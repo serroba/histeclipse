@@ -42,8 +42,8 @@ export interface StrikeClockOptions {
   readonly drawn?: string;
   /** What its extinction took, as a gauge of the life left (#1223). */
   readonly loss?: LossGauge;
-  /** A measured record, drawn above the slider on its scale (#1229). */
-  readonly proxy?: ProxyChart;
+  /** Measured records, drawn above the slider on its scale (#1229). */
+  readonly proxies?: readonly ProxyChart[];
   /** The moment changed: `seconds` since the event. */
   onMoment(seconds: number): void;
   /** The reader closed it. */
@@ -123,14 +123,14 @@ function clockView(
     dated,
     drawn,
     loss: gauge,
-    proxy: record,
-  }: Pick<StrikeClockOptions, 'title' | 'dated' | 'drawn' | 'loss' | 'proxy'>,
+    proxies = [],
+  }: Pick<StrikeClockOptions, 'title' | 'dated' | 'drawn' | 'loss' | 'proxies'>,
   scale: ClockScale,
   transport: Transport,
 ): ClockView {
   const [band, says] = datedBand(scale, dated);
   const loss = gauge === undefined ? null : lossView(gauge);
-  const proxy = record === undefined ? null : proxyView(record, scale);
+  const proxy = proxyView(proxies, scale);
   const speed = element(
     'select',
     { class: 'strike-clock-speed', 'aria-label': 'Speed' },

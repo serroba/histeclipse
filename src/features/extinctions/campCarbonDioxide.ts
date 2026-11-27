@@ -68,6 +68,7 @@ function readings(): ProxyReading[] {
 }
 
 export const CAMP_CARBON_DIOXIDE: ProxyChart = {
+  name: 'Carbon dioxide',
   title: 'Carbon dioxide in the Newark Basin, ppm, measured',
   low: 0,
   high: 6000,

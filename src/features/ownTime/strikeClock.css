@@ -312,6 +312,28 @@
   margin: 0;
 }
 
+.proxy-picks {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 4px;
+}
+
+.proxy-pick {
+  padding: 2px 8px;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 10px;
+  background: none;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.proxy-pick[aria-pressed='true'] {
+  border-color: rgb(255 255 255 / 0.5);
+  color: inherit;
+}
+
 .proxy-title {
   margin: 0 0 2px;
   font-size: 12px;

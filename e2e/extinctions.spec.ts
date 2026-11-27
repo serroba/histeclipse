@@ -38,8 +38,13 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     // Nothing lost yet (#1223).
     await expect(clock.locator('.loss-gauge-label')).toHaveText('Marine genera left: 100%');
     // The sea's warming at Meishan, measured, above the slider (#1229).
-    await expect(clock.locator('.proxy-chart')).toContainText('Sea-surface temperature at Meishan');
-    await expect(clock.locator('.proxy-dot')).toHaveCount(42);
+    const record = clock.locator('.proxy-chart:visible');
+    await expect(record).toContainText('Sea-surface temperature at Meishan');
+    await expect(record.locator('.proxy-dot')).toHaveCount(42);
+    // And carbon dioxide, worked out from fossil plants, picked by name.
+    await clock.getByRole('button', { name: 'Carbon dioxide' }).click();
+    await expect(record).toContainText('Carbon dioxide, ppm, worked out from fossil plants');
+    await expect(record.locator('.proxy-dot')).toHaveCount(72);
   });
   await test.step('And the header says the clock’s age, in the Permian, the bar’s own pace set aside (#1222)', async () => {
     await expect(page.locator('.hud-date')).toHaveText(/^252\.\d million years ago$/);

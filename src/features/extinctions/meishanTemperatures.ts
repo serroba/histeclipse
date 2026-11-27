@@ -120,6 +120,7 @@ function readings(): ProxyReading[] {
 }
 
 export const MEISHAN_TEMPERATURES: ProxyChart = {
+  name: 'Sea temperature',
   title: 'Sea-surface temperature at Meishan, °C, measured',
   low: 20,
   high: 36,
