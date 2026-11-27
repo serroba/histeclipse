@@ -1,13 +1,16 @@
 /**
  * Playing deep time towards the present: at a pace (#1076), or a story's own speed, easing near
  * milestones and finds so they can be read as they pass (#1077), and stopping at the bar's young
- * end. From there, play starts again at the bar's oldest.
+ * end. From there, play starts again at the bar's oldest. Where a part shows its own timeline,
+ * such as the temperature chart over the ice ages, play follows its pace instead (#1276).
  */
 
 import { anchorMa, MILESTONES } from '../../deepTime/milestones';
+import { speedAlong, type PlayAxis } from '../../deepTime/playAxis';
 import { easeAt } from '../../deepTime/playEase';
-import { playhead } from '../../deepTime/playhead';
-import { DEFAULT_PACE, paceSpeed, type Pace } from '../../deepTime/playSpeed';
+import { axisPlayhead, playhead, type AxisPlayhead } from '../../deepTime/playhead';
+import { DEFAULT_PACE, paceShare, paceSpeed, type Pace } from '../../deepTime/playSpeed';
+import { roundMa } from '../../deepTime/scale';
 import type { Store } from '../../state/store';
 import type { DeepBarWindow } from '../../state/timeZoom';
 import type { ViewState } from '../../state/viewState';
@@ -18,6 +21,8 @@ export interface PlayingParts {
   shown(state: ViewState): DeepBarWindow;
   /** What play eases near besides the milestones, Ma: the finds of the layers on. */
   finds(state: ViewState): readonly number[];
+  /** A part's own timeline play follows while it shows, if any (#1276). */
+  axis(state: ViewState): PlayAxis | null;
   /** A loop calling `tick` each frame with the seconds since the last, started and stopped. */
   loop(tick: (seconds: number) => void): { start(): void; stop(): void };
   /** Playing started or stopped, or how it plays changed: the bar shows it. */
@@ -44,6 +49,30 @@ export interface Playing {
 /** Where each milestone sits on the time line. */
 const MILESTONE_MARKS = MILESTONES.map(anchorMa);
 
+/**
+ * A frame along a part's own timeline: it hears where play is, unrounded, and the view keeps it
+ * to the thousand years; at the young end, it hears that too. Whether play is to stop.
+ */
+function stepAlong(
+  axis: PlayAxis,
+  frame: {
+    readonly store: PlayingParts['store'];
+    readonly head: AxisPlayhead;
+    readonly ma: number;
+    readonly youngest: number;
+    readonly seconds: number;
+    readonly share: number;
+  },
+): boolean {
+  const { store, head, ma, youngest, seconds, share } = frame;
+  const reached = Math.max(youngest, head.step(axis, ma, share, seconds));
+  axis.follow(reached);
+  store.set((now) => ({ ...now, ma: roundMa(reached) }));
+  if (reached > youngest) return false;
+  axis.ended();
+  return true;
+}
+
 export function deepPlaying(parts: PlayingParts): Playing {
   const { store } = parts;
   let playing = false;
@@ -51,8 +80,12 @@ export function deepPlaying(parts: PlayingParts): Playing {
   let storySpeed: number | null = null;
   let easing = !parts.lessMotion;
   let head = playhead();
+  let along = axisPlayhead();
   const speed = (): number => {
-    const { oldest, youngest } = parts.shown(store.get());
+    const state = store.get();
+    const axis = storySpeed === null && state.ma !== null ? parts.axis(state) : null;
+    if (axis !== null && state.ma !== null) return speedAlong(axis, state.ma, paceShare(pace));
+    const { oldest, youngest } = parts.shown(state);
     return storySpeed ?? paceSpeed(oldest - youngest, pace);
   };
   function stop(): void {
@@ -70,6 +103,12 @@ export function deepPlaying(parts: PlayingParts): Playing {
       return;
     }
     const { youngest } = parts.shown(state);
+    const axis = storySpeed === null ? parts.axis(state) : null;
+    if (axis !== null) {
+      if (stepAlong(axis, { store, head: along, ma, youngest, seconds, share: paceShare(pace) }))
+        stop();
+      return;
+    }
     const full = speed();
     const share =
       easing && storySpeed === null
@@ -88,6 +127,7 @@ export function deepPlaying(parts: PlayingParts): Playing {
       const { oldest, youngest } = parts.shown(store.get());
       if ((store.get().ma ?? 0) <= youngest) store.set((state) => ({ ...state, ma: oldest }));
       head = playhead();
+      along = axisPlayhead();
       frames.start();
       parts.changed();
     },

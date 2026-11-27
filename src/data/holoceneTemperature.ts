@@ -129,6 +129,16 @@ export function yearOf(x: number): number {
   return end;
 }
 
+/** Where the moment `ma` (Ma before 1950) is on the chart's own clock, seconds (#1276). */
+export function chartSecondsAt(ma: number): number {
+  return msAt(xOf(1950 - ma * 1e6)) / 1000;
+}
+
+/** The moment, Ma before 1950, `seconds` along the chart's own clock: `chartSecondsAt` undone. */
+export function maAtChartSeconds(seconds: number): number {
+  return (1950 - yearOf(reachedAt(seconds * 1000))) / 1e6;
+}
+
 /** A year on the chart as its cursor names it: thousands of years ago, then BCE and CE. */
 export function chartDateText(year: number): string {
   if (year < -9000) {

@@ -2,9 +2,10 @@
  * The column of small panels beside the globe (#722, #526): bottom left, between the page's
  * panels as the globe is. A layer's panel joins it, in its `order`, so two layers on at once
  * stack rather than overlap. A grip at its top moves the column out of the globe's way (#811):
- * dragged by a finger or a mouse, or with the arrow keys; it stays on the screen. Each panel
- * folds to its name, and unfolds, by a button at its corner; this browser remembers which are
- * folded.
+ * dragged by a finger or a mouse, or with the arrow keys; it stays on the screen. A tap on the
+ * grip, or Enter, folds the whole column away to the grip, so the globe shows, and unfolds it
+ * (#1279). Each panel folds to its name, and unfolds, by a button at its corner; this browser
+ * remembers which are folded.
  */
 
 import { element } from './dom';
@@ -12,6 +13,9 @@ import './globePanels.css';
 
 /** Pixels an arrow key moves the column. */
 const KEY_STEP = 24;
+
+/** Pixels a pointer may move on the grip and still be a tap, which folds, not a drag. */
+const TAP_SLOP = 6;
 
 export interface Offset {
   readonly x: number;
@@ -52,15 +56,32 @@ const ARROWS: Readonly<Record<string, Offset>> = {
   ArrowDown: { x: 0, y: KEY_STEP },
 };
 
-/** The grip that moves `column`. */
+/** The grip's names: what it does, folded or not. */
+const GRIP_LABEL = {
+  open: 'Move the panels, or tap to fold them away',
+  folded: 'Move the panels, or tap to show them',
+} as const;
+
+/** Fold the column away to its grip, or show it again (#1279). */
+function foldColumn(column: HTMLElement, handle: HTMLElement, folded: boolean): void {
+  column.classList.toggle('is-folded', folded);
+  handle.setAttribute('aria-expanded', String(!folded));
+  handle.setAttribute('aria-label', folded ? GRIP_LABEL.folded : GRIP_LABEL.open);
+}
+
+/** The grip that moves `column`, and folds it when tapped. */
 function grip(column: HTMLElement): HTMLElement {
   const handle = element(
     'button',
-    { type: 'button', class: 'globe-panels-grip', 'aria-label': 'Move the panels' },
-    element('span', {}),
+    { type: 'button', class: 'globe-panels-grip' },
+    element('span', { class: 'globe-panels-bar' }),
+    element('span', { class: 'globe-panels-show' }, 'Show panels'),
   );
+  foldColumn(column, handle, false);
   let at: Offset = { x: 0, y: 0 };
   let held: { readonly pointer: Offset; readonly from: Offset } | null = null;
+  // Whether the pointer moved past a tap's slop since it went down: a drag, which does not fold.
+  let dragged = false;
   const move = (wanted: Offset): void => {
     at = keptOnScreen(
       wanted,
@@ -73,20 +94,28 @@ function grip(column: HTMLElement): HTMLElement {
   };
   handle.addEventListener('pointerdown', (event) => {
     held = { pointer: { x: event.clientX, y: event.clientY }, from: at };
+    dragged = false;
     handle.setPointerCapture(event.pointerId);
   });
   handle.addEventListener('pointermove', (event) => {
     if (held === null) return;
-    move({
-      x: held.from.x + event.clientX - held.pointer.x,
-      y: held.from.y + event.clientY - held.pointer.y,
-    });
+    const by = { x: event.clientX - held.pointer.x, y: event.clientY - held.pointer.y };
+    if (Math.hypot(by.x, by.y) > TAP_SLOP) dragged = true;
+    move({ x: held.from.x + by.x, y: held.from.y + by.y });
   });
   const letGo = (): void => {
     held = null;
   };
   handle.addEventListener('pointerup', letGo);
   handle.addEventListener('pointercancel', letGo);
+  // A tap, or Enter or Space: fold or unfold. The click that ends a drag does neither.
+  handle.addEventListener('click', () => {
+    if (dragged) {
+      dragged = false;
+      return;
+    }
+    foldColumn(column, handle, !column.classList.contains('is-folded'));
+  });
   handle.addEventListener('keydown', (event) => {
     const step = ARROWS[event.key];
     if (step === undefined) return;

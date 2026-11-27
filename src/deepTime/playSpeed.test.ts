@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import fc from 'fast-check';
 
-import { PACES, paceSpeed, deepSpeedText, deepSpeedWords, prefetchFrames } from './playSpeed';
+import {
+  PACES,
+  paceShare,
+  paceSpeed,
+  deepSpeedText,
+  deepSpeedWords,
+  prefetchFrames,
+} from './playSpeed';
 
 describe('deep time play speeds', () => {
   it('Given the 540 Myr span, Then Normal sweeps it in about 20 s, Slow in two minutes, Fast in six (#1076)', () => {
@@ -41,6 +48,14 @@ describe('deep time play speeds', () => {
 
   it('says a speed under a thousand years a second in years', () => {
     expect(deepSpeedText(0.0005)).toBe('500 yr/s');
+  });
+});
+
+describe('paceShare (#1276)', () => {
+  it('scales play along a part’s own timeline as each pace scales a sweep of the bar', () => {
+    expect(paceShare('normal')).toBe(1);
+    expect(paceShare('slow')).toBeCloseTo(1 / 6);
+    expect(paceShare('fast')).toBeCloseTo(20 / 6);
   });
 });
 

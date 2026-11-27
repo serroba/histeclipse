@@ -28,7 +28,7 @@ describe('the panels beside the globe', () => {
     const columns = container.querySelectorAll('.globe-panels');
     expect(columns).toHaveLength(1);
     const [grip, list] = [...(columns[0]?.children ?? [])];
-    expect(grip?.getAttribute('aria-label')).toBe('Move the panels');
+    expect(grip?.getAttribute('aria-label')).toBe('Move the panels, or tap to fold them away');
     expect([...(list?.children ?? [])]).toEqual([first, second]);
     expect([first.style.order, second.style.order]).toEqual(['2', '1']);
   });
@@ -44,6 +44,39 @@ describe('the panels beside the globe', () => {
     grip.dispatchEvent(pointer('pointerup', 140, 300));
     grip.dispatchEvent(pointer('pointermove', 300, 300));
     expect(made.style.translate).toBe('40px -100px');
+  });
+
+  it('When the grip is tapped, Then the column folds away to it, and a second tap shows it (#1279)', () => {
+    const { column: made, grip } = column();
+    grip.setPointerCapture = () => undefined;
+    grip.dispatchEvent(pointer('pointerdown', 100, 400));
+    // A finger's wobble is still a tap.
+    grip.dispatchEvent(pointer('pointermove', 103, 402));
+    grip.dispatchEvent(pointer('pointerup', 103, 402));
+    grip.click();
+    expect(made.classList.contains('is-folded')).toBe(true);
+    expect(grip.getAttribute('aria-expanded')).toBe('false');
+    expect(grip.getAttribute('aria-label')).toBe('Move the panels, or tap to show them');
+    expect(grip.textContent).toBe('Show panels');
+    // Enter or Space on the button: a click.
+    grip.click();
+    expect(made.classList.contains('is-folded')).toBe(false);
+    expect(grip.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('When the grip is dragged, Then the click that ends the drag does not fold it', () => {
+    const { column: made, grip } = column();
+    grip.setPointerCapture = () => undefined;
+    grip.dispatchEvent(pointer('pointerdown', 100, 400));
+    grip.dispatchEvent(pointer('pointermove', 100, 380));
+    grip.dispatchEvent(pointer('pointerup', 100, 380));
+    grip.click();
+    expect(made.classList.contains('is-folded')).toBe(false);
+    // The next tap folds.
+    grip.dispatchEvent(pointer('pointerdown', 100, 380));
+    grip.dispatchEvent(pointer('pointerup', 100, 380));
+    grip.click();
+    expect(made.classList.contains('is-folded')).toBe(true);
   });
 
   it('When an arrow key is pressed on the grip, Then the column moves a step', () => {

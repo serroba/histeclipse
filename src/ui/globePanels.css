@@ -51,7 +51,7 @@
   touch-action: none;
 }
 
-.globe-panels-grip > span {
+.globe-panels-bar {
   width: 40px;
   height: 5px;
   border-radius: 3px;
@@ -63,9 +63,36 @@
   cursor: grabbing;
 }
 
-.globe-panels-grip:focus-visible > span {
+.globe-panels-grip:focus-visible > .globe-panels-bar {
   outline: 2px solid var(--accent, currentcolor);
   outline-offset: 3px;
+}
+
+/* Folded away to the grip (#1279): the globe shows, and the grip says how to bring them back. */
+.globe-panels-show {
+  display: none;
+}
+
+.globe-panels.is-folded > .globe-panels-list {
+  display: none;
+}
+
+.globe-panels.is-folded > .globe-panels-grip {
+  flex-direction: column;
+  gap: 4px;
+  width: auto;
+  height: auto;
+  padding: 6px 14px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  background: rgb(10 16 32 / 0.88);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.globe-panels.is-folded .globe-panels-show {
+  display: inline;
 }
 
 .globe-panels:not(:has(.globe-panels-list > :not([hidden]))) {

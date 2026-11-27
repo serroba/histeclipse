@@ -12,6 +12,7 @@ import { DEFAULT_PACE, PACE_LABELS, PACES, type Pace } from '../../deepTime/play
 import { element } from '../../ui/dom';
 import { setText } from '../../util/pageWrites';
 import { createTransport, type Transport } from '../../ui/transport';
+import { askFrame } from './frames';
 import { legendView, type LegendItem } from './legend';
 import { createLinger, type Linger } from './linger';
 import { lossView, type LossGauge, type LossView } from './lossGauge';
@@ -240,15 +241,17 @@ function slowed(view: Pick<ClockView, 'slowed'>, now: boolean): void {
 }
 
 /**
- * How far play moves from `position` in `seconds` at `pace`: at the scale's own pace there
- * (Chicxulub's slower over the approach, faster once the sky has cleared; #1187), lingering at
+ * How far play moves from `position` in a frame `ms` after the last, at `pace`: by at most a
+ * fifth of a second of play, so a hitch pauses it, never skips; at the scale's own pace there
+ * (Chicxulub's slower over the approach, faster once the sky has cleared; #1187); lingering at
  * its key moments to be read, and saying so (#1267).
  */
 function playedOn(
   view: Pick<ClockView, 'slowed' | 'linger'>,
   scale: ClockScale,
-  [pace, seconds, position]: readonly [Pace, number, number],
+  [pace, ms, position]: readonly [Pace, number, number],
 ): number {
+  const seconds = Math.min(0.2, ms / 1000);
   const { delta, lingering } = view.linger.step(
     position,
     scale.advance(pace, seconds, position),
@@ -261,7 +264,7 @@ function playedOn(
 export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
   const scale = options.scale ?? STRIKE_SCALE;
   let position = 0;
-  let frame: number | null = null;
+  let frame: (() => void) | null = null;
   let last: number | null = null;
 
   const transport = createTransport(
@@ -301,29 +304,28 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
   }
 
   function tick(now: number): void {
-    // A late frame moves it on by at most a fifth of a second: a hitch pauses it, never skips.
-    const seconds = last === null ? 0 : Math.min(0.2, (now - last) / 1000);
+    const cost = last === null ? 0 : now - last;
     last = now;
-    moveTo(position + playedOn(view, scale, [speed.value as Pace, seconds, position]));
+    moveTo(position + playedOn(view, scale, [speed.value as Pace, cost, position]));
     if (position >= scale.end) {
       stop();
       if (options.closeAtEnd === true) close();
       return;
     }
-    frame = requestAnimationFrame(tick);
+    frame = askFrame(tick, cost);
   }
 
   function start(): void {
     if (frame !== null) return;
     if (position >= scale.end) position = 0;
     last = null;
-    frame = requestAnimationFrame(tick);
+    frame = askFrame(tick, 0);
     root.dataset['playing'] = 'true';
     transport.render(true, position);
   }
 
   function stop(): void {
-    if (frame !== null) cancelAnimationFrame(frame);
+    frame?.();
     frame = null;
     root.dataset['playing'] = 'false';
     transport.render(false, position);

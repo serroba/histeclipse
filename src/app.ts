@@ -271,6 +271,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       features.deepOff(state);
     },
     finds: (state) => features.finds(state),
+    playAxis: (state) => features.playAxis(state),
     platesReach: () => plateMasks.reach(),
     watchFormation: () => features.watchFormation(store.get()),
     loadArchive: () => {

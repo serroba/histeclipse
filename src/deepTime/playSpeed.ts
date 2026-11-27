@@ -21,6 +21,11 @@ export const PACE_LABELS: Readonly<Record<Pace, string>> = {
 /** Seconds a sweep of the bar takes at each pace. */
 const SWEEP_SECONDS: Readonly<Record<Pace, number>> = { slow: 120, normal: 20, fast: 6 };
 
+/** How fast `pace` goes beside Normal: what play along a part's own timeline is scaled by. */
+export function paceShare(pace: Pace): number {
+  return SWEEP_SECONDS.normal / SWEEP_SECONDS[pace];
+}
+
 /** The slowest deep time plays: a hundred years a second. */
 const SLOWEST = 0.0001;
 
