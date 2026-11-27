@@ -40,6 +40,7 @@ export const temperatureFeature = feature({
     return {
       load: () => layer.load(on),
       playAxis: (state) => chart.playAxis(state),
+      storyDate: () => chart.storyDate(),
       show(state) {
         chart.show(state);
       },

@@ -79,6 +79,8 @@ test('playing the ice ages beside the temperature chart goes at its pace, on to 
       .toBeGreaterThan(1850);
     // Caught before 1950 and the draw on past it: the year the poll saw, not a later read.
     expect(year).toBeLessThan(1951);
+    // And the header says the years, not "Today", through the last thousand (#1285).
+    await expect(page.locator('.hud-date')).toHaveText(/^(1[89]\d\d|20\d\d)$/);
   });
   await test.step('And the chart draws on past 1950, deep time’s present, to its latest year', async () => {
     await expect(chart).toHaveAttribute('data-complete', 'true', { timeout: 15_000 });
@@ -93,6 +95,9 @@ test('playing the ice ages beside the temperature chart goes at its pace, on to 
     );
     await showDeepDetails(page);
     await expect(page.locator('.temperature-note')).toContainText('measured: Berkeley Earth');
+    // The header at the chart's latest year, the measured warming named.
+    await expect(page.locator('.hud-date')).toHaveText(/^20[2-3]\d$/);
+    await expect(page.locator('.hud-detail')).toContainText('measured warming');
   });
   expect(problems).toEqual([]);
 });

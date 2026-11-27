@@ -5,13 +5,16 @@
  */
 
 import {
+  chartDateText,
   chartSecondsAt,
+  latestYear,
   loadHoloceneTemperature,
   maAtChartSeconds,
   type HoloceneTemperature,
 } from '../../data/holoceneTemperature';
 import { maOfYear, yearOfMa } from '../../data/iceSheets';
 import type { PlayAxis } from '../../deepTime/playAxis';
+import type { StoryDate } from '../../deepTime/storyDate';
 import { roundMa } from '../../deepTime/scale';
 import { loadOnce } from '../../state/loadOnce';
 import type { ViewState } from '../../state/viewState';
@@ -49,14 +52,74 @@ interface Fields {
   readonly temperatureDrawn: boolean;
 }
 
+/** Within the last thousand years the header says the chart's year, not "Today" (#1285). */
+const YEARS_FROM = 950;
+
+/** What the header says the globe shows while the measured warming colours it (#1283). */
+const MEASURED_WHAT = 'Industrial era · measured warming, 5-year mean';
+
 export interface ChartPart {
   playAxis(state: ViewState): PlayAxis | null;
+  /**
+   * The chart's year lent to deep time's header and bar (#1285): deep time keeps the moment to
+   * the thousand years, so through the last thousand it would read "Today".
+   */
+  storyDate(): StoryDate | null;
   show(state: ViewState): void;
   /** After the layer coloured the globe: the measured warming over it, and the note's words. */
   deep(state: ViewState, fields: Fields): Fields;
 }
 
-export function createChartPart(context: FeatureContext<'temperatureMaps'>): ChartPart {
+/**
+ * The chart's year, lent as the header's date while it is within the last thousand years and
+ * `showing` says the chart shows (with what the globe shows then); deep time is shown again
+ * when what it reads changes, as the view itself may not have moved.
+ */
+export function yearLender(
+  deep: { again(): void },
+  showing: () => { readonly what: string | null } | null,
+): { set(year: number | null): void; check(): void; date(): StoryDate | null } {
+  let year: number | null = null;
+  let lent: string | null = null;
+  const date = (): StoryDate | null => {
+    const shown = showing();
+    if (shown === null || year === null || year <= YEARS_FROM) return null;
+    return { when: chartDateText(year), what: shown.what };
+  };
+  const check = (): void => {
+    const when = date()?.when ?? null;
+    if (when === lent) return;
+    lent = when;
+    deep.again();
+  };
+  return {
+    date,
+    check,
+    set(next) {
+      year = next;
+      check();
+    },
+  };
+}
+
+/** The chart's own clock for play to follow (#1276): `showAt` puts the chart where play is. */
+function chartAxis(showAt: (ma: number, drawOn: boolean) => void): PlayAxis {
+  return {
+    at: chartSecondsAt,
+    ma: maAtChartSeconds,
+    follow: (ma) => {
+      showAt(ma, false);
+    },
+    // Today, deep time's present (1950): the chart draws on to its latest year.
+    ended: () => {
+      showAt(0, true);
+    },
+  };
+}
+
+export function createChartPart(
+  context: FeatureContext<'temperatureMaps' | 'deepTime'>,
+): ChartPart {
   const chart = loadOnce<HoloceneTemperature>({
     fetch: () =>
       loadHoloceneTemperature(`${context.base}data/holocene-temperature.json`, context.fetchJson),
@@ -65,12 +128,7 @@ export function createChartPart(context: FeatureContext<'temperatureMaps'>): Cha
   });
   // From 1850 on the chart, the globe shows the measured warming (#1283).
   const measured = createMeasured(
-    {
-      ...context,
-      prefetch: (urls) => {
-        context.temperatureMaps.prefetch(urls);
-      },
-    },
+    { ...context, prefetch: context.temperatureMaps.prefetch },
     chartShown,
   );
   let lastState: ViewState | null = null;
@@ -79,44 +137,42 @@ export function createChartPart(context: FeatureContext<'temperatureMaps'>): Cha
     const surface = lastState === null ? null : measured.surface(lastState);
     if (surface !== null) context.temperatureMaps.setTemperature(surface);
   };
+  // The chart's year lent to the header through the last thousand years (#1285).
+  const lender = yearLender(context.deepTime, () =>
+    lastState === null || !chartShown(lastState)
+      ? null
+      : { what: measured.surface(lastState) === null ? null : MEASURED_WHAT },
+  );
   const chartPanel = context.globe.addLayer(
     holocenePanel((year) => {
-      // The reader's drag, or the chart drawing on past 1950, which the view does not keep.
+      // The reader's drag, or the chart drawing on past 1950: kept finer than the view (#1285).
       measured.at(year);
       paint();
+      followed = Math.min(CHART_REACHES_MA, Math.max(0, maOfYear(year)));
+      lender.set(year);
       const ma = maOfChart(year);
       context.change((state) => (state.ma === ma ? state : { ...state, ma }));
     }),
   );
-  const panel = (view: HoloceneView | null): void => {
-    chartPanel.update(view);
-    measured.at(view?.year ?? null);
-    paint();
-  };
   let shownAt: number | null = null;
   let shownData: HoloceneTemperature | null = null;
   // Where play along the chart has reached, finer than the moment the view keeps (#1276).
   let followed: number | null = null;
+  const panel = (view: HoloceneView | null): void => {
+    chartPanel.update(view);
+    measured.at(view?.year ?? null);
+    paint();
+    lender.set(view?.year ?? null);
+  };
   return {
     // While the chart shows, play goes at its pace: each of its panels gets its time (#1276).
     playAxis(state) {
       const data = chartShown(state) ? chart.value() : null;
       if (data === null) return null;
-      const showAt = (ma: number, drawOn: boolean): void => {
+      return chartAxis((ma, drawOn) => {
         followed = ma;
         panel({ data, year: yearAt(ma), drawOn });
-      };
-      return {
-        at: chartSecondsAt,
-        ma: maAtChartSeconds,
-        follow: (ma) => {
-          showAt(ma, false);
-        },
-        // Today, deep time's present (1950): the chart draws on to its latest year.
-        ended: () => {
-          showAt(0, true);
-        },
-      };
+      });
     },
     show(state) {
       const data = chartShown(state) ? chart.value() : null;
@@ -132,10 +188,15 @@ export function createChartPart(context: FeatureContext<'temperatureMaps'>): Cha
       if (ma === shownAt && data === shownData) return;
       shownAt = ma;
       shownData = data;
-      panel(data === null || ma === null ? null : { data, year: yearOfMa(ma) });
+      // Today, the chart's latest measured year, not deep time's present, 1950 (#1285).
+      const year = ma === 0 && data !== null ? latestYear(data).year : yearOfMa(ma ?? 0);
+      panel(data === null || ma === null ? null : { data, year });
     },
+    storyDate: () => lender.date(),
     deep(state, fields) {
       lastState = state;
+      // The header read before the bar: what it lends may have changed with the state.
+      lender.check();
       const surface = measured.surface(state);
       if (surface === null) return fields;
       context.temperatureMaps.setTemperature(surface);

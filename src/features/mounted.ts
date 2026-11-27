@@ -110,6 +110,15 @@ function firstAxis(
   return null;
 }
 
+/** The first date a feature lends deep time's header, if any (#1285). */
+function firstDate(mounted: readonly { readonly shown: FeatureInstance }[]): StoryDate | null {
+  for (const { shown } of mounted) {
+    const date = shown.storyDate?.() ?? null;
+    if (date !== null) return date;
+  }
+  return null;
+}
+
 export function mountFeatures(
   features: readonly Feature[],
   core: FeatureCore,
@@ -191,6 +200,7 @@ export function mountFeatures(
         const facts = [shown.here?.(state) ?? []].flat();
         return facts.map((fact) => [feature.id, fact] as const);
       }),
-    storyDate: () => ownTime.lent(),
+    // An own-time clock's moment, or else a feature's date (#1285).
+    storyDate: () => ownTime.lent() ?? firstDate(mounted),
   };
 }
