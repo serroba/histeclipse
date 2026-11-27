@@ -103,6 +103,7 @@ describe('parseViewState', () => {
       land: 'dhuime',
       snowball: 'hard',
       water: 'delivered',
+      finds: null,
       why: null,
       tree: null,
       craters: null,
@@ -690,6 +691,12 @@ describe('serializeViewState', () => {
     land: fc.constantFrom(...LAND_MODELS),
     snowball: fc.constantFrom(...SNOWBALL_MODELS),
     water: fc.constantFrom(...WATER_MODELS),
+    finds: fc.option(
+      fc.record({
+        group: fc.constantFrom(...LINEAGE_GROUPS),
+        pbdb: fc.integer({ min: 0, max: 9_999_999 }),
+      }),
+    ),
     why: fc.constantFrom(null, ...WHY_VIEWS),
     tree: fc.oneof(
       fc.constant(null),

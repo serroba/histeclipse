@@ -30,6 +30,8 @@ export const DEEP_TIME: Watch = (s) => [
   s.land,
   s.snowball,
   s.water,
+  // The genus whose finds Fossils rings (#309).
+  s.finds,
 ];
 
 /** The sky view: where and when it is seen from, and what is drawn on it. */

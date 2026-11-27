@@ -38,7 +38,7 @@ export {
   type TreeView,
 } from './slices/sheets';
 
-export { DISPERSAL_SCENARIOS, type DispersalScenario } from './slices/deep';
+export { DISPERSAL_SCENARIOS, type DispersalScenario, type FossilFinds } from './slices/deep';
 
 export const MODES = ['globe', 'sky'] as const;
 export type Mode = (typeof MODES)[number];

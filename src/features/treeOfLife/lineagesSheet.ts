@@ -18,7 +18,8 @@ import {
   type Lineages,
   type Place,
 } from '../../data/lineages';
-import type { LineagesView } from '../../state/viewState';
+import { findsOf, oldestFinds } from '../../data/fossilFinds';
+import type { FossilFinds, LineagesView } from '../../state/viewState';
 import { elementAt } from '../../util/arrays';
 import { errorMessage } from '../../util/errors';
 import { element } from '../../ui/dom';
@@ -63,8 +64,8 @@ export function createLineagesSheet(
   load: (group: LineageGroup) => Promise<Lineages>,
   /** The elevation map's url for a moment (Ma, a multiple of 5 up to 540). */
   floorUrl: (ma: number) => string,
-  /** Go to deep time at a moment, facing a place, with the fossils showing. */
-  onGlobe: (ma: number, where: Place) => void,
+  /** Go to deep time at a moment, facing a place, with the fossils showing and its finds ringed. */
+  onGlobe: (ma: number, where: Place, finds: FossilFinds) => void,
   /** The book that says where the lines come from. */
   why: HTMLElement,
 ): LineagesSheet {
@@ -437,14 +438,11 @@ export function createLineagesSheet(
         return element('li', {}, button);
       }),
     );
-    const start = elementAt(data.starts, index);
-    const globe = element(
-      'button',
-      { type: 'button', class: 'why-all' },
-      `See its fossils on the globe, ${String(Math.round(node.first))} million years ago`,
-    );
+    const start = oldestFinds(findsOf(data.lineages, index)) ?? elementAt(data.starts, index);
+    const label = `See its fossils on the globe, ${String(Math.round(start.ma))} million years ago`;
+    const globe = element('button', { type: 'button', class: 'why-all' }, label);
     globe.addEventListener('click', () => {
-      onGlobe(node.first, start);
+      onGlobe(start.ma, start, { group: data.lineages.id, pbdb: node.pbdb });
     });
     const more = element(
       'a',

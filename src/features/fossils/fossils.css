@@ -46,3 +46,17 @@
   background: var(--fossil);
   vertical-align: middle;
 }
+
+/* One genus's sites (#309): a ring in its group's colour, over the counts, that lets taps through. */
+.empire-label.fossil-find {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  pointer-events: none;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow:
+    0 0 0 2px var(--fossil),
+    0 0 6px rgb(0 0 0 / 0.8);
+}

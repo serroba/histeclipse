@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import pictures from '../../../public/data/fossil-pictures.json';
 import fossils from '../../../public/data/fossils.json';
+import dinosaurs from '../../../public/data/time-tree/dinosaurs.json';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { MarkerCardContent } from '../../ui/markerCard';
 import type { Capability, FeatureContext } from '../feature';
@@ -20,6 +21,9 @@ const JURASSIC = { ma: 150, scale: 'all' } as const;
 /** A context that records what the feature asks of the app (#380): no globe, no page. */
 function fakeContext(options: { readonly failing?: boolean } = {}) {
   const drawn: unknown[] = [];
+  // The second layer: one genus's finds, ringed (#309).
+  const ringed: unknown[] = [];
+  let layers = 0;
   const cards: MarkerCardContent[] = [];
   const refresh = vi.fn();
   const notify = vi.fn();
@@ -31,16 +35,29 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
       options.failing === true
         ? Promise.reject(new Error('offline'))
         : Promise.resolve(
-            new Response(JSON.stringify(url.endsWith('pictures.json') ? pictures : fossils)),
+            new Response(
+              JSON.stringify(
+                url.endsWith('pictures.json')
+                  ? pictures
+                  : url.includes('time-tree')
+                    ? dinosaurs
+                    : fossils,
+              ),
+            ),
           ),
-    globe: { addLayer: () => ({ update: (input: unknown) => drawn.push(input) }) },
+    globe: {
+      addLayer: () => {
+        const into = layers++ === 0 ? drawn : ringed;
+        return { update: (input: unknown) => into.push(input) };
+      },
+    },
     notify,
     cards: { show: (card: MarkerCardContent) => cards.push(card), open: () => true },
     tree: { openLineages },
     change,
     refresh,
   } as unknown as FeatureContext<Capability>;
-  return { context, drawn, cards, refresh, notify, openLineages, change };
+  return { context, drawn, ringed, cards, refresh, notify, openLineages, change };
 }
 
 describe('the fossils as a feature', () => {
@@ -135,6 +152,61 @@ describe('the fossils as a feature', () => {
     action?.run();
     const update = change.mock.calls[0]?.[0] as (state: ViewState) => ViewState;
     expect(update(on).lineages).toEqual({ group: 'dinosaurs', pick: null });
+  });
+
+  it('rings a genus’s finds where the link names one, and says where its nearest are (#309)', async () => {
+    const { context, ringed, refresh, change } = fakeContext();
+    const shown = fossilsFeature.mount(context, context);
+    const rex: ViewState = { ...on, ma: 68, finds: { group: 'dinosaurs', pbdb: 38613 } };
+    const text = (): string =>
+      (shown.deep?.(rex, { ma: rex.ma ?? 0, scale: 'all' })?.note ?? [])
+        .map((part) => (typeof part === 'string' ? part : 'text' in part ? part.text : ''))
+        .join('');
+    text();
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    expect(text()).toContain('Its finds: loading…');
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(2);
+    });
+    // Near 70 Ma: its North American sites.
+    expect(text()).toMatch(/Tyrannosaurus, ringed: found at \d+ sites within 2\.5 million years/);
+    const sites = ringed.at(-1) as { group: string; sites: readonly unknown[] };
+    expect(sites.group).toBe('dinosaurs');
+    expect(sites.sites.length).toBeGreaterThan(1);
+    // Long before it: none, a way to its nearest, and a way to stop.
+    const early = { ...rex, ma: 150 };
+    const note = shown.deep?.(early, { ma: 150, scale: 'all' })?.note ?? [];
+    const runs = note.flatMap((part) => (typeof part === 'object' && 'run' in part ? [part] : []));
+    expect(runs.map((part) => part.text)).toEqual([
+      'Go to its nearest finds, 80 million years ago',
+      'Stop marking Tyrannosaurus',
+    ]);
+    expect(ringed.at(-1)).toEqual({ group: 'dinosaurs', sites: [] });
+    runs.at(-2)?.run();
+    runs.at(-1)?.run();
+    const [go, stop] = change.mock.calls.map((call) => call[0] as (state: ViewState) => ViewState);
+    expect(go?.(early).ma).toBe(80);
+    expect(stop?.(early).finds).toBeNull();
+  });
+
+  it('says so when the genus to mark is not in its group’s lines', async () => {
+    const { context, refresh } = fakeContext();
+    const shown = fossilsFeature.mount(context, context);
+    const lost: ViewState = { ...on, finds: { group: 'dinosaurs', pbdb: 1 } };
+    shown.deep?.(lost, JURASSIC);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(1);
+    });
+    // The fossils first, then the genus's group.
+    shown.deep?.(lost, JURASSIC);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(2);
+    });
+    const note = shown.deep?.(lost, JURASSIC)?.note ?? [];
+    expect(note).toContain(' The genus to mark is not among the lines through time.');
+    expect(note.some((part) => typeof part === 'object' && 'run' in part)).toBe(true);
   });
 
   it('says so when the fossils cannot be loaded', async () => {
