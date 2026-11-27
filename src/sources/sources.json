@@ -2370,6 +2370,12 @@
     "cite": "Schaller, M. F., Wright, J. D. & Kent, D. V. (2011), Atmospheric Pco2 perturbations associated with the Central Atlantic Magmatic Province, Science 331, 1404–1409. Our summary: soil carbonates between the province’s lavas in the Newark Basin show CO₂ rising from about 2,000 to about 4,400 ppm after the first lavas, then falling back over 300,000 years, a pattern repeated after the next two",
     "url": "https://doi.org/10.1126/science.1199011"
   },
+  "schaller2015": {
+    "name": "Schaller, Wright & Kent 2015",
+    "kind": "paper",
+    "cite": "Schaller, M. F., Wright, J. D. & Kent, D. V. (2015), A 30 Myr record of Late Triassic atmospheric pCO2 variation reflects a fundamental control of the carbon cycle by changes in continental weathering, GSA Bulletin 127(5–6), 661–671. Our summary: soil carbonates from the Newark rift basin give CO2 through the Late Triassic: near 4,500 ppm in the late Carnian, falling below about 2,000 ppm just before the Central Atlantic Magmatic Province erupted, as Pangaea's drift north brought more land into the humid tropics to weather; its table places the first Newark lava at 201.52 ± 0.034 million years ago, from Blackburn et al. (2013)",
+    "url": "https://doi.org/10.1130/B31107.1"
+  },
   "schiller2018": {
     "name": "Schiller et al. 2018",
     "kind": "paper",

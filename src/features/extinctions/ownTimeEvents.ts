@@ -25,6 +25,7 @@ import {
 } from './fumesModel';
 import { END_ORDOVICIAN, LATE_DEVONIAN } from './coldPhases';
 import { END_GUADALUPIAN } from './guadalupianPhases';
+import { CAMP_CARBON_DIOXIDE } from './campCarbonDioxide';
 import { LOSSES } from './losses';
 import { MEISHAN_TEMPERATURES } from './meishanTemperatures';
 import { END_PERMIAN } from './permianPhases';
@@ -122,6 +123,7 @@ const PROVINCES: readonly Province[] = [
       plusMinus: [0, 40 * KYR],
       says: 'The extinction as Blackburn et al. (2013) date it: 100,000 ± 40,000 years from 201.564 million years ago. On land, cyclostratigraphy gives it 20,000 to 40,000 years (Deenen et al. 2010); in the sea, ash beds date it between 201.51 ± 0.15 and 201.36 ± 0.17 million years ago (as Lindström et al. 2021 review).',
     },
+    proxy: CAMP_CARBON_DIOXIDE,
     drawn: `${SMOKE} a quarter more with each of its four pulses, spaced evenly over 600,000 years: an assumption.`,
     fuming: campFuming,
     cover: campCover,
