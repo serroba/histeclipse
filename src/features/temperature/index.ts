@@ -55,8 +55,11 @@ export const temperatureFeature = feature({
           temperature: layer.view(state, at),
           temperatureDrawn: layer.drawn(state, at),
         };
-        layer.show(state, at, moment.maPerSecond ?? null);
-        return chart.deep(state, fields);
+        // The measured warming in place of the models' maps, where it has the moment (#1283).
+        const measured = chart.deep(state, fields);
+        if (measured.surface === null) layer.show(state, at, moment.maPerSecond ?? null);
+        else context.temperatureMaps.setTemperature(measured.surface);
+        return measured.fields;
       },
     };
   },

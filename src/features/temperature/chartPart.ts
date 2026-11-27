@@ -16,12 +16,12 @@ import { maOfYear, yearOfMa } from '../../data/iceSheets';
 import type { PlayAxis } from '../../deepTime/playAxis';
 import type { StoryDate } from '../../deepTime/storyDate';
 import { roundMa } from '../../deepTime/scale';
-import { loadOnce } from '../../state/loadOnce';
+import { loadOnce, type LoadOnce } from '../../state/loadOnce';
 import type { ViewState } from '../../state/viewState';
 import type { TemperatureView } from '../../ui/temperatureLegend';
 import type { FeatureContext } from '../feature';
 import { holocenePanel, type HoloceneView } from './holocenePanel';
-import { createMeasured, MEASURED_NOTE } from './measured';
+import { createMeasured, MEASURED_NOTE, type Measured, type Surface } from './measured';
 
 /** The oldest moment the chart reaches, Ma: beyond, over the ice ages, it is not shown. */
 const CHART_REACHES_MA = 0.8;
@@ -58,6 +58,9 @@ const YEARS_FROM = 950;
 /** What the header says the globe shows while the measured warming colours it (#1283). */
 const MEASURED_WHAT = 'Industrial era · measured warming, 5-year mean';
 
+/** The header at today, off the chart, while the latest measured warming colours the globe. */
+const TODAY_MEASURED: StoryDate = { when: 'Today', what: 'Measured warming since 1850–1900' };
+
 export interface ChartPart {
   playAxis(state: ViewState): PlayAxis | null;
   /**
@@ -66,8 +69,14 @@ export interface ChartPart {
    */
   storyDate(): StoryDate | null;
   show(state: ViewState): void;
-  /** After the layer coloured the globe: the measured warming over it, and the note's words. */
-  deep(state: ViewState, fields: Fields): Fields;
+  /**
+   * Before the layer colours the globe: the measured warming to colour it by instead, if any,
+   * and the bar's fields saying so. Only one surface is set a frame: two would trade places.
+   */
+  deep(
+    state: ViewState,
+    fields: Fields,
+  ): { readonly fields: Fields; readonly surface: Surface | null };
 }
 
 /**
@@ -117,21 +126,55 @@ function chartAxis(showAt: (ma: number, drawOn: boolean) => void): PlayAxis {
   };
 }
 
-export function createChartPart(
-  context: FeatureContext<'temperatureMaps' | 'deepTime'>,
-): ChartPart {
-  const chart = loadOnce<HoloceneTemperature>({
+/**
+ * Today, off the ice ages' chart (#1289): Krapp et al.'s present set beside itself shows no
+ * change, so where the colours show the change, the latest measured warming colours the globe.
+ */
+function measuredNow(
+  state: ViewState,
+  fields: Fields,
+  measured: Measured,
+): { readonly surface: Surface | null; readonly today: boolean } {
+  const chart = measured.surface(state);
+  if (chart !== null || state.ma !== 0 || !fields.temperature.changing || chartShown(state)) {
+    return { surface: chart, today: false };
+  }
+  const surface = measured.latest();
+  return { surface, today: surface !== null };
+}
+
+/** The measured warming, fetched when first wanted: arrived, deep time draws again with it. */
+function measuredFor(context: FeatureContext<'temperatureMaps' | 'deepTime'>): Measured {
+  return createMeasured(
+    {
+      ...context,
+      prefetch: context.temperatureMaps.prefetch,
+      refresh: () => {
+        context.deepTime.again();
+      },
+    },
+    chartShown,
+  );
+}
+
+/** The chart's records, fetched once, the first time it is shown. */
+function chartLoad(context: FeatureContext<'temperatureMaps'>): LoadOnce<HoloceneTemperature> {
+  return loadOnce<HoloceneTemperature>({
     fetch: () =>
       loadHoloceneTemperature(`${context.base}data/holocene-temperature.json`, context.fetchJson),
     what: 'the temperature over 800,000 years',
     context,
   });
-  // From 1850 on the chart, the globe shows the measured warming (#1283).
-  const measured = createMeasured(
-    { ...context, prefetch: context.temperatureMaps.prefetch },
-    chartShown,
-  );
+}
+
+export function createChartPart(
+  context: FeatureContext<'temperatureMaps' | 'deepTime'>,
+): ChartPart {
+  const chart = chartLoad(context);
+  // From 1850 on the chart, and at today, the globe shows the measured warming (#1283, #1289).
+  const measured = measuredFor(context);
   let lastState: ViewState | null = null;
+  let todayLent = false;
   /** The measured warming on the globe, where the chart's year has it. */
   const paint = (): void => {
     const surface = lastState === null ? null : measured.surface(lastState);
@@ -192,15 +235,21 @@ export function createChartPart(
       const year = ma === 0 && data !== null ? latestYear(data).year : yearOfMa(ma ?? 0);
       panel(data === null || ma === null ? null : { data, year });
     },
-    storyDate: () => lender.date(),
+    storyDate: () => lender.date() ?? (todayLent ? TODAY_MEASURED : null),
     deep(state, fields) {
       lastState = state;
       // The header read before the bar: what it lends may have changed with the state.
       lender.check();
-      const surface = measured.surface(state);
-      if (surface === null) return fields;
-      context.temperatureMaps.setTemperature(surface);
-      return { ...fields, temperature: { ...fields.temperature, note: MEASURED_NOTE } };
+      const { surface, today } = measuredNow(state, fields, measured);
+      // Recorded before asking: deep time draws again at once, and would ask again.
+      const changed = today !== todayLent;
+      todayLent = today;
+      if (changed) context.deepTime.again();
+      if (surface === null) return { fields, surface };
+      return {
+        fields: { ...fields, temperature: { ...fields.temperature, note: MEASURED_NOTE } },
+        surface,
+      };
     },
   };
 }

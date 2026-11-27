@@ -79,4 +79,17 @@ describe('the measured warming on the ice-age globe, from 1850 on the chart (#12
     expect(MEASURED_NOTE).toContain('Berkeley Earth');
     expect(MEASURED_NOTE).toContain('1850–1900');
   });
+
+  it('gives the latest measured warming as today, once it has loaded (#1289)', async () => {
+    const { measured, refresh } = setUp(false);
+    expect(measured.latest()).toBeNull();
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    expect(measured.latest()).toMatchObject({
+      younger: '/data/warming/2024.png',
+      older: '/data/warming/2024.png',
+      change: true,
+    });
+  });
 });

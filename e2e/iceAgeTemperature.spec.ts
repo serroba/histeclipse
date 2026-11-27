@@ -101,3 +101,30 @@ test('playing the ice ages beside the temperature chart goes at its pace, on to 
   });
   expect(problems).toEqual([]);
 });
+
+test('at today on the 540 Myr scale, the globe shows the latest measured warming, and the header says so (#1289)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await test.step('Given today on the 540 Myr scale with Temperature on', async () => {
+    await page.goto('./?ma=0&scale=all&layers=temperature');
+    await globeRendered(page);
+  });
+  await test.step('Then the globe is hotter, measured, and the header names it', async () => {
+    await expect(page.getByTestId('globe')).toHaveAttribute(
+      'data-temperature',
+      /warming\/2024\.png/,
+    );
+    await expect(page.locator('.hud-date')).toHaveText('Today');
+    await expect(page.locator('.hud-detail')).toContainText('Measured warming since 1850–1900');
+    await showDeepDetails(page);
+    await expect(page.locator('.temperature-note')).toContainText('measured: Berkeley Earth');
+  });
+  await test.step('When they go a million years back, Then the models’ maps again', async () => {
+    await page.goto('./?ma=1&scale=all&layers=temperature');
+    await globeRendered(page);
+    await expect(page.getByTestId('globe')).not.toHaveAttribute('data-temperature', /warming/);
+    await expect(page.locator('.hud-detail')).not.toContainText('Measured warming');
+  });
+  expect(problems).toEqual([]);
+});
