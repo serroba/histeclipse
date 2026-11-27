@@ -5,6 +5,8 @@ import { collectProblems, expect, globeRendered, test } from './support';
 test('temperature records show side by side beside the globe, with the ozone hole’s panel under them @acceptance @mobile', async ({
   page,
 }) => {
+  // Two layers' data and their panels: up to 27 s on CI's busier runners (#1246).
+  test.slow();
   const problems = collectProblems(page);
   const records = page.getByRole('region', { name: 'Temperature records side by side' });
   await test.step('Given 2016 with Warming since 1850 and the ozone hole on', async () => {
