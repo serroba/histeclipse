@@ -177,14 +177,14 @@ describe('the temperature maps as a feature', () => {
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
     });
-    // The chart at 1950, deep time's present: the measured maps asked for.
+    // The chart at its latest year, today: the measured maps asked for.
     shown.show?.(today, 0);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalledTimes(2);
     });
     const fields = shown.deepBar?.(today, { ma: 0, scale: 'ice' });
     expect(setTemperature).toHaveBeenLastCalledWith(
-      expect.objectContaining({ younger: '/data/warming/1950.png', change: true }),
+      expect.objectContaining({ younger: '/data/warming/2024.png', change: true }),
     );
     expect(fields?.temperature?.note).toContain('Berkeley Earth');
     // 20,000 years ago: Krapp et al.'s maps, and their own note.
@@ -196,5 +196,21 @@ describe('the temperature maps as a feature', () => {
       expect.objectContaining({ younger: expect.stringContaining('warming') as unknown }),
     );
     expect(then?.temperature?.note ?? '').not.toContain('Berkeley Earth');
+  });
+
+  it('at today, the chart at its latest year, which the header reads (#1285)', async () => {
+    const { context, panels, refresh, again } = fakeContext();
+    const shown = temperatureFeature.mount(context, context);
+    const today: ViewState = { ...on, ma: 0, deepScale: 'ice' };
+    shown.show?.(today, 0);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    shown.show?.(today, 0);
+    shown.deepBar?.(today, { ma: 0, scale: 'ice' });
+    const latest = (panels.at(-1) as { year: number }).year;
+    expect(latest).toBeGreaterThanOrEqual(2024);
+    expect(shown.storyDate?.()?.when).toBe(String(latest));
+    expect(again).toHaveBeenCalled();
   });
 });

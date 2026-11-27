@@ -12,6 +12,7 @@
  */
 
 import type { PlayAxis } from '../deepTime/playAxis';
+import type { StoryDate } from '../deepTime/storyDate';
 import type { Pace } from '../deepTime/playSpeed';
 import type { Fetch } from '../util/fetchJson';
 import type { Globe } from '../globe/globe';
@@ -253,6 +254,11 @@ export interface FeatureInstance {
    * temperature chart's pace over the ice ages; null while it does not.
    */
   playAxis?(state: ViewState): PlayAxis | null;
+  /**
+   * Deep time (#1285): a date it lends the header and bar, finer than the moment the view keeps,
+   * such as the temperature chart's year through the last thousand years; null while it has none.
+   */
+  storyDate?(): StoryDate | null;
   /** One of its markers was tapped: all that follows `<picks>:` in the marker's pick. */
   pick?(id: string): void;
   /** Another marker was tapped: a card of this feature's still loading should not open. */

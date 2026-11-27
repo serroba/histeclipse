@@ -92,6 +92,12 @@ describe('the features as mounted together', () => {
     expect(features.playAxis(base)).toBe(axis);
   });
 
+  it('lends the header a feature’s date where no clock of its own lends one (#1285)', () => {
+    expect(features.storyDate()).toBeNull();
+    Object.assign(fossils.shown, { storyDate: () => ({ when: '1943', what: null }) });
+    expect(features.storyDate()).toEqual({ when: '1943', what: null });
+  });
+
   it('gathers the step each offers from its row in the Layers panel, or none', () => {
     const actions = new Map(features.actions());
     expect(actions.get('fossils')?.label).toBe('Go');
