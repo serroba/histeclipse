@@ -6,6 +6,8 @@ import { ownTimeOf } from './ownTimeEvents';
 
 const DATA = sites as ExtinctionSites;
 
+const KYR = 1000 * 365.25 * 86_400;
+
 describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
   it('are all six: the end-Cretaceous, the three volcanic provinces and the two of the seas', () => {
     expect(ownTimeOf(DATA, 'k-pg-extinction', 66)?.key).toBe('Chicxulub');
@@ -51,7 +53,9 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
       strikes,
       layer: () => ({ update }),
     } as unknown as Parameters<NonNullable<typeof event>['play']>[0]);
-    expect(strikes.flyTo).toHaveBeenCalledTimes(1);
+    // The camera is the guide's, as the clock plays (#1266): one view, from a little south.
+    expect(strikes.flyTo).not.toHaveBeenCalled();
+    expect(event?.views).toHaveLength(1);
     played?.at(0);
     expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ spread: 4 }));
     played?.end();
@@ -59,6 +63,16 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     expect(event?.offer).toBe('Watch the end-Guadalupian in its own time');
     expect(event?.scale.marks[0]?.[1]).toBe('Before');
     expect(ownTimeOf(DATA, 'end-triassic-extinction', 201.5)?.scale.marks[0]?.[1]).toBe('Rifting');
+  });
+
+  it('guide the camera from the traps to Meishan, then out to the world (#1266)', () => {
+    const views = ownTimeOf(DATA, 'end-permian-extinction', 251.9)?.views ?? [];
+    expect(views.map((view) => view.distance)).toEqual([2.3, 2.3, 4.5]);
+    expect(views.map((view) => view.from)).toEqual([-Infinity, 2 * KYR, 75 * KYR]);
+    const triassic = ownTimeOf(DATA, 'end-triassic-extinction', 201.5)?.views ?? [];
+    expect(triassic).toHaveLength(3);
+    const [, meishan] = views;
+    expect(meishan?.place).not.toEqual(views[0]?.place);
   });
 
   it('draw a crisis of the seas with the clock, and take it away when closed', () => {

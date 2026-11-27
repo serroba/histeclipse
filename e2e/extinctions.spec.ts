@@ -69,6 +69,8 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await expect(page.locator('.hud-detail')).toContainText('Triassic');
     // And the gauge has fallen by what Stanley (2016) estimates was lost (#1223).
     await expect(clock.locator('.loss-gauge-label')).toHaveText('Marine genera left: 38%');
+    // The camera has drawn out to see the traps and Meishan on one side of the world (#1266).
+    await expect(globe).toHaveAttribute('data-distance', '4.50');
   });
   await test.step('When they close it, the fumes go', async () => {
     await clock.getByRole('button', { name: 'Close' }).click();

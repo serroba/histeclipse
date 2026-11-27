@@ -49,13 +49,19 @@ function service(pace: 'slow' | 'normal' = 'slow', playing = true) {
   const hold = vi.fn(() => playing);
   const resume = vi.fn();
   const refresh = vi.fn();
+  const strikes = {
+    on: document.createElement('div'),
+    setInsets: vi.fn(),
+    flyTo: vi.fn(),
+    zoomTo: vi.fn(),
+  };
   const context = {
     globe: { addLayer },
     refresh,
     change: (next: (state: ViewState) => ViewState) => {
       view = next(view);
     },
-    strikes: { on: document.createElement('div') },
+    strikes,
     deepTime: { hold, resume, pace: () => pace },
     overPage: {
       add: (element: HTMLElement) => {
@@ -69,6 +75,7 @@ function service(pace: 'slow' | 'normal' = 'slow', playing = true) {
     hold,
     resume,
     refresh,
+    strikes,
     view: () => view,
   };
 }
@@ -97,6 +104,31 @@ describe('events in their own time (#1191)', () => {
     expect(resume).toHaveBeenCalledTimes(1);
     // Closed, it can be reached again.
     expect(own.arrive(chicxulub.made, 66)).toBe('clock');
+  });
+
+  it('guides the camera as its clock plays, the globe kept clear of the clock beside it (#1266)', () => {
+    const { own, strikes } = service('slow');
+    const place = { latitude: 60, longitude: 90 };
+    const box = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({ left: window.innerWidth - 400, width: 384 } as DOMRect);
+    own.watch(
+      { ...event('end-Permian', layer).made, views: [{ from: 0, place, distance: 2 }] },
+      252,
+    );
+    expect(strikes.flyTo).toHaveBeenCalledWith(place);
+    expect(strikes.zoomTo).toHaveBeenCalledWith(2);
+    window.dispatchEvent(new Event('resize'));
+    expect(strikes.setInsets).toHaveBeenLastCalledWith({ right: 400 });
+    // Across the page's foot, as on a phone: not beside it.
+    box.mockReturnValue({ left: 16, width: 300 } as DOMRect);
+    window.dispatchEvent(new Event('resize'));
+    expect(strikes.setInsets).toHaveBeenLastCalledWith({ right: 0 });
+    box.mockReturnValue({ left: window.innerWidth - 400, width: 384 } as DOMRect);
+    window.dispatchEvent(new Event('resize'));
+    close();
+    expect(strikes.setInsets).toHaveBeenLastCalledWith({ right: 0 });
+    box.mockRestore();
   });
 
   it('lends the header the moment its clock is at, from its own zero, while it is open (#1222)', () => {
