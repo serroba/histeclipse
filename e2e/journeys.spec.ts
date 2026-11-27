@@ -222,6 +222,8 @@ test('a link to a destination opens its view, and the link keeps naming it (#726
 });
 
 test('a historian follows the eclipses seen from one empire @acceptance', async ({ page }) => {
+  // Two loads of the eclipses and the empires: up to 29 s on CI's busier runners (#1246).
+  test.slow();
   const problems = collectProblems(page);
   const seen = page.getByLabel('Eclipses seen from', { exact: true });
   await test.step('Given the globe in 763 BCE', async () => {

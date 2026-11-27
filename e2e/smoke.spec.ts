@@ -453,6 +453,8 @@ test('Back and Forward restore the eclipse and view @acceptance @mobile', async 
 });
 
 test('Back restores the rendered camera after zooming an eclipse @acceptance', async ({ page }) => {
+  // A zoom in and back out, each waited for in rendered frames: up to 29 s on CI (#1246).
+  test.slow();
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');
   await page.goto('./?t=2024-04-08T18:17&cam=0,0,4.5&layers=eclipses');
