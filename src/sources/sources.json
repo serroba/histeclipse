@@ -131,6 +131,13 @@
     "cite": "Atwood, W. B., Abdo, A. A., Ackermann, M., et al. (2009), The Large Area Telescope on the Fermi Gamma-Ray Space Telescope Mission, The Astrophysical Journal 697, 1071 (doi:10.1088/0004-637X/697/2/1071), with the Fermi Technical Handbook and NASA SVS: the craft 2.8 m tall and 2.5 m across as launched, 15 m wide with its arrays out, the LAT 1.8 m square on top. The LAT’s design and performance",
     "url": "https://doi.org/10.1088/0004-637X/697/2/1071"
   },
+  "augland2019": {
+    "name": "Augland et al. 2019",
+    "kind": "paper",
+    "cite": "Augland, L. E., Ryabov, V. V., Vernikovsky, V. A., Planke, S., et al. (2019), The main pulse of the Siberian Traps expanded in size and composition, Scientific Reports 9, 18723. Our summary: uranium–lead dates on intrusions in Taimyr show them formed in the main pulse of the Siberian Traps, with the extinction, adding some 300,000 km² north of Norilsk to its area and felsic magma to its kinds; the province's greatest extent, Taimyr and the West Siberian basin included, has been estimated at about 5 million km²",
+    "url": "https://doi.org/10.1038/s41598-019-54023-2",
+    "licence": "CC BY 4.0"
+  },
   "bahcall2005": {
     "name": "Bahcall et al. 2005",
     "kind": "paper",
@@ -1451,6 +1458,12 @@
     "url": "https://doi.org/10.1038/s41597-021-01009-3",
     "licence": "CC BY 4.0"
   },
+  "kravchinsky2012": {
+    "name": "Kravchinsky 2012",
+    "kind": "paper",
+    "cite": "Kravchinsky, V. A. (2012), Paleozoic large igneous provinces of Northern Eurasia: correlation with mass extinction events, Global and Planetary Change 86–87, 31–36. Our summary: the large igneous provinces of northern Eurasia, among them the Viluy, Siberian and Emeishan traps, set against the mass extinctions, with a table of their estimated areas and volumes from earlier studies",
+    "url": "https://doi.org/10.1016/j.gloplacha.2012.01.007"
+  },
   "kringDurda2002": {
     "name": "Kring & Durda 2002",
     "kind": "paper",
@@ -2271,6 +2284,12 @@
     "url": "https://doi.org/10.5281/zenodo.4589727",
     "licence": "CC BY 4.0"
   },
+  "reichow2009": {
+    "name": "Reichow et al. 2009",
+    "kind": "paper",
+    "cite": "Reichow, M. K., Pringle, M. S., Al'Mukhamedov, A. I., Allen, M. B., et al. (2009), The timing and extent of the eruption of the Siberian Traps large igneous province: implications for the end-Permian environmental crisis, Earth and Planetary Science Letters 277, 9–20. Our summary: argon–argon dates on basalts buried under the West Siberian Basin match those of the traps, so the province's main pulse covered up to 5 million km², about twice the some 2.5 million km² of outcrops on the Siberian craton",
+    "url": "https://doi.org/10.1016/j.epsl.2008.09.030"
+  },
   "riahi2017": {
     "name": "Riahi et al. 2017",
     "kind": "paper",
@@ -2438,6 +2457,12 @@
     "kind": "paper",
     "cite": "Shellnutt, J. G. (2014), The Emeishan large igneous province: A synthesis, Geoscience Frontiers 5, 369–394. Our summary: a review of the province, some 300,000 km² on the western Yangtze Block and in Tibet and Vietnam, contemporaneous with the late Capitanian extinction about 260 million years ago, its eruptions within three million years at most",
     "url": "https://doi.org/10.1016/j.gsf.2013.07.003"
+  },
+  "shellnutt2015": {
+    "name": "Shellnutt 2015",
+    "kind": "paper",
+    "cite": "Shellnutt, J. G. (2015), Igneous Rock Associations 16. The Late Permian Emeishan Large Igneous Province, Geoscience Canada 42, 169–180. Our summary: a review of the Emeishan province of southwest China and northern Vietnam, covering at least 300,000 km², its age, its rocks and its link with the end-Guadalupian extinction",
+    "url": "https://doi.org/10.12789/geocanj.2014.41.060"
   },
   "siegel2019": {
     "name": "Siegel et al. 2019, collapsars as a source of r-process elements",
@@ -2631,6 +2656,12 @@
     "url": "https://doi.org/10.1017/RDC.2020.22",
     "licence": "CC BY 4.0"
   },
+  "vermaKhosla2019": {
+    "name": "Verma & Khosla 2019",
+    "kind": "paper",
+    "cite": "Verma, O. & Khosla, A. (2019), Developments in the stratigraphy of the Deccan Volcanic Province, peninsular India, Comptes Rendus Géoscience 351, 461–476. Our summary: a review of the Deccan's lava flows and their dating; the province covers some 500,000 km² of India today, and estimates of its first extent range from 1 to 2.6 million km², estimates it calls highly speculative",
+    "url": "https://doi.org/10.1016/j.crte.2019.10.002"
+  },
   "vikingMap": {
     "name": "Viking colour mosaic of Mars",
     "kind": "imagery",
@@ -2767,5 +2798,11 @@
     "kind": "paper",
     "cite": "Zhao et al. (2002), Review of global 2.1–1.8 Ga orogens: implications for a pre-Rodinia supercontinent, Earth-Science Reviews 59, 125–162",
     "url": "https://doi.org/10.1016/S0012-8252(02)00073-9"
+  },
+  "zi2010": {
+    "name": "Zi et al. 2010",
+    "kind": "paper",
+    "cite": "Zi, J.-W., Fan, W.-M., Wang, Y.-J., Cawood, P. A., et al. (2010), U-Pb geochronology and geochemistry of the Dashibao basalts in the Songpan-Ganzi Terrane, SW China, with implications for the age of Emeishan volcanism, American Journal of Science 310, 1054–1080. Our summary: zircon dates tie basalts north of the Emeishan province to it; the province's first size is hard to estimate after its disruption and erosion, but its main outcrops cover some 250,000 km²",
+    "url": "https://doi.org/10.2475/09.2010.11"
   }
 }

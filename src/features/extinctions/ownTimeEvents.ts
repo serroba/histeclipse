@@ -31,6 +31,7 @@ import { factsAt, KEY_FACTS, type KeyFact } from './keyFacts';
 import { PROVINCE_LEGEND, seasLegend } from './legends';
 import { LOSSES } from './losses';
 import { MEISHAN_TEMPERATURES } from './meishanTemperatures';
+import { EXTENTS } from './provinceExtents';
 import { PERMIAN_CARBON_DIOXIDE } from './permianCarbonDioxide';
 import { END_PERMIAN } from './permianPhases';
 import { seasLayer } from './seasLayer';
@@ -102,7 +103,7 @@ const PROVINCES: readonly Province[] = [
     name: 'the end-Permian',
     phases: END_PERMIAN,
     sites: ['siberian-traps'],
-    spread: 9,
+    spread: EXTENTS.siberian.spread,
     start: [-300 * KYR, 'Lavas'],
     dated: {
       from: 0,
@@ -119,7 +120,7 @@ const PROVINCES: readonly Province[] = [
       [2 * KYR, ['meishan'], PROVINCE_DISTANCE],
       [75 * KYR, ['siberian-traps', 'meishan'], WORLD_DISTANCE],
     ],
-    drawn: `${SMOKE} as far as the share erupted by then: two thirds before and during the extinction.`,
+    drawn: `${SMOKE} as far as the share erupted by then: two thirds before and during the extinction. ${EXTENTS.siberian.says}`,
     fuming: siberianFuming,
     cover: siberianCover,
   },
@@ -129,7 +130,7 @@ const PROVINCES: readonly Province[] = [
     phases: END_TRIASSIC,
     // Its lavas, now on four continents, lay together in the middle of Pangaea.
     sites: ['camp-palisades', 'camp-morocco'],
-    spread: 14,
+    spread: EXTENTS.camp.spread,
     // Not the intrusions, 100,000 years before: their mark would sit on the extinction's.
     start: [-400 * KYR, 'Rifting'],
     // Its start with the earliest lavas (Blackburn et al. 2013).
@@ -148,7 +149,7 @@ const PROVINCES: readonly Province[] = [
       [30 * KYR, ['kuhjoch', 'st-audries-bay'], PROVINCE_DISTANCE],
       [150 * KYR, ['camp-palisades', 'camp-morocco', 'kuhjoch'], WORLD_DISTANCE],
     ],
-    drawn: `${SMOKE} a quarter more with each of its four pulses, spaced evenly over 600,000 years: an assumption.`,
+    drawn: `${SMOKE} a quarter more with each of its four pulses, spaced evenly over 600,000 years: an assumption. ${EXTENTS.camp.says}`,
     fuming: campFuming,
     cover: campCover,
   },
@@ -157,10 +158,10 @@ const PROVINCES: readonly Province[] = [
     name: 'the end-Guadalupian',
     phases: END_GUADALUPIAN,
     sites: ['emeishan-traps'],
-    spread: 4,
+    spread: EXTENTS.emeishan.spread,
     start: [-400 * KYR, 'Before'],
     zero: 259.8,
-    drawn: `${SMOKE} mostly in its first million years; how it spread is drawn, not measured.`,
+    drawn: `${SMOKE} mostly in its first million years; how it spread is drawn, not measured. ${EXTENTS.emeishan.says}`,
     fuming: emeishanFuming,
     cover: emeishanCover,
   },
@@ -354,9 +355,6 @@ function drawnOf(data: ExtinctionSites, id: string, ma: number): OwnTimeEvent | 
   return facing(deccan === null ? strike : withDeccan(strike, deccan), place, STRIKE_DISTANCE);
 }
 
-/** How far the Deccan Traps' vents spread, degrees: drawn to cover the province, not measured. */
-const DECCAN_SPREAD = 7;
-
 /**
  * Chicxulub's strike with the Deccan Traps fuming beside it (#1206), the end-Cretaceous's two
  * causes on one clock: it outranks the strike alone, so it takes the clock over when Impacts and
@@ -366,8 +364,7 @@ function withDeccan(strike: OwnTimeEvent, deccan: GeoPoint): OwnTimeEvent {
   return {
     ...strike,
     rank: 1,
-    drawn:
-      'The Deccan Traps’ smoke and lava are drawn to illustrate, not measured, and held steady through the million years: whether most erupted before or after the impact is argued.',
+    drawn: `The Deccan Traps’ smoke and lava are drawn to illustrate, not measured, and held steady through the million years: whether most erupted before or after the impact is argued. ${EXTENTS.deccan.says}`,
     play(tools) {
       const struck = strike.play(tools);
       const fumes = tools.layer(fumesLayer);
@@ -376,7 +373,7 @@ function withDeccan(strike: OwnTimeEvent, deccan: GeoPoint): OwnTimeEvent {
           struck.at(seconds);
           fumes.update({
             center: deccan,
-            spread: DECCAN_SPREAD,
+            spread: EXTENTS.deccan.spread,
             fuming: deccanFuming(seconds),
             cover: deccanCover(),
           });
