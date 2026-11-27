@@ -10,14 +10,8 @@ import { CRISIS_SCALE, LONG_CRISIS_SCALE } from '../../deepTime/crisisClock';
 import { siteThen, type ExtinctionSites } from '../../data/extinctions';
 import type { GeoPoint } from '../../core/geo';
 import { impactPlay, strikeEvent, strikePhasesOf } from '../impacts';
-import type {
-  DatedWindow,
-  EventPhase,
-  GuideView,
-  LegendItem,
-  OwnTimeEvent,
-  ProxyChart,
-} from '../ownTime';
+import type { DatedWindow, EventPhase, GuideView, OwnTimeEvent, ProxyChart } from '../ownTime';
+import { factsLayer, type PinnedFact } from './factsLayer';
 import { fumesLayer } from './fumesLayer';
 import {
   campCover,
@@ -33,6 +27,8 @@ import {
 import { END_ORDOVICIAN, LATE_DEVONIAN } from './coldPhases';
 import { END_GUADALUPIAN } from './guadalupianPhases';
 import { CAMP_CARBON_DIOXIDE } from './campCarbonDioxide';
+import { factsAt, KEY_FACTS, type KeyFact } from './keyFacts';
+import { PROVINCE_LEGEND, seasLegend } from './legends';
 import { LOSSES } from './losses';
 import { MEISHAN_TEMPERATURES } from './meishanTemperatures';
 import { PERMIAN_CARBON_DIOXIDE } from './permianCarbonDioxide';
@@ -95,14 +91,6 @@ interface Province {
 const KYR = 1000 * 365.25 * 86_400;
 
 /** What every volcanic province's drawing is, before what it assumes (#1226). */
-/** A province's marks and colours (#1268). */
-const PROVINCE_LEGEND: readonly LegendItem[] = [
-  ['cause', 'The lava province'],
-  ['record', 'Where the extinction is dated'],
-  ['smoke', 'Smoke, darker with gas from the sills'],
-  ['lava', 'Lava flowing'],
-  ['basalt', 'Lava cooled to basalt'],
-];
 
 const SMOKE =
   'Drawn to illustrate, not measured: smoke over vents spread across the province, and the lava, glowing red at its front and dark basalt behind,';
@@ -179,7 +167,11 @@ const PROVINCES: readonly Province[] = [
 ];
 
 /** A province fuming at `center` on the crisis clock. */
-function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
+function provinceEvent(
+  province: Province,
+  center: GeoPoint,
+  facts: readonly (KeyFact & { readonly point: GeoPoint })[],
+): OwnTimeEvent {
   return {
     key: province.key,
     title: `${capitalised(province.name)}, in its own time`,
@@ -196,6 +188,7 @@ function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
     ma: province.zero,
     play(tools) {
       const fumes = tools.layer(fumesLayer);
+      const pinned = tools.layer(factsLayer);
       return {
         at(seconds) {
           fumes.update({
@@ -204,12 +197,26 @@ function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
             fuming: province.fuming(seconds),
             cover: province.cover(seconds),
           });
+          pinned.update(factsAt(facts, seconds).map(pinnedOf));
         },
         end() {
           fumes.update(null);
+          pinned.update(null);
         },
       };
     },
+  };
+}
+
+/** A fact as pinned on the globe (#1268): its place, its words, whose. */
+function pinnedOf(
+  fact: KeyFact & { readonly point: GeoPoint; readonly whose: string },
+): PinnedFact {
+  return {
+    id: `${fact.site}@${String(fact.from)}`,
+    point: fact.point,
+    text: fact.text,
+    source: fact.whose,
   };
 }
 
@@ -270,12 +277,7 @@ function coldEvent(crisis: ColdCrisis, ice: GeoPoint | null, anoxia: GeoPoint): 
     offer: `Watch ${crisis.name} in its own time`,
     ma: crisis.zero,
     drawn: crisis.drawn,
-    legend: [
-      ['cause', ice === null ? 'A possible cause' : 'The ice sheet’s place'],
-      ['record', 'Where the extinction is dated'],
-      ...(ice === null ? [] : [['ice', 'The ice sheet’s reach'] as const]),
-      ['anoxia', 'Oxygen-poor water'],
-    ],
+    legend: seasLegend(ice !== null),
     play(tools) {
       const seas = tools.layer(seasLayer);
       return {
@@ -337,7 +339,11 @@ function drawnOf(data: ExtinctionSites, id: string, ma: number): OwnTimeEvent | 
       const place = middleOf(sites.flatMap((site) => placeOf(data, site, ma) ?? []));
       return place === null ? [] : [{ from: at, place, distance }];
     });
-    return guided(provinceEvent(province, center), [first, ...tour]);
+    const facts = (KEY_FACTS[id] ?? []).flatMap((each) => {
+      const point = placeOf(data, each.site, ma);
+      return point === null ? [] : [{ ...each, point }];
+    });
+    return guided(provinceEvent(province, center, facts), [first, ...tour]);
   }
   const phases = strikePhasesOf('Chicxulub');
   if (id !== 'k-pg-extinction' || phases === null) return null;

@@ -57,7 +57,7 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     expect(strikes.flyTo).not.toHaveBeenCalled();
     expect(event?.views).toHaveLength(1);
     played?.at(0);
-    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ spread: 4 }));
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ spread: 4 }));
     played?.end();
     expect(update).toHaveBeenLastCalledWith(null);
     expect(event?.offer).toBe('Watch the end-Guadalupian in its own time');
@@ -85,6 +85,26 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     ]);
     expect(ownTimeOf(DATA, 'end-triassic-extinction', 201.5)?.lingers).toHaveLength(4);
     expect(ownTimeOf(DATA, 'end-guadalupian-extinction', 259.8)?.lingers).toEqual([]);
+  });
+
+  it('pin the end-Permian’s key facts at their places as its clock reaches them (#1268)', () => {
+    const event = ownTimeOf(DATA, 'end-permian-extinction', 251.9);
+    const update = vi.fn();
+    const played = event?.play({
+      strikes: { flyTo: vi.fn(), zoomTo: vi.fn() },
+      layer: () => ({ update }),
+    } as unknown as Parameters<NonNullable<typeof event>['play']>[0]);
+    const pinned = () =>
+      update.mock.calls.map(([input]: unknown[]) => input).findLast(Array.isArray) as
+        readonly { text: string; source: string }[] | undefined;
+    played?.at(-500 * KYR);
+    expect(pinned()).toEqual([]);
+    played?.at(10 * KYR);
+    expect(pinned()?.map((each) => each.source)).toEqual(['Burgess & Bowring 2015; Stanley 2016']);
+    played?.at(100 * KYR);
+    expect(pinned()?.[0]?.text).toContain('sixfold');
+    played?.end();
+    expect(update).toHaveBeenLastCalledWith(null);
   });
 
   it('key each clock’s marks and colours: no ice where there was none (#1268)', () => {

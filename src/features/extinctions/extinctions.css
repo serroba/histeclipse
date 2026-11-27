@@ -35,3 +35,35 @@
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
+
+/* A key fact pinned beside its place as the clock reaches it (#1268): readable, and whose. */
+.empire-label.extinction-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 220px;
+  margin-left: 14px;
+  padding: 6px 9px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: rgb(10 16 32 / 0.85);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: normal;
+  pointer-events: none;
+}
+
+.extinction-fact-source {
+  color: var(--ink-muted);
+  font-size: 10.5px;
+}
+
+@media (max-width: 600px) {
+  .empire-label.extinction-fact {
+    max-width: 170px;
+    font-size: 11px;
+  }
+}

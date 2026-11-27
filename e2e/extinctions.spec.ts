@@ -61,6 +61,8 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     const slider = clock.getByRole('slider');
     await slider.fill('4.1');
     await expect(clock.locator('.strike-clock-phase')).toHaveText('The Great Dying');
+    // And what was lost, pinned at Meishan with whose count it is (#1268).
+    await expect(page.locator('.extinction-fact')).toContainText('81% by Stanley’s count');
     await expect(clock.locator('.strike-clock-sources a').first()).toHaveAttribute(
       'href',
       /^https:\/\/doi\.org\/10\./,
