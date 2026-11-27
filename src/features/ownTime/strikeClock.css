@@ -97,6 +97,21 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Said while play lingers at a key moment: the pace, not the events, has slowed (#1267). */
+.strike-clock-slowed {
+  align-self: flex-start;
+  margin: 0;
+  padding: 1px 8px;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  border-radius: 10px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.strike-clock:not([data-playing='true']) .strike-clock-slowed {
+  display: none;
+}
+
 @media (max-width: 600px) {
   .strike-clock-when {
     font-size: 18px;

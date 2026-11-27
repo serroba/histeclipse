@@ -84,6 +84,8 @@ export interface OwnTimeEvent {
   readonly loss?: LossGauge;
   /** Measured records, drawn above its clock's slider (#1229). */
   readonly proxies?: readonly ProxyChart[];
+  /** Its key moments, seconds since it: its clock's play lingers there to be read (#1267). */
+  readonly lingers?: readonly number[];
   /** Where the camera looks as its clock plays, turned back there when left alone (#1266). */
   readonly views?: readonly GuideView[];
   /**
@@ -215,9 +217,11 @@ function marked(event: OwnTimeEvent): {
   drawn?: string;
   loss?: LossGauge;
   proxies?: readonly ProxyChart[];
+  lingers?: readonly number[];
 } {
   return {
     ...(event.proxies === undefined ? {} : { proxies: event.proxies }),
+    ...(event.lingers === undefined ? {} : { lingers: event.lingers }),
     ...(event.dated === undefined ? {} : { dated: event.dated }),
     ...(event.drawn === undefined ? {} : { drawn: event.drawn }),
     ...(event.loss === undefined ? {} : { loss: event.loss }),

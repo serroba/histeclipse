@@ -12,6 +12,7 @@ import { DEFAULT_PACE, PACE_LABELS, PACES, type Pace } from '../../deepTime/play
 import { element } from '../../ui/dom';
 import { setText } from '../../util/pageWrites';
 import { createTransport, type Transport } from '../../ui/transport';
+import { createLinger, type Linger } from './linger';
 import { lossView, type LossGauge, type LossView } from './lossGauge';
 import { phaseAt, type EventPhase } from './phases';
 import { proxyView, type ProxyChart, type ProxyView } from './proxyChart';
@@ -44,6 +45,8 @@ export interface StrikeClockOptions {
   readonly loss?: LossGauge;
   /** Measured records, drawn above the slider on its scale (#1229). */
   readonly proxies?: readonly ProxyChart[];
+  /** Its key moments, seconds since the event: play lingers there to be read (#1267). */
+  readonly lingers?: readonly number[];
   /** The moment changed: `seconds` since the event. */
   onMoment(seconds: number): void;
   /** The reader closed it. */
@@ -65,6 +68,10 @@ export interface StrikeClock {
 interface ClockView {
   readonly root: HTMLElement;
   readonly when: HTMLElement;
+  /** Said while play lingers at a key moment (#1267). */
+  readonly slowed: HTMLElement;
+  /** Where play lingers: its key moments (#1267). */
+  readonly linger: Linger;
   readonly phaseTitle: HTMLElement;
   readonly phaseText: HTMLElement;
   readonly sources: HTMLElement;
@@ -124,7 +131,8 @@ function clockView(
     drawn,
     loss: gauge,
     proxies = [],
-  }: Pick<StrikeClockOptions, 'title' | 'dated' | 'drawn' | 'loss' | 'proxies'>,
+    lingers = [],
+  }: Pick<StrikeClockOptions, 'title' | 'dated' | 'drawn' | 'loss' | 'proxies' | 'lingers'>,
   scale: ClockScale,
   transport: Transport,
 ): ClockView {
@@ -154,6 +162,7 @@ function clockView(
   const foldButton = element('button', { type: 'button', class: 'strike-clock-fold' }, 'Less');
   const view = {
     when: element('p', { class: 'strike-clock-when', 'aria-live': 'polite' }),
+    slowed: element('p', { class: 'strike-clock-slowed', hidden: '' }, 'Slowed to read'),
     phaseTitle: element('h3', { class: 'strike-clock-phase' }),
     phaseText: element('p', { class: 'strike-clock-text' }),
     sources: element('p', { class: 'strike-clock-sources' }),
@@ -163,6 +172,7 @@ function clockView(
     { class: 'strike-clock', role: 'dialog', 'aria-label': title, hidden: '' },
     element('header', {}, element('h2', {}, title), foldButton, closeButton),
     view.when,
+    view.slowed,
     view.phaseTitle,
     view.phaseText,
     view.sources,
@@ -180,7 +190,8 @@ function clockView(
     ...(drawn === undefined ? [] : [element('p', { class: 'strike-clock-drawn' }, drawn)]),
     element('div', { class: 'strike-clock-controls' }, transport.play, speed),
   );
-  const made = { root, speed, closeButton, foldButton, loss, proxy, ...view };
+  const linger = createLinger(lingers.map((seconds) => scale.positionAt(seconds)));
+  const made = { root, speed, closeButton, foldButton, loss, proxy, linger, ...view };
   foldable(made);
   return made;
 }
@@ -213,6 +224,30 @@ function showMoment(
       element('a', { href: source.url, target: '_blank', rel: 'noopener' }, source.name),
     ]),
   );
+}
+
+/** Say, or stop saying, that play has slowed to read (#1267): written only when it changes. */
+function slowed(view: Pick<ClockView, 'slowed'>, now: boolean): void {
+  if (view.slowed.hidden === now) view.slowed.hidden = !now;
+}
+
+/**
+ * How far play moves from `position` in `seconds` at `pace`: at the scale's own pace there
+ * (Chicxulub's slower over the approach, faster once the sky has cleared; #1187), lingering at
+ * its key moments to be read, and saying so (#1267).
+ */
+function playedOn(
+  view: Pick<ClockView, 'slowed' | 'linger'>,
+  scale: ClockScale,
+  [pace, seconds, position]: readonly [Pace, number, number],
+): number {
+  const { delta, lingering } = view.linger.step(
+    position,
+    scale.advance(pace, seconds, position),
+    seconds,
+  );
+  slowed(view, lingering);
+  return delta;
 }
 
 export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
@@ -261,9 +296,7 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
     // A late frame moves it on by at most a fifth of a second: a hitch pauses it, never skips.
     const seconds = last === null ? 0 : Math.min(0.2, (now - last) / 1000);
     last = now;
-    // At the scale's own pace there: Chicxulub's slower over the approach, faster once the sky
-    // has cleared (#1187).
-    moveTo(position + scale.advance(speed.value as Pace, seconds, position));
+    moveTo(position + playedOn(view, scale, [speed.value as Pace, seconds, position]));
     if (position >= scale.end) {
       stop();
       if (options.closeAtEnd === true) close();

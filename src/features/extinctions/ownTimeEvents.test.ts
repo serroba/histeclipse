@@ -75,6 +75,18 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     expect(meishan?.place).not.toEqual(views[0]?.place);
   });
 
+  it('linger at the end-Permian’s and end-Triassic’s key moments (#1267)', () => {
+    expect(ownTimeOf(DATA, 'end-permian-extinction', 251.9)?.lingers).toEqual([
+      -300 * KYR,
+      0,
+      2 * KYR,
+      75 * KYR,
+      5000 * KYR,
+    ]);
+    expect(ownTimeOf(DATA, 'end-triassic-extinction', 201.5)?.lingers).toHaveLength(4);
+    expect(ownTimeOf(DATA, 'end-guadalupian-extinction', 259.8)?.lingers).toEqual([]);
+  });
+
   it('draw a crisis of the seas with the clock, and take it away when closed', () => {
     const event = ownTimeOf(DATA, 'end-ordovician-extinction', 444);
     const update = vi.fn();
