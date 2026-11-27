@@ -288,6 +288,23 @@ describe('the strike clock’s panel (#1173)', () => {
     expect(moments.at(-1)).toBeGreaterThan(0);
   });
 
+  it('keys its marks and colours on the globe, where it has any (#1268)', () => {
+    expect(clock().made.root.querySelector('.strike-clock-legend')).toBeNull();
+    const made = createStrikeClock({
+      title: 'The end-Permian, in its own time',
+      phases: PHASES,
+      legend: [
+        ['cause', 'The lava province'],
+        ['lava', 'Lava flowing'],
+      ],
+      onMoment: vi.fn(),
+      onClose: vi.fn(),
+    });
+    const items = [...made.root.querySelectorAll('.strike-clock-legend li')];
+    expect(items.map((each) => each.textContent)).toEqual(['The lava province', 'Lava flowing']);
+    expect(items[1]?.querySelector('.legend-swatch')?.className).toBe('legend-swatch legend-lava');
+  });
+
   it('says nothing of a phase before the first, and takes a second open or pause in its stride', () => {
     const onMoment = vi.fn();
     const made = createStrikeClock({

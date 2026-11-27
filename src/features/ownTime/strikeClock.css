@@ -439,3 +439,65 @@
   font-size: 11px;
   line-height: 1.35;
 }
+
+/* The key to an event's marks and colours on the globe (#1268), each in the globe's own colour. */
+.strike-clock-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  list-style: none;
+}
+
+.strike-clock-legend li {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
+.legend-cause {
+  border: 2px solid rgb(235 70 60);
+  border-radius: 50%;
+  background: rgb(235 70 60 / 0.3);
+}
+
+.legend-record {
+  width: 7px;
+  height: 7px;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.5);
+}
+
+.legend-smoke {
+  border-radius: 50%;
+  background: linear-gradient(90deg, rgb(204 196 184), rgb(41 33 28));
+}
+
+.legend-lava {
+  background: rgb(242 128 31);
+}
+
+.legend-basalt {
+  border: 1px solid rgb(255 255 255 / 0.25);
+  background: rgb(30 27 25);
+}
+
+.legend-ice {
+  background: rgb(240 247 255);
+}
+
+.legend-anoxia {
+  border: 1px solid rgb(255 255 255 / 0.25);
+  background: rgb(56 54 18);
+}
