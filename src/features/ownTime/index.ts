@@ -80,8 +80,8 @@ export interface OwnTimeEvent {
   readonly drawn?: string;
   /** What its extinction took, as a gauge of the life left on its clock (#1223). */
   readonly loss?: LossGauge;
-  /** A measured record, drawn above its clock's slider (#1229). */
-  readonly proxy?: ProxyChart;
+  /** Measured records, drawn above its clock's slider (#1229). */
+  readonly proxies?: readonly ProxyChart[];
   /**
    * When its clock's zero is, Ma, where dated more closely than the moment it is watched from
    * (#1222): the end-Permian's start at Meishan, 251.941 Ma, not the 251.9 its card is at.
@@ -184,10 +184,10 @@ function marked(event: OwnTimeEvent): {
   dated?: DatedWindow;
   drawn?: string;
   loss?: LossGauge;
-  proxy?: ProxyChart;
+  proxies?: readonly ProxyChart[];
 } {
   return {
-    ...(event.proxy === undefined ? {} : { proxy: event.proxy }),
+    ...(event.proxies === undefined ? {} : { proxies: event.proxies }),
     ...(event.dated === undefined ? {} : { dated: event.dated }),
     ...(event.drawn === undefined ? {} : { drawn: event.drawn }),
     ...(event.loss === undefined ? {} : { loss: event.loss }),

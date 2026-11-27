@@ -1,8 +1,9 @@
 /**
- * A measured record on an event's clock (#1229): readings drawn above its slider, each where its
+ * Measured records on an event's clock (#1229): readings drawn above its slider, each where its
  * dated moment falls on the slider's own scale, so the thumb is the chart's cursor. A reading
  * known only to lie between two dates is drawn across them. The record's words say whose it is
- * and what is assumed in placing it.
+ * and what is assumed in placing it. Where a clock has more than one record, one is shown at a
+ * time, picked by name.
  */
 
 import type { ClockScale } from '../../deepTime/clockScale';
@@ -19,6 +20,8 @@ export interface ProxyReading {
 }
 
 export interface ProxyChart {
+  /** Its name to pick it by, where a clock has more than one: "Temperature". */
+  readonly name: string;
   /** What is measured, and in what: "Sea-surface temperature at Meishan, °C". */
   readonly title: string;
   readonly low: number;
@@ -42,7 +45,7 @@ function percent(value: number, low: number, high: number): string {
 }
 
 /** The chart of `chart` above a slider running on `scale`. */
-export function proxyView(chart: ProxyChart, scale: ClockScale): ProxyView {
+function chartView(chart: ProxyChart, scale: ClockScale): ProxyView {
   const along = (seconds: number) => percent(scale.positionAt(seconds), 0, scale.end);
   const dots = chart.readings.map((reading) => {
     const dot = element('span', { class: `proxy-dot proxy-series-${String(reading.series)}` });
@@ -85,6 +88,49 @@ export function proxyView(chart: ProxyChart, scale: ClockScale): ProxyView {
     root,
     at(position) {
       cursor.style.left = percent(position, 0, 1);
+    },
+  };
+}
+
+/** The records `charts` above a slider running on `scale`: one at a time, if more than one. */
+export function proxyView(charts: readonly ProxyChart[], scale: ClockScale): ProxyView | null {
+  const views = charts.map((chart) => chartView(chart, scale));
+  const [only] = views;
+  if (only === undefined) return null;
+  if (views.length === 1) return only;
+  const buttons = charts.map((chart, index) =>
+    element(
+      'button',
+      { type: 'button', class: 'proxy-pick', 'aria-pressed': String(index === 0) },
+      chart.name,
+    ),
+  );
+  const pick = (chosen: number): void => {
+    views.forEach((view, index) => {
+      view.root.hidden = index !== chosen;
+      buttons[index]?.setAttribute('aria-pressed', String(index === chosen));
+    });
+  };
+  buttons.forEach((button, index) => {
+    button.addEventListener('click', () => {
+      pick(index);
+    });
+  });
+  pick(0);
+  const root = element(
+    'div',
+    { class: 'proxy-charts' },
+    element(
+      'div',
+      { class: 'proxy-picks', role: 'group', 'aria-label': 'Measured record' },
+      ...buttons,
+    ),
+    ...views.map((view) => view.root),
+  );
+  return {
+    root,
+    at(position) {
+      for (const view of views) view.at(position);
     },
   };
 }

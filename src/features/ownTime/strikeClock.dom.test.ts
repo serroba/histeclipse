@@ -203,17 +203,20 @@ describe('the strike clock’s panel (#1173)', () => {
       title: 'The end-Permian, in its own time',
       phases: PHASES,
       scale: CRISIS_SCALE,
-      proxy: {
-        title: 'Temperature',
-        low: 20,
-        high: 30,
-        series: ['A'],
-        readings: [
-          { seconds: 0, value: 25, series: 0 },
-          { seconds: 0, value: 40, series: 0, between: [0, 1e12] },
-        ],
-        says: 'Measured.',
-      },
+      proxies: [
+        {
+          name: 'Temperature',
+          title: 'Temperature',
+          low: 20,
+          high: 30,
+          series: ['A'],
+          readings: [
+            { seconds: 0, value: 25, series: 0 },
+            { seconds: 0, value: 40, series: 0, between: [0, 1e12] },
+          ],
+          says: 'Measured.',
+        },
+      ],
       onMoment: vi.fn(),
       onClose: vi.fn(),
     });
@@ -228,6 +231,38 @@ describe('the strike clock’s panel (#1173)', () => {
     const cursor = made.root.querySelector<HTMLElement>('.proxy-cursor');
     expect(Number.parseFloat(cursor?.style.left ?? '')).toBeCloseTo(at, 6);
     expect(made.root.querySelector('.proxy-key')?.textContent).toBe('A');
+  });
+
+  it('shows one of several records at a time, picked by name (#1229)', () => {
+    const record = (name: string, value: number) => ({
+      name,
+      title: `${name}, measured`,
+      low: 0,
+      high: 10,
+      series: ['A'],
+      readings: [{ seconds: 0, value, series: 0 }],
+      says: 'Measured.',
+    });
+    const made = createStrikeClock({
+      title: 'The end-Permian, in its own time',
+      phases: PHASES,
+      scale: CRISIS_SCALE,
+      proxies: [record('Temperature', 5), record('Carbon dioxide', 8)],
+      onMoment: vi.fn(),
+      onClose: vi.fn(),
+    });
+    made.open(0);
+    const charts = [...made.root.querySelectorAll<HTMLElement>('.proxy-chart')];
+    const picks = [...made.root.querySelectorAll<HTMLButtonElement>('.proxy-pick')];
+    expect(picks.map((each) => each.textContent)).toEqual(['Temperature', 'Carbon dioxide']);
+    expect(charts.map((each) => each.hidden)).toEqual([false, true]);
+    picks[1]?.click();
+    expect(charts.map((each) => each.hidden)).toEqual([true, false]);
+    expect(picks.map((each) => each.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
+    // Both cursors follow the moment, shown or not.
+    const cursors = [...made.root.querySelectorAll<HTMLElement>('.proxy-cursor')];
+    expect(cursors[0]?.style.left).toBe(cursors[1]?.style.left);
+    expect(cursors[0]?.style.left).not.toBe('');
   });
 
   it('says nothing of a phase before the first, and takes a second open or pause in its stride', () => {

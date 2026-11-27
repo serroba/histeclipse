@@ -28,6 +28,7 @@ import { END_GUADALUPIAN } from './guadalupianPhases';
 import { CAMP_CARBON_DIOXIDE } from './campCarbonDioxide';
 import { LOSSES } from './losses';
 import { MEISHAN_TEMPERATURES } from './meishanTemperatures';
+import { PERMIAN_CARBON_DIOXIDE } from './permianCarbonDioxide';
 import { END_PERMIAN } from './permianPhases';
 import { seasLayer } from './seasLayer';
 import { devonianSeas, ordovicianSeas, type Seas } from './seasModel';
@@ -71,7 +72,7 @@ interface Province {
   /** When the extinction began, Ma: its clock's zero, lent deep time's header (#1222). */
   readonly zero: number;
   /** A measured record through it, drawn above its clock's slider (#1229). */
-  readonly proxy?: ProxyChart;
+  readonly proxies?: readonly ProxyChart[];
   fuming(seconds: number): Fuming;
   /** How much of its lava has flowed by `seconds` (#1212). */
   cover(seconds: number): number;
@@ -100,7 +101,7 @@ const PROVINCES: readonly Province[] = [
     },
     // Its start at Meishan (Burgess, Bowring & Shen 2014), before the boundary at 251.902.
     zero: 251.941,
-    proxy: MEISHAN_TEMPERATURES,
+    proxies: [MEISHAN_TEMPERATURES, PERMIAN_CARBON_DIOXIDE],
     drawn: `${SMOKE} as far as the share erupted by then: two thirds before and during the extinction.`,
     fuming: siberianFuming,
     cover: siberianCover,
@@ -123,7 +124,7 @@ const PROVINCES: readonly Province[] = [
       plusMinus: [0, 40 * KYR],
       says: 'The extinction as Blackburn et al. (2013) date it: 100,000 ± 40,000 years from 201.564 million years ago. On land, cyclostratigraphy gives it 20,000 to 40,000 years (Deenen et al. 2010); in the sea, ash beds date it between 201.51 ± 0.15 and 201.36 ± 0.17 million years ago (as Lindström et al. 2021 review).',
     },
-    proxy: CAMP_CARBON_DIOXIDE,
+    proxies: [CAMP_CARBON_DIOXIDE],
     drawn: `${SMOKE} a quarter more with each of its four pulses, spaced evenly over 600,000 years: an assumption.`,
     fuming: campFuming,
     cover: campCover,
@@ -151,7 +152,7 @@ function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
     scale: { ...CRISIS_SCALE, marks: [province.start, ...CRISIS_SCALE.marks.slice(1)] },
     offer: `Watch ${province.name} in its own time`,
     ...(province.dated === undefined ? {} : { dated: province.dated }),
-    ...(province.proxy === undefined ? {} : { proxy: province.proxy }),
+    ...(province.proxies === undefined ? {} : { proxies: province.proxies }),
     drawn: province.drawn,
     ma: province.zero,
     play(tools) {
