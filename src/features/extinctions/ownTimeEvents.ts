@@ -10,7 +10,7 @@ import { CRISIS_SCALE, LONG_CRISIS_SCALE } from '../../deepTime/crisisClock';
 import { siteThen, type ExtinctionSites } from '../../data/extinctions';
 import type { GeoPoint } from '../../core/geo';
 import { impactPlay, strikeEvent, strikePhasesOf } from '../impacts';
-import type { DatedWindow, EventPhase, OwnTimeEvent, ProxyChart } from '../ownTime';
+import type { DatedWindow, EventPhase, GuideView, OwnTimeEvent, ProxyChart } from '../ownTime';
 import { fumesLayer } from './fumesLayer';
 import {
   campCover,
@@ -40,19 +40,19 @@ const CHICXULUB_KM = 180;
 const COLD_DISTANCE = 3;
 /** How far out a province is watched from: its plumes and the haze over the globe. */
 const PROVINCE_DISTANCE = 2.3;
+/** Far enough out to see a province and its records on one side of the world (#1266). */
+const WORLD_DISTANCE = 4.5;
 /** How far out Chicxulub is watched from: far enough to see its front cross the globe (#1167). */
 const STRIKE_DISTANCE = 3.4;
 
-/** `event`, the globe first turned to `place` and drawn back to `distance`. */
+/** `event`, the globe turned to `place` and drawn back to `distance`, and back when left alone. */
 function facing(event: OwnTimeEvent, place: GeoPoint, distance: number): OwnTimeEvent {
-  return {
-    ...event,
-    play(tools) {
-      tools.strikes.flyTo(place);
-      tools.strikes.zoomTo(distance);
-      return event.play(tools);
-    },
-  };
+  return guided(event, [{ from: -Infinity, place, distance }]);
+}
+
+/** `event`, the camera guided through `views` as its clock plays (#1266). */
+function guided(event: OwnTimeEvent, views: readonly GuideView[]): OwnTimeEvent {
+  return { ...event, views };
 }
 
 /** A volcanic province watched in its own time: where it lay, how far it spread, its timeline. */
@@ -62,6 +62,11 @@ interface Province {
   readonly phases: readonly EventPhase[];
   /** Its sites, whose middle it is centred on. */
   readonly sites: readonly string[];
+  /**
+   * Where the camera goes next as its story moves on (#1266): from when, the sites whose middle
+   * it looks at, and how far from them, in Earth radii.
+   */
+  readonly tour?: readonly (readonly [from: number, sites: readonly string[], distance: number])[];
   readonly spread: number;
   /** The first mark under its clock: when its story begins, seconds since the extinction. */
   readonly start: readonly [number, string];
@@ -102,6 +107,11 @@ const PROVINCES: readonly Province[] = [
     // Its start at Meishan (Burgess, Bowring & Shen 2014), before the boundary at 251.902.
     zero: 251.941,
     proxies: [MEISHAN_TEMPERATURES, PERMIAN_CARBON_DIOXIDE],
+    // To Meishan as the sea's life dies, then out to the world as its carbon peaks.
+    tour: [
+      [2 * KYR, ['meishan'], PROVINCE_DISTANCE],
+      [75 * KYR, ['siberian-traps', 'meishan'], WORLD_DISTANCE],
+    ],
     drawn: `${SMOKE} as far as the share erupted by then: two thirds before and during the extinction.`,
     fuming: siberianFuming,
     cover: siberianCover,
@@ -125,6 +135,11 @@ const PROVINCES: readonly Province[] = [
       says: 'The extinction as Blackburn et al. (2013) date it: 100,000 ± 40,000 years from 201.564 million years ago. On land, cyclostratigraphy gives it 20,000 to 40,000 years (Deenen et al. 2010); in the sea, ash beds date it between 201.51 ± 0.15 and 201.36 ± 0.17 million years ago (as Lindström et al. 2021 review).',
     },
     proxies: [CAMP_CARBON_DIOXIDE],
+    // To the sea's record in Europe as its carbon builds, then out to the world as it pulses.
+    tour: [
+      [30 * KYR, ['kuhjoch', 'st-audries-bay'], PROVINCE_DISTANCE],
+      [150 * KYR, ['camp-palisades', 'camp-morocco', 'kuhjoch'], WORLD_DISTANCE],
+    ],
     drawn: `${SMOKE} a quarter more with each of its four pulses, spaced evenly over 600,000 years: an assumption.`,
     fuming: campFuming,
     cover: campCover,
@@ -287,7 +302,12 @@ function drawnOf(data: ExtinctionSites, id: string, ma: number): OwnTimeEvent | 
     if (center === null) return null;
     // Seen from a little south, at a slant, so the plumes are seen rising.
     const from = { latitude: center.latitude - 4, longitude: center.longitude };
-    return facing(provinceEvent(province, center), from, PROVINCE_DISTANCE);
+    const first = { from: -Infinity, place: from, distance: PROVINCE_DISTANCE };
+    const tour = (province.tour ?? []).flatMap(([at, sites, distance]) => {
+      const place = middleOf(sites.flatMap((site) => placeOf(data, site, ma) ?? []));
+      return place === null ? [] : [{ from: at, place, distance }];
+    });
+    return guided(provinceEvent(province, center), [first, ...tour]);
   }
   const phases = strikePhasesOf('Chicxulub');
   if (id !== 'k-pg-extinction' || phases === null) return null;

@@ -88,7 +88,7 @@ describe('the aeons begin with Earth and the Moon forming (#1218)', () => {
     const zoomTo = vi.fn();
     const flyTo = vi.fn();
     const tools = {
-      strikes: { on, zoomTo, flyTo },
+      strikes: { on, zoomTo, flyTo, setInsets: vi.fn() },
       layer: (factory: object) => ({
         update: factory === discLayer ? disc : 'needs' in factory ? sized : update,
       }),
@@ -121,7 +121,12 @@ describe('the aeons begin with Earth and the Moon forming (#1218)', () => {
   it('draws Earth growing as the model chosen has it, whole from the impact (#1219)', () => {
     const sized = vi.fn();
     const tools = {
-      strikes: { on: document.createElement('div'), zoomTo: vi.fn(), flyTo: vi.fn() },
+      strikes: {
+        on: document.createElement('div'),
+        zoomTo: vi.fn(),
+        flyTo: vi.fn(),
+        setInsets: vi.fn(),
+      },
       layer: (factory: object) => ({ update: 'needs' in factory ? sized : vi.fn() }),
     } as unknown as Parameters<ReturnType<typeof formationEvent>['play']>[0];
     const fast = formationEvent('early', 'fast').play(tools);

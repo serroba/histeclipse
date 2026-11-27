@@ -516,12 +516,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     strikes: {
       playImpact: (spec) => globe.playImpact(spec),
-      flyTo: (place) => {
-        globe.flyTo(place);
-      },
-      zoomTo: (distance) => {
-        globe.zoomTo(distance);
-      },
+      flyTo: globe.flyTo.bind(globe),
+      zoomTo: globe.zoomTo.bind(globe),
+      setInsets: globe.setInsets.bind(globe),
       on: globeContainer,
     },
     radiocarbon: { curves: () => years.curves() },

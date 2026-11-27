@@ -166,7 +166,7 @@ export interface Capabilities {
   /** The globe coloured by temperature in deep time, and the maps ahead fetched as it plays. */
   readonly temperatureMaps: Pick<Globe, 'setTemperature' | 'prefetch'>;
   /** A crater's strike: played on the globe turned to it, and written on `on` as it happens. */
-  readonly strikes: Pick<Globe, 'playImpact' | 'flyTo' | 'zoomTo'> & {
+  readonly strikes: Pick<Globe, 'playImpact' | 'flyTo' | 'zoomTo' | 'setInsets'> & {
     readonly on: HTMLElement;
   };
   /** Radiocarbon's calibration curves, loaded once. */

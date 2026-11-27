@@ -33,6 +33,7 @@ function fakeContext(
   const strikes = {
     playImpact: vi.fn(() => playing),
     flyTo: vi.fn(),
+    setInsets: vi.fn(),
     zoomTo: vi.fn(),
     on: document.createElement('div'),
   };
