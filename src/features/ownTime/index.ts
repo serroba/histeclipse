@@ -23,6 +23,7 @@ import type { GlobeLayer, LayerFactory } from '../../globe/layerHost';
 import type { Capabilities, FeatureCore } from '../feature';
 import type { LossGauge } from './lossGauge';
 import { createGuide, type GuideView } from './guide';
+import type { LegendItem } from './legend';
 import type { ProxyChart } from './proxyChart';
 import type { EventPhase } from './phases';
 import {
@@ -52,6 +53,7 @@ export { phase, phaseAt, type EventPhase } from './phases';
 export type { DatedWindow } from './strikeClock';
 export type { LossGauge } from './lossGauge';
 export type { GuideView } from './guide';
+export type { LegendItem } from './legend';
 export type { ProxyChart, ProxyReading } from './proxyChart';
 
 export interface OwnTimeEvent {
@@ -84,6 +86,8 @@ export interface OwnTimeEvent {
   readonly loss?: LossGauge;
   /** Measured records, drawn above its clock's slider (#1229). */
   readonly proxies?: readonly ProxyChart[];
+  /** Its marks and colours on the globe, as a key under its clock (#1268). */
+  readonly legend?: readonly LegendItem[];
   /** Its key moments, seconds since it: its clock's play lingers there to be read (#1267). */
   readonly lingers?: readonly number[];
   /** Where the camera looks as its clock plays, turned back there when left alone (#1266). */
@@ -218,10 +222,12 @@ function marked(event: OwnTimeEvent): {
   loss?: LossGauge;
   proxies?: readonly ProxyChart[];
   lingers?: readonly number[];
+  legend?: readonly LegendItem[];
 } {
   return {
     ...(event.proxies === undefined ? {} : { proxies: event.proxies }),
     ...(event.lingers === undefined ? {} : { lingers: event.lingers }),
+    ...(event.legend === undefined ? {} : { legend: event.legend }),
     ...(event.dated === undefined ? {} : { dated: event.dated }),
     ...(event.drawn === undefined ? {} : { drawn: event.drawn }),
     ...(event.loss === undefined ? {} : { loss: event.loss }),

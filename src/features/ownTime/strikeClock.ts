@@ -13,6 +13,7 @@ import { element } from '../../ui/dom';
 import { setText } from '../../util/pageWrites';
 import { createTransport, type Transport } from '../../ui/transport';
 import { askFrame } from './frames';
+import { legendView, type LegendItem } from './legend';
 import { createLinger, type Linger } from './linger';
 import { lossView, type LossGauge, type LossView } from './lossGauge';
 import { phaseAt, type EventPhase } from './phases';
@@ -42,6 +43,8 @@ export interface StrikeClockOptions {
   readonly dated?: DatedWindow;
   /** What on the globe is drawn to illustrate, not measured, and what its colours are (#1226). */
   readonly drawn?: string;
+  /** Its marks and colours on the globe, as a key (#1268). */
+  readonly legend?: readonly LegendItem[];
   /** What its extinction took, as a gauge of the life left (#1223). */
   readonly loss?: LossGauge;
   /** Measured records, drawn above the slider on its scale (#1229). */
@@ -133,7 +136,11 @@ function clockView(
     loss: gauge,
     proxies = [],
     lingers = [],
-  }: Pick<StrikeClockOptions, 'title' | 'dated' | 'drawn' | 'loss' | 'proxies' | 'lingers'>,
+    legend = [],
+  }: Pick<
+    StrikeClockOptions,
+    'title' | 'dated' | 'drawn' | 'loss' | 'proxies' | 'lingers' | 'legend'
+  >,
   scale: ClockScale,
   transport: Transport,
 ): ClockView {
@@ -188,6 +195,7 @@ function clockView(
     ),
     ...(says === undefined ? [] : [says]),
     element('p', { class: 'strike-clock-hint' }, scale.hint),
+    ...[legendView(legend)].filter((each) => each !== null),
     ...(drawn === undefined ? [] : [element('p', { class: 'strike-clock-drawn' }, drawn)]),
     element('div', { class: 'strike-clock-controls' }, transport.play, speed),
   );

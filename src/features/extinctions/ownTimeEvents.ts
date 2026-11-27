@@ -10,7 +10,14 @@ import { CRISIS_SCALE, LONG_CRISIS_SCALE } from '../../deepTime/crisisClock';
 import { siteThen, type ExtinctionSites } from '../../data/extinctions';
 import type { GeoPoint } from '../../core/geo';
 import { impactPlay, strikeEvent, strikePhasesOf } from '../impacts';
-import type { DatedWindow, EventPhase, GuideView, OwnTimeEvent, ProxyChart } from '../ownTime';
+import type {
+  DatedWindow,
+  EventPhase,
+  GuideView,
+  LegendItem,
+  OwnTimeEvent,
+  ProxyChart,
+} from '../ownTime';
 import { fumesLayer } from './fumesLayer';
 import {
   campCover,
@@ -88,6 +95,15 @@ interface Province {
 const KYR = 1000 * 365.25 * 86_400;
 
 /** What every volcanic province's drawing is, before what it assumes (#1226). */
+/** A province's marks and colours (#1268). */
+const PROVINCE_LEGEND: readonly LegendItem[] = [
+  ['cause', 'The lava province'],
+  ['record', 'Where the extinction is dated'],
+  ['smoke', 'Smoke, darker with gas from the sills'],
+  ['lava', 'Lava flowing'],
+  ['basalt', 'Lava cooled to basalt'],
+];
+
 const SMOKE =
   'Drawn to illustrate, not measured: smoke over vents spread across the province, and the lava, glowing red at its front and dark basalt behind,';
 
@@ -176,6 +192,7 @@ function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
       .filter((phase) => province.keys?.includes(phase.id) === true)
       .map((phase) => phase.from),
     drawn: province.drawn,
+    legend: PROVINCE_LEGEND,
     ma: province.zero,
     play(tools) {
       const fumes = tools.layer(fumesLayer);
@@ -253,6 +270,12 @@ function coldEvent(crisis: ColdCrisis, ice: GeoPoint | null, anoxia: GeoPoint): 
     offer: `Watch ${crisis.name} in its own time`,
     ma: crisis.zero,
     drawn: crisis.drawn,
+    legend: [
+      ['cause', ice === null ? 'A possible cause' : 'The ice sheet’s place'],
+      ['record', 'Where the extinction is dated'],
+      ...(ice === null ? [] : [['ice', 'The ice sheet’s reach'] as const]),
+      ['anoxia', 'Oxygen-poor water'],
+    ],
     play(tools) {
       const seas = tools.layer(seasLayer);
       return {
