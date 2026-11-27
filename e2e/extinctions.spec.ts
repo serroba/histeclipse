@@ -35,6 +35,10 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await expect(clock).toBeVisible();
     await expect(globe).toHaveAttribute('data-fumes', 'on');
     await expect(clock.locator('.strike-clock-when')).toHaveText(/before the extinction$/);
+    await expect(clock).toHaveAttribute('data-playing', 'true');
+    // Paused to read it: playing, each frame of the fuming globe takes CI's software graphics
+    // so long that every step waits seconds. How it plays is the unit tests'.
+    await clock.getByRole('button', { name: 'Pause' }).click();
     // Nothing lost yet (#1223).
     await expect(clock.locator('.loss-gauge-label')).toHaveText('Marine genera left: 100%');
     // The sea's warming at Meishan, measured, above the slider (#1229).
@@ -54,7 +58,6 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await expect(clock.locator('.strike-clock-drawn')).toContainText('Drawn to illustrate');
   });
   await test.step('When they move the slider to the extinction, Then it says the phase and its sources', async () => {
-    await clock.getByRole('button', { name: 'Pause' }).click();
     const slider = clock.getByRole('slider');
     await slider.fill('4.1');
     await expect(clock.locator('.strike-clock-phase')).toHaveText('The Great Dying');
