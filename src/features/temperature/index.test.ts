@@ -168,4 +168,33 @@ describe('the temperature maps as a feature', () => {
     expect(panels.at(-1)).toMatchObject({ year: -3050 });
     expect(panels.at(-1)).not.toHaveProperty('drawOn');
   });
+
+  it('at today over the ice ages, colours the globe by the measured warming, and says so (#1283)', async () => {
+    const { context, setTemperature, refresh } = fakeContext();
+    const shown = temperatureFeature.mount(context, context);
+    const today: ViewState = { ...on, ma: 0, deepScale: 'ice' };
+    shown.show?.(today, 0);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    // The chart at 1950, deep time's present: the measured maps asked for.
+    shown.show?.(today, 0);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(2);
+    });
+    const fields = shown.deepBar?.(today, { ma: 0, scale: 'ice' });
+    expect(setTemperature).toHaveBeenLastCalledWith(
+      expect.objectContaining({ younger: '/data/warming/1950.png', change: true }),
+    );
+    expect(fields?.temperature?.note).toContain('Berkeley Earth');
+    // 20,000 years ago: Krapp et al.'s maps, and their own note.
+    const glacial = { ...today, ma: 0.02 };
+    shown.show?.(glacial, 0);
+    const before = setTemperature.mock.calls.length;
+    const then = shown.deepBar?.(glacial, { ma: 0.02, scale: 'ice' });
+    expect(setTemperature.mock.calls.slice(before).flat()).not.toContainEqual(
+      expect.objectContaining({ younger: expect.stringContaining('warming') as unknown }),
+    );
+    expect(then?.temperature?.note ?? '').not.toContain('Berkeley Earth');
+  });
 });

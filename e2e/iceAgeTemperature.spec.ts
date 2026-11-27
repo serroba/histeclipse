@@ -86,5 +86,13 @@ test('playing the ice ages beside the temperature chart goes at its pace, on to 
     await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
     await expect(page).toHaveURL(/ma=0(&|$)/);
   });
+  await test.step('And the globe shows the measured warming of the chart’s latest years, and says so (#1283)', async () => {
+    await expect(page.getByTestId('globe')).toHaveAttribute(
+      'data-temperature',
+      /warming\/2024\.png/,
+    );
+    await showDeepDetails(page);
+    await expect(page.locator('.temperature-note')).toContainText('measured: Berkeley Earth');
+  });
   expect(problems).toEqual([]);
 });
