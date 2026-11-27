@@ -137,4 +137,35 @@ describe('the temperature maps as a feature', () => {
     shown.show?.(on, 0);
     expect(panels.at(-1)).toBeNull();
   });
+
+  it('gives play the chart’s pace while it shows, the chart following play finer than the view keeps it (#1276)', async () => {
+    const { context, panels, refresh } = fakeContext();
+    const shown = temperatureFeature.mount(context, context);
+    const ice: ViewState = { ...on, ma: 0.021, deepScale: 'ice' };
+    // Not loaded yet, or not showing: play keeps its own pace.
+    expect(shown.playAxis?.(ice)).toBeNull();
+    shown.show?.(ice, 0);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    expect(shown.playAxis?.({ ...ice, deepScale: 'all' })).toBeNull();
+    const axis = shown.playAxis?.(ice);
+    if (axis === undefined || axis === null) throw new Error('expected the chart’s timeline');
+    // The chart's own clock: 12 s across the ice ages, then the Holocene.
+    expect(axis.at(0.02195)).toBeCloseTo(12, 6);
+    expect(axis.ma(axis.at(0.0005))).toBeCloseTo(0.0005, 9);
+    // Play at 1890: the chart there, though the view keeps the moment as 0 (1950).
+    axis.follow(0.00006);
+    expect(panels.at(-1)).toMatchObject({ year: 1890, drawOn: false });
+    const count = panels.length;
+    shown.show?.({ ...ice, ma: 0 }, 0);
+    expect(panels).toHaveLength(count);
+    // At today, the chart draws on to its latest year.
+    axis.ended();
+    expect(panels.at(-1)).toMatchObject({ year: 1950, drawOn: true });
+    // The reader moves the slider: the chart goes where the view is.
+    shown.show?.({ ...ice, ma: 0.005 }, 0);
+    expect(panels.at(-1)).toMatchObject({ year: -3050 });
+    expect(panels.at(-1)).not.toHaveProperty('drawOn');
+  });
 });

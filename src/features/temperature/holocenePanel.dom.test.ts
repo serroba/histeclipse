@@ -9,11 +9,16 @@ import type { Capability, FeatureContext } from '../feature';
 
 // The chart itself is SVG glue the Playwright suite covers: here, what it is asked, and its year.
 const charts = vi.hoisted(() => ({
-  made: [] as { onYear: (year: number) => void; held: number[]; disposed: boolean }[],
+  made: [] as {
+    onYear: (year: number) => void;
+    held: number[];
+    playing: boolean[];
+    disposed: boolean;
+  }[],
 }));
 vi.mock('../../story/holoceneChart', () => ({
   createHoloceneChart: (_stage: HTMLElement, _data: unknown, onYear: (year: number) => void) => {
-    const chart = { onYear, held: [] as number[], disposed: false };
+    const chart = { onYear, held: [] as number[], playing: [] as boolean[], disposed: false };
     charts.made.push(chart);
     // Drawn, it names its first year at once.
     onYear(-798_050);
@@ -22,6 +27,9 @@ vi.mock('../../story/holoceneChart', () => ({
         chart.held.push(year);
         onYear(year);
         return year;
+      },
+      setPlaying: (next: boolean) => {
+        chart.playing.push(next);
       },
       dispose: () => {
         chart.disposed = true;
@@ -56,6 +64,16 @@ describe('temperature over 800,000 years beside the globe (#434)', () => {
     expect(root?.hidden).toBe(true);
     panel.dispose?.();
     expect(charts.made[0]?.disposed).toBe(true);
+  });
+
+  it('Given play reached today, Then the chart draws on from there to its latest year (#1276)', () => {
+    charts.made.length = 0;
+    const container = document.createElement('div');
+    const panel = holocenePanel(vi.fn())({ container } as unknown as LayerHost);
+    panel.update({ data, year: 1890 });
+    panel.update({ data, year: 1950, drawOn: true });
+    expect(charts.made[0]?.held).toEqual([1890, 1950]);
+    expect(charts.made[0]?.playing).toEqual([true]);
   });
 
   it('Given the cursor moved, Then the feature takes the view to that moment of deep time', async () => {
