@@ -33,6 +33,7 @@ import { LOSSES } from './losses';
 import { MEISHAN_TEMPERATURES } from './meishanTemperatures';
 import { EXTENTS } from './provinceExtents';
 import { PERMIAN_CARBON_DIOXIDE } from './permianCarbonDioxide';
+import { PERMIAN_CARBON_ISOTOPES } from './permianCarbonIsotopes';
 import { END_PERMIAN } from './permianPhases';
 import { seasLayer } from './seasLayer';
 import { devonianSeas, ordovicianSeas, type Seas } from './seasModel';
@@ -113,7 +114,7 @@ const PROVINCES: readonly Province[] = [
     },
     // Its start at Meishan (Burgess, Bowring & Shen 2014), before the boundary at 251.902.
     zero: 251.941,
-    proxies: [MEISHAN_TEMPERATURES, PERMIAN_CARBON_DIOXIDE],
+    proxies: [MEISHAN_TEMPERATURES, PERMIAN_CARBON_DIOXIDE, PERMIAN_CARBON_ISOTOPES],
     keys: ['lavas', 'sills', 'dying', 'carbon', 'recovery'],
     // To Meishan as the sea's life dies, then out to the world as its carbon peaks.
     tour: [

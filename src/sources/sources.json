@@ -54,6 +54,12 @@
     "cite": "Alexander, Bowden, Fogel, Howard, Herd & Nittler (2012), The provenances of asteroids, and their contributions to the volatile inventories of the terrestrial planets, Science 337, 721–723",
     "url": "https://doi.org/10.1126/science.1223474"
   },
+  "algeo2007": {
+    "name": "Algeo et al. 2007",
+    "kind": "paper",
+    "cite": "Algeo, T. J., Ellwood, B., Nguyen, T. K. T., Rowe, H. & Maynard, J. B. (2007), The Permian–Triassic boundary at Nhi Tao, Vietnam: Evidence for recurrent influx of sulfidic watermasses to a shallow-marine carbonate platform, Palaeogeography, Palaeoclimatology, Palaeoecology 252, 304–327. Our summary: carbon isotopes and chemistry of a shallow carbonate platform in Vietnam across the boundary, with repeated pulses of sulfidic water rising onto it; its δ¹³C is one of the ten sections in Wu et al. (2021)’s compilation",
+    "url": "https://doi.org/10.1016/j.palaeo.2006.11.055"
+  },
   "algeoScheckler1998": {
     "name": "Algeo & Scheckler 1998",
     "kind": "paper",
@@ -479,6 +485,12 @@
     "kind": "paper",
     "cite": "Chen, Z.-Q. & Benton, M. J. (2012), The timing and pattern of biotic recovery following the end-Permian mass extinction, Nature Geoscience 5, 375–383. Our summary: a review of the Early Triassic record finding that life recovered slowly and in steps, held back by repeated environmental crises, complex marine and land ecosystems returning only some five million years after the extinction, in the Middle Triassic",
     "url": "https://doi.org/10.1038/ngeo1475"
+  },
+  "clarkson2013": {
+    "name": "Clarkson et al. 2013",
+    "kind": "paper",
+    "cite": "Clarkson, M. O., Richoz, S., Wood, R. A., Maurer, F., Krystyn, L., McGurty, D. J. & Astratti, D. (2013), A new high-resolution δ13C record for the Early Triassic: Insights from the Arabian Platform, Gondwana Research 24, 233–242. Our summary: a detailed carbon-isotope record from Wadi Shahha in Oman, on the Tethys’ southern margin, through the extinction and the Early Triassic; one of the ten sections in Wu et al. (2021)’s compilation",
+    "url": "https://doi.org/10.1016/j.gr.2012.10.002"
   },
   "clarkson2015": {
     "name": "Clarkson et al. 2015",
@@ -1431,6 +1443,12 @@
     "kind": "paper",
     "cite": "Korenaga, J. (2023), Rapid solidification of Earth’s magma ocean limits early lunar recession, Icarus 400, 115564. Our summary: Earth's magma ocean froze too fast to drive the young Moon far, leaving it only about 7–9 Earth radii out when it had solidified",
     "url": "https://doi.org/10.1016/j.icarus.2023.115564"
+  },
+  "korte2010": {
+    "name": "Korte et al. 2010",
+    "kind": "paper",
+    "cite": "Korte, C., Pande, P., Kalia, P., Kozur, H. W., Joachimski, M. M. & Oberhänsli, H. (2010), Massive volcanism at the Permian–Triassic boundary and its impact on the isotopic composition of the ocean and atmosphere, Journal of Asian Earth Sciences 37, 293–311. Our summary: carbon and oxygen isotopes across the boundary, among them at Abadeh and Shahreza in Iran, read as the mark of massive volcanism on the sea and air; Abadeh and Shahreza are two of the ten sections in Wu et al. (2021)’s compilation",
+    "url": "https://doi.org/10.1016/j.jseaes.2009.08.012"
   },
   "korte2011": {
     "name": "Korte et al. 2011",
@@ -2401,6 +2419,19 @@
     "cite": "Schiller, M., Bizzarro, M., Fernandes, V. A. (2018), Isotopic evolution of the protoplanetary disk and the building blocks of Earth and the Moon, Nature 555(7697), 507–510. Our summary: calcium isotopes in meteorites change with their age: Earth and the Moon match the early disc’s, which suggests Earth grew fast, by accreting dust and pebbles, while the gas lasted",
     "url": "https://doi.org/10.1038/nature25990"
   },
+  "schobben2014": {
+    "name": "Schobben et al. 2014",
+    "kind": "paper",
+    "cite": "Schobben, M., Joachimski, M. M., Korn, D., Leda, L. & Korte, C. (2014), Palaeotethys seawater temperature rise and an intensified hydrological cycle following the end-Permian mass extinction, Gondwana Research 26, 675–683. Our summary: conodont oxygen isotopes and carbonate carbon isotopes from Zal and Kuh-e-Ali Bashi in Iran show the sea warming after the extinction; both sections are in Wu et al. (2021)’s compilation",
+    "url": "https://doi.org/10.1016/j.gr.2013.07.019"
+  },
+  "schobben2017": {
+    "name": "Schobben et al. 2017",
+    "kind": "paper",
+    "cite": "Schobben, M., Ullmann, C. V., Leda, L., Korn, D., Struck, U., Reimold, W. U., Ghaderi, A., Algeo, T. J. & Korte, C. (2017), Latest Permian carbonate carbon isotope variability traces heterogeneous organic carbon accumulation and authigenic carbonate formation, Climate of the Past 13, 1635–1659. Our summary: carbon isotopes from sections including Bálvány North in Hungary differ from place to place because of local organic carbon and carbonate formed in the sediment, a caution on reading any one section as the whole sea; Bálvány North is in Wu et al. (2021)’s compilation",
+    "url": "https://doi.org/10.5194/cp-13-1635-2017",
+    "licence": "CC BY 3.0"
+  },
   "schoene2019": {
     "name": "Schoene et al. 2019",
     "kind": "paper",
@@ -2495,6 +2526,12 @@
     "cite": "Rhodes, Skyfield: high precision research-grade positions for planets and Earth satellites",
     "url": "https://rhodesmill.org/skyfield/",
     "licence": "MIT"
+  },
+  "song2012": {
+    "name": "Song et al. 2012",
+    "kind": "paper",
+    "cite": "Song, H., Tong, J., Xiong, Y., Sun, D., Tian, L. & Song, H. (2012), The large increase of δ13Ccarb-depth gradient and the end-Permian mass extinction, Science China Earth Sciences 55, 1101–1109. Our summary: carbon isotopes from shallow and deep sections in South China, among them Yangou, show the difference between surface and deep water growing at the extinction; Yangou is in Wu et al. (2021)’s compilation",
+    "url": "https://doi.org/10.1007/s11430-012-4416-1"
   },
   "speibase": {
     "name": "SPEIbase",
