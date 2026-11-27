@@ -24,6 +24,7 @@ const PHASES: readonly EventPhase[] = [
 let frames: ((now: number) => void)[] = [];
 
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
   frames = [];
   vi.stubGlobal('requestAnimationFrame', (callback: (now: number) => void) => {
     frames.push(callback);
@@ -34,11 +35,13 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
   document.body.replaceChildren();
 });
 
-/** Run the frame asked for, at `now` ms. */
+/** Run the frame asked for, at `now` ms; after a slow frame, once the clock's wait is over. */
 function frame(now: number): void {
+  if (vi.isFakeTimers()) vi.runOnlyPendingTimers();
   const next = frames.shift();
   next?.(now);
 }
@@ -286,6 +289,27 @@ describe('the strike clock’s panel (#1173)', () => {
     for (let now = 400; now <= 5000; now += 200) frame(now);
     expect(tag?.hidden).toBe(true);
     expect(moments.at(-1)).toBeGreaterThan(0);
+  });
+
+  it('after a slow frame, waits as long as it took before the next, so the page keeps up', () => {
+    const { made } = clock();
+    made.open();
+    frames.shift()?.(0);
+    // A quick frame: the next is asked for at once.
+    frames.shift()?.(16);
+    expect(frames).toHaveLength(1);
+    // A slow one, as with software graphics: the next waits as long as it took, at most 500 ms.
+    frames.shift()?.(316);
+    expect(frames).toHaveLength(0);
+    vi.advanceTimersByTime(299);
+    expect(frames).toHaveLength(0);
+    vi.advanceTimersByTime(1);
+    expect(frames).toHaveLength(1);
+    // Paused while it waits: nothing more is asked for.
+    frames.shift()?.(2316);
+    made.root.querySelector<HTMLButtonElement>('.strike-clock-play')?.click();
+    vi.advanceTimersByTime(500);
+    expect(frames).toHaveLength(0);
   });
 
   it('says nothing of a phase before the first, and takes a second open or pause in its stride', () => {
