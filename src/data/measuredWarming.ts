@@ -83,3 +83,42 @@ export function warmingAt(
   if (older === undefined) throw new Error('No measured-warming frames');
   return { younger: older, older, mix: 0 };
 }
+
+/**
+ * Krapp et al.'s ice-age maps end before industry (their present is pre-industrial): from here
+ * on the globe shows the measured warming instead (#485, #1283), Berkeley Earth's against
+ * 1850–1900.
+ */
+export const MAPS_END_YEAR = 1850;
+
+/**
+ * From 1850, the measured warming at `year` as the globe's Temperature surface: the maps either
+ * side, blended, shown as the change from 1850–1900. Before, none: Krapp et al.'s maps show.
+ */
+export function measuredAt(
+  warming: MeasuredWarming,
+  year: number,
+  url: (file: string) => string,
+): {
+  readonly younger: string;
+  readonly older: string;
+  readonly mix: number;
+  readonly columns: number;
+  readonly rows: number;
+  readonly coldest: number;
+  readonly warmest: number;
+  readonly change: true;
+} | null {
+  if (year < MAPS_END_YEAR) return null;
+  const { younger, older, mix } = warmingAt(warming, year);
+  return {
+    younger: url(younger.file),
+    older: url(older.file),
+    mix,
+    columns: warming.columns,
+    rows: warming.rows,
+    coldest: warming.coldest,
+    warmest: warming.warmest,
+    change: true,
+  };
+}
