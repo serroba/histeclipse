@@ -82,7 +82,7 @@ function fumed(drawn: readonly unknown[]): unknown {
 
 describe('the extinctions as a feature', () => {
   it('asks for the cards, the timeline and the shared clock, and is shown again as deep time changes', () => {
-    expect(extinctionsFeature.needs).toEqual(['cards', 'timeline', 'ownTime']);
+    expect(extinctionsFeature.needs).toEqual(['cards', 'timeline', 'ownTime', 'strikes']);
     expect(extinctionsFeature.watches(on)).toEqual([on.layers, on.mode, on.ma, on.deepScale]);
   });
 
@@ -157,6 +157,15 @@ describe('the extinctions as a feature', () => {
     expect(clockTitle()).toBe('Chicxulub, in its own time');
     expect(strikes.playImpact).toHaveBeenCalledWith(expect.objectContaining({ driven: true }));
     expect(strikes.zoomTo).toHaveBeenCalledWith(3.4);
+  });
+
+  it('turns the globe to the extinction deep time is near, unless motion is to be less (#1266)', async () => {
+    const { strikes } = await loaded({ ...on, ma: 252 });
+    expect(strikes.flyTo).toHaveBeenCalledTimes(1);
+    expect(strikes.zoomTo).toHaveBeenLastCalledWith(3.2);
+    document.body.replaceChildren();
+    const still = await loaded({ ...on, ma: 252 }, { lessMotion: true });
+    expect(still.strikes.flyTo).not.toHaveBeenCalled();
   });
 
   it('watches the end-Permian from a card, the traps fuming', async () => {

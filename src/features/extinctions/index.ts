@@ -11,6 +11,7 @@ import { ANOXIC_SEAS_PART } from './anoxicSeasPart';
 import { LAVA_FLOWS_PART } from './lavaFlowsPart';
 import { feature } from '../feature';
 import { extinctionLayer } from './extinctionLayer';
+import { createFollow } from './follow';
 import { ownTimeOf } from './ownTimeEvents';
 import {
   extinctionCard,
@@ -35,7 +36,7 @@ export const EXTINCTION_EARTH_PARTS: readonly EarthPart[] = [LAVA_FLOWS_PART, AN
 
 export const extinctionsFeature = feature({
   id: 'extinctions',
-  needs: ['cards', 'timeline', 'ownTime'],
+  needs: ['cards', 'timeline', 'ownTime', 'strikes'],
   picks: 'extinction',
   watches: (state) => [state.layers, state.mode, state.ma, state.deepScale],
   mount(context) {
@@ -52,6 +53,8 @@ export const extinctionsFeature = feature({
     // Where deep time was in the frame before, while it plays.
     let from: number | null = null;
     const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // The globe turned to the extinction deep time is near (#1266).
+    const follow = createFollow(context.strikes, () => context.ownTime.watching());
     // A place a passage opened before its mark was drawn (#1233): its card opens once it is.
     let pending: string | null = null;
 
@@ -97,6 +100,7 @@ export const extinctionsFeature = feature({
           said = null;
           marks = [];
           onGlobe.update(null);
+          follow.end();
           return;
         }
         const data = load.value();
@@ -111,6 +115,7 @@ export const extinctionsFeature = feature({
         marks = extinctionMarks(data, state.ma);
         onGlobe.update(marks);
         said = extinctionsText(marks);
+        if (!lessMotion.matches) follow.at(marks);
         handOver(data, state.ma);
         if (pending !== null && openCard(pending)) pending = null;
       },

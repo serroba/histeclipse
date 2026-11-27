@@ -52,7 +52,7 @@ interface OwnTimePlay {
 export { phase, phaseAt, type EventPhase } from './phases';
 export type { DatedWindow } from './strikeClock';
 export type { LossGauge } from './lossGauge';
-export type { GuideView } from './guide';
+export { createGuide, IDLE_MS, type Guide, type GuideView } from './guide';
 export type { LegendItem } from './legend';
 export type { ProxyChart, ProxyReading } from './proxyChart';
 
@@ -115,6 +115,8 @@ export interface OwnTime {
    * age and period it shows, not the one deep time is held at; null with none open.
    */
   lent(): StoryDate | null;
+  /** Whether a clock is open: it has the camera, and nothing else should turn it. */
+  watching(): boolean;
 }
 
 /** Seconds in a million years. */
@@ -331,5 +333,6 @@ export function createOwnTime(
       return 'offer';
     },
     lent: lender.lent,
+    watching: () => open !== null,
   };
 }
