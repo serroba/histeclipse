@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
+import type { PlayAxis } from '../../deepTime/playAxis';
 import { createStore } from '../../state/store';
 import { defaultViewState, type ViewState } from '../../state/viewState';
 import { deepPlaying, heldPlay } from './playing';
 
 /** Deep time on the 540 Myr bar, playing by frames the test runs; and how often the bar showed it. */
-function setUp(state: Partial<ViewState>, lessMotion = false, finds: readonly number[] = []) {
+function setUp(
+  state: Partial<ViewState>,
+  lessMotion = false,
+  finds: readonly number[] = [],
+  axis: PlayAxis | null = null,
+) {
   const store = createStore<ViewState>({
     ...defaultViewState(new Date('2026-06-15T12:00:00Z')),
     deepScale: 'all',
@@ -18,6 +24,7 @@ function setUp(state: Partial<ViewState>, lessMotion = false, finds: readonly nu
     store,
     shown: () => ({ oldest: 540, youngest: 0 }),
     finds: () => finds,
+    axis: () => axis,
     loop: (each) => {
       tick = each;
       return {
@@ -45,6 +52,62 @@ function setUp(state: Partial<ViewState>, lessMotion = false, finds: readonly nu
   };
   return { store, play, frames, changes: () => changes, running: () => running };
 }
+
+/** A timeline 10 seconds long at Normal, from 1 Ma to today, evenly; and what it heard. */
+function tenSeconds() {
+  const followed: number[] = [];
+  let ended = 0;
+  const axis: PlayAxis = {
+    at: (ma) => (1 - ma) * 10,
+    ma: (seconds) => 1 - seconds / 10,
+    follow: (ma) => followed.push(ma),
+    ended: () => {
+      ended += 1;
+    },
+  };
+  return { axis, followed, ended: () => ended };
+}
+
+describe('playing along a part’s own timeline (#1276)', () => {
+  it('Given a timeline, Then play keeps its pace, tells it where it is unrounded, and the end', () => {
+    const { axis, followed, ended } = tenSeconds();
+    const { store, play, frames } = setUp({ ma: 1 }, false, [], axis);
+    // Its pace at Normal: a tenth of a Ma a second, as the bar says it.
+    expect(play.speed()).toBeCloseTo(0.1);
+    play.start();
+    frames(150, 1 / 60);
+    // Two and a half seconds along: a quarter of the way, its milestones no matter.
+    expect(store.get().ma).toBe(0.75);
+    expect(followed.at(-1)).toBeCloseTo(0.75, 6);
+    frames(10, 1 / 600);
+    // Finer than the thousand years the view keeps.
+    expect(followed.at(-1)).not.toBe(store.get().ma);
+    frames(1000);
+    expect(store.get().ma).toBe(0);
+    expect(play.playing()).toBe(false);
+    expect(ended()).toBe(1);
+  });
+
+  it('Given Fast, Then it goes along the timeline faster, as the pace control says', () => {
+    const { axis } = tenSeconds();
+    const { store, play, frames } = setUp({ ma: 1 }, false, [], axis);
+    play.setPace('fast');
+    expect(play.speed()).toBeCloseTo(0.1 * (20 / 6));
+    play.start();
+    frames(60);
+    expect(store.get().ma).toBeCloseTo(1 - 20 / 6 / 10, 2);
+  });
+
+  it('Given the reader moves the slider as it plays, Then it carries on from there', () => {
+    const { axis } = tenSeconds();
+    const { store, play, frames } = setUp({ ma: 1 }, false, [], axis);
+    play.start();
+    frames(60);
+    store.set((state) => ({ ...state, ma: 0.3 }));
+    frames(60);
+    expect(store.get().ma).toBeCloseTo(0.2, 3);
+  });
+});
 
 describe('playing deep time (#1076, #1077)', () => {
   it('Given Normal, Then the 540 Myr bar plays at 20 Myr/s towards today, and stops there', () => {

@@ -11,6 +11,7 @@
  * styles a `.css` file in its folder (#382).
  */
 
+import type { PlayAxis } from '../deepTime/playAxis';
 import type { Pace } from '../deepTime/playSpeed';
 import type { Fetch } from '../util/fetchJson';
 import type { Globe } from '../globe/globe';
@@ -247,6 +248,11 @@ export interface FeatureInstance {
   deepBar?(state: ViewState, moment: DeepMoment): DeepBarFields;
   /** Deep time (#1077): the moments, Ma, of the finds its layer shows, that play eases near. */
   finds?(state: ViewState): readonly number[];
+  /**
+   * Deep time (#1276): its own timeline that play follows while it shows, such as the
+   * temperature chart's pace over the ice ages; null while it does not.
+   */
+  playAxis?(state: ViewState): PlayAxis | null;
   /** One of its markers was tapped: all that follows `<picks>:` in the marker's pick. */
   pick?(id: string): void;
   /** Another marker was tapped: a card of this feature's still loading should not open. */

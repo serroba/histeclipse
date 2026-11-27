@@ -8,6 +8,7 @@ import type { DeepChip } from '../../ui/deepChips';
 import type { DeepScale, ViewState } from '../../state/viewState';
 import type { DeepTimeView } from '../../ui/deepTimeBar';
 import type { Span } from '../../ui/spanSwitch';
+import type { PlayAxis } from '../../deepTime/playAxis';
 import type { StoryDate } from '../../deepTime/storyDate';
 import type { ZoomTarget } from '../../state/timeZoom';
 
@@ -62,6 +63,8 @@ export interface DeepTimeContext extends PartContext {
   bar(state: ViewState, moment: DeepMoment): Gathered;
   /** The finds of the layers on, Ma, that play eases near (#1077). */
   finds(state: ViewState): readonly number[];
+  /** A layer's own timeline play follows while it shows, if any (#1276). */
+  playAxis(state: ViewState): PlayAxis | null;
   /** Out of deep time: what its layers and surfaces drew goes. */
   off(state: ViewState): void;
   /** How far back the plates reach, Ma, once known. */

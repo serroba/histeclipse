@@ -214,12 +214,15 @@ describe('deep time’s own story (#1218)', () => {
   function frames() {
     let asked: FrameRequestCallback[] = [];
     let now = 0;
+    // A 200 ms frame is a slow one: the clock waits on a timer before asking for the next.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       asked.push(callback);
       return asked.length;
     });
     return (count: number, step = 200) => {
       for (let index = 0; index < count; index += 1) {
+        vi.runOnlyPendingTimers();
         const run = asked;
         asked = [];
         now += step;

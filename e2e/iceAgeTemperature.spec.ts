@@ -51,3 +51,40 @@ test('the last ice age shows on the land as cold, against today, or as it was', 
   });
   expect(problems).toEqual([]);
 });
+
+test('playing the ice ages beside the temperature chart goes at its pace, on to the latest measured year (#1276)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const chart = page.getByTestId('holocene-panel');
+  await test.step('Given 3,000 years ago over the ice ages, with Temperature and its chart on', async () => {
+    await page.goto('./?ma=0.003&scale=ice&layers=temperature');
+    await globeRendered(page);
+    await expect(chart).toHaveAttribute('data-year', '-1050');
+  });
+  await test.step('When they play', async () => {
+    await page.getByRole('button', { name: 'Play' }).click();
+  });
+  await test.step('Then the industrial era has its seconds on the chart, finer than the bar keeps', async () => {
+    // At one speed in years it went by in a hundredth of a second (#1276); now about three.
+    let year = 0;
+    await expect
+      .poll(
+        async () => {
+          year = Number(await chart.getAttribute('data-year'));
+          return year;
+        },
+        { intervals: [100] },
+      )
+      .toBeGreaterThan(1850);
+    // Caught before 1950 and the draw on past it: the year the poll saw, not a later read.
+    expect(year).toBeLessThan(1951);
+  });
+  await test.step('And the chart draws on past 1950, deep time’s present, to its latest year', async () => {
+    await expect(chart).toHaveAttribute('data-complete', 'true', { timeout: 15_000 });
+    expect(Number(await chart.getAttribute('data-year'))).toBeGreaterThan(2020);
+    await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
+    await expect(page).toHaveURL(/ma=0(&|$)/);
+  });
+  expect(problems).toEqual([]);
+});

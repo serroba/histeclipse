@@ -5,7 +5,12 @@
  * chart the planetary boundaries' story opens on (#434), as part of the layer.
  */
 
-import { loadHoloceneTemperature, type HoloceneTemperature } from '../../data/holoceneTemperature';
+import {
+  chartSecondsAt,
+  loadHoloceneTemperature,
+  maAtChartSeconds,
+  type HoloceneTemperature,
+} from '../../data/holoceneTemperature';
 import { maOfYear, yearOfMa } from '../../data/iceSheets';
 import { roundMa } from '../../deepTime/scale';
 import { loadOnce } from '../../state/loadOnce';
@@ -29,10 +34,13 @@ export function chartShown(state: ViewState): boolean {
   );
 }
 
-/** The moment a year on the chart is, as deep time keeps it: to the thousand years. */
+/** The moment a year on the chart is, as deep time keeps it: to the thousand years, at most today. */
 export function maOfChart(year: number): number {
-  return Math.min(CHART_REACHES_MA, roundMa(maOfYear(year)));
+  return Math.max(0, Math.min(CHART_REACHES_MA, roundMa(maOfYear(year))));
 }
+
+/** The chart's year at a moment kept finer than a thousand years, as play reaches it (#1276). */
+const yearAt = (ma: number): number => 1950 - ma * 1e6;
 
 export const temperatureFeature = feature({
   id: 'temperature',
@@ -73,12 +81,41 @@ export const temperatureFeature = feature({
     let on = false;
     let shownAt: number | null = null;
     let shownData: HoloceneTemperature | null = null;
+    // Where play along the chart has reached, finer than the moment the view keeps (#1276).
+    let followed: number | null = null;
     return {
       load: () => layer.load(on),
+      // While the chart shows, play goes at its pace: each of its panels gets its time (#1276).
+      playAxis(state) {
+        const data = chartShown(state) ? chart.value() : null;
+        if (data === null) return null;
+        const showAt = (ma: number, drawOn: boolean): void => {
+          followed = ma;
+          panel.update({ data, year: yearAt(ma), drawOn });
+        };
+        return {
+          at: chartSecondsAt,
+          ma: maAtChartSeconds,
+          follow: (ma) => {
+            showAt(ma, false);
+          },
+          // Today, deep time's present (1950): the chart draws on to its latest year.
+          ended: () => {
+            showAt(0, true);
+          },
+        };
+      },
       show(state) {
         const data = chartShown(state) ? chart.value() : null;
         if (chartShown(state) && data === null) chart.want();
         const ma = data === null ? null : state.ma;
+        // The moment play along the chart reached, kept rounded: the chart already shows it.
+        if (followed !== null && ma !== null && roundMa(followed) === ma) {
+          shownAt = ma;
+          shownData = data;
+          return;
+        }
+        followed = null;
         if (ma === shownAt && data === shownData) return;
         shownAt = ma;
         shownData = data;

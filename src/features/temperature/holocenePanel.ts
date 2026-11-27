@@ -17,6 +17,8 @@ export interface HoloceneView {
   readonly data: HoloceneTemperature;
   /** The year shown, astronomical. */
   readonly year: number;
+  /** Draw on from there to the latest measured year, as play reaching today asks (#1276). */
+  readonly drawOn?: boolean;
 }
 
 /** The panel, made with what moving its cursor does; null takes it away. */
@@ -51,6 +53,7 @@ export function holocenePanel(moveTo: (year: number) => void): LayerFactory<Holo
         });
         chart.holdAt(view.year);
         holding = false;
+        if (view.drawOn === true) chart.setPlaying(true);
       },
       dispose() {
         chart?.dispose();
