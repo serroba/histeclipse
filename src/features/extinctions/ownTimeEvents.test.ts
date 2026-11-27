@@ -107,6 +107,25 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     expect(update).toHaveBeenLastCalledWith(null);
   });
 
+  it('key each clock’s marks and colours: no ice where there was none (#1268)', () => {
+    const swatches = (id: string, ma: number) =>
+      ownTimeOf(DATA, id, ma)?.legend?.map(([swatch]) => swatch);
+    expect(swatches('end-permian-extinction', 251.9)).toEqual([
+      'cause',
+      'record',
+      'smoke',
+      'lava',
+      'basalt',
+    ]);
+    expect(swatches('end-ordovician-extinction', 444)).toEqual([
+      'cause',
+      'record',
+      'ice',
+      'anoxia',
+    ]);
+    expect(swatches('late-devonian-extinction', 372)).toEqual(['cause', 'record', 'anoxia']);
+  });
+
   it('draw a crisis of the seas with the clock, and take it away when closed', () => {
     const event = ownTimeOf(DATA, 'end-ordovician-extinction', 444);
     const update = vi.fn();

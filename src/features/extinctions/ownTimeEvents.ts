@@ -28,6 +28,7 @@ import { END_ORDOVICIAN, LATE_DEVONIAN } from './coldPhases';
 import { END_GUADALUPIAN } from './guadalupianPhases';
 import { CAMP_CARBON_DIOXIDE } from './campCarbonDioxide';
 import { factsAt, KEY_FACTS, type KeyFact } from './keyFacts';
+import { PROVINCE_LEGEND, seasLegend } from './legends';
 import { LOSSES } from './losses';
 import { MEISHAN_TEMPERATURES } from './meishanTemperatures';
 import { PERMIAN_CARBON_DIOXIDE } from './permianCarbonDioxide';
@@ -90,6 +91,7 @@ interface Province {
 const KYR = 1000 * 365.25 * 86_400;
 
 /** What every volcanic province's drawing is, before what it assumes (#1226). */
+
 const SMOKE =
   'Drawn to illustrate, not measured: smoke over vents spread across the province, and the lava, glowing red at its front and dark basalt behind,';
 
@@ -182,6 +184,7 @@ function provinceEvent(
       .filter((phase) => province.keys?.includes(phase.id) === true)
       .map((phase) => phase.from),
     drawn: province.drawn,
+    legend: PROVINCE_LEGEND,
     ma: province.zero,
     play(tools) {
       const fumes = tools.layer(fumesLayer);
@@ -274,6 +277,7 @@ function coldEvent(crisis: ColdCrisis, ice: GeoPoint | null, anoxia: GeoPoint): 
     offer: `Watch ${crisis.name} in its own time`,
     ma: crisis.zero,
     drawn: crisis.drawn,
+    legend: seasLegend(ice !== null),
     play(tools) {
       const seas = tools.layer(seasLayer);
       return {
