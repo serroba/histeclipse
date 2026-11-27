@@ -207,7 +207,7 @@ function loader(context: SpacecraftContext, then: Geocentric): LoadOnce<Loaded> 
         loadSpacecraftPaths(`${context.base}data/spacecraft-paths.json`, context.fetchJson),
       ]).then(([record, paths]) => ({
         craft: [...record.craft, ...record.aboutEarth],
-        missions: missions(record.craft, today()),
+        missions: missions(record.craft, today(), record.aboutEarth),
         wheres: craftWheres(paths, then),
       })),
     what: 'the spacecraft',

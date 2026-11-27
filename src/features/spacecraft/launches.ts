@@ -87,10 +87,10 @@ function programsLoader(context: LaunchesContext, ready: () => void) {
       if (asked) return;
       asked = true;
       loadSpacecraft(`${context.base}data/spacecraft.json`, context.fetchJson).then(
-        ({ craft }) => {
+        ({ craft, aboutEarth }) => {
           loaded = {
             launches: launchesProgram(launchMoments(craft), departures(craft)),
-            missions: missions(craft, today()),
+            missions: missions(craft, today(), aboutEarth),
           };
           ready();
         },

@@ -46,7 +46,7 @@ describe('the passages file', () => {
         ),
         ...moonPassages(MOON_FACTS),
         ...eclipsePassages(famous),
-        ...missionPassages(record.craft),
+        ...missionPassages(record.craft, record.aboutEarth),
         ...storyPassages(),
         ...telescopePassages(await loadTelescopes('telescopes.json', serve(telescopes))),
         ...extinctionPassages(

@@ -1868,6 +1868,13 @@
     "cite": "NASA, “Ganymede” (moon overview)",
     "url": "https://science.nasa.gov/jupiter/moons/ganymede/"
   },
+  "nasaHubbleMissions": {
+    "name": "NASA: missions to Hubble",
+    "kind": "reference",
+    "cite": "NASA Science, Missions to Hubble: the telescope's launch and deployment on Space Shuttle Discovery (24–29 April 1990, released 25 April) and its five servicing missions, of December 1993, February 1997, December 1999, March 2002 and May 2009, with what each did. A US Government work",
+    "url": "https://science.nasa.gov/mission/hubble/observatory/missions-to-hubble/",
+    "licence": "NASA, public domain"
+  },
   "nasaHyperion": {
     "name": "NASA: Hyperion",
     "kind": "reference",
