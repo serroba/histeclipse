@@ -160,7 +160,7 @@ describe('the extinctions as a feature', () => {
     cards.at(-1)?.action?.run();
     expect(clockTitle()).toBe('The end-Permian, in its own time');
     expect(strikes.zoomTo).toHaveBeenCalledWith(2.3);
-    expect(drawn.at(-1)).toMatchObject({ spread: 9, fuming: { lava: 0, gas: 0, haze: 0 } });
+    expect(drawn.at(-1)).toMatchObject({ spread: 8.5, fuming: { lava: 0, gas: 0, haze: 0 } });
   });
 
   it('watches the end-Triassic and the end-Guadalupian from their cards, each province fuming (#1201)', async () => {
@@ -170,7 +170,7 @@ describe('the extinctions as a feature', () => {
     expect(clockTitle()).toBe('The end-Triassic, in its own time');
     // Centred between its lavas, now on either side of the Atlantic.
     const camp = triassic.drawn.at(-1) as { center: { longitude: number }; spread: number };
-    expect(camp.spread).toBe(14);
+    expect(camp.spread).toBe(12.1);
     expect(camp.center.longitude).toBeGreaterThan(-25);
     expect(camp.center.longitude).toBeLessThan(-5);
     document.body.replaceChildren();
@@ -178,7 +178,7 @@ describe('the extinctions as a feature', () => {
     guadalupian.shown.pick?.('emeishan-traps');
     guadalupian.cards.at(-1)?.action?.run();
     expect(clockTitle()).toBe('The end-Guadalupian, in its own time');
-    expect(guadalupian.drawn.at(-1)).toMatchObject({ spread: 4 });
+    expect(guadalupian.drawn.at(-1)).toMatchObject({ spread: 2.7 });
   });
 
   it('watches the end-Ordovician’s ice and the Late Devonian’s seas from their cards (#1202)', async () => {

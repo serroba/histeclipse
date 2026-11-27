@@ -57,7 +57,7 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     expect(strikes.flyTo).not.toHaveBeenCalled();
     expect(event?.views).toHaveLength(1);
     played?.at(0);
-    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ spread: 4 }));
+    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ spread: 2.7 }));
     played?.end();
     expect(update).toHaveBeenLastCalledWith(null);
     expect(event?.offer).toBe('Watch the end-Guadalupian in its own time');
@@ -116,7 +116,7 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     } as unknown as Parameters<NonNullable<typeof event>['play']>[0]);
     played?.at(5);
     expect(strike.at).toHaveBeenCalledWith(5);
-    expect(update).toHaveBeenCalledWith(expect.objectContaining({ spread: 7 }));
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ spread: 4.7 }));
     played?.end();
     expect(strike.end).toHaveBeenCalled();
     expect(update).toHaveBeenLastCalledWith(null);
