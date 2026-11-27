@@ -179,8 +179,12 @@ describe('the temperature maps as a feature', () => {
     });
     // The chart at its latest year, today: the measured maps asked for.
     shown.show?.(today, 0);
+    // The measured maps arrive, and deep time draws again with them.
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(2);
+      shown.deepBar?.(today, { ma: 0, scale: 'ice' });
+      expect(setTemperature).toHaveBeenLastCalledWith(
+        expect.objectContaining({ younger: '/data/warming/2024.png' }),
+      );
     });
     const fields = shown.deepBar?.(today, { ma: 0, scale: 'ice' });
     expect(setTemperature).toHaveBeenLastCalledWith(
@@ -212,5 +216,36 @@ describe('the temperature maps as a feature', () => {
     expect(latest).toBeGreaterThanOrEqual(2024);
     expect(shown.storyDate?.()?.when).toBe(String(latest));
     expect(again).toHaveBeenCalled();
+  });
+
+  it('at today on the 540 Myr scale, colours the globe by the latest measured warming, and the header says so (#1289)', async () => {
+    const { context, setTemperature, again } = fakeContext();
+    const shown = temperatureFeature.mount(context, context);
+    const today: ViewState = { ...on, ma: 0, deepScale: 'all' };
+    const now = { ma: 0, scale: 'all' } as const;
+    // Krapp et al.'s maps and the measured warming load: shown again until both are in.
+    await vi.waitFor(() => {
+      shown.deepBar?.(today, now);
+      expect(setTemperature).toHaveBeenLastCalledWith(
+        expect.objectContaining({ younger: '/data/warming/2024.png' }),
+      );
+    });
+    const fields = shown.deepBar?.(today, now);
+    expect(setTemperature).toHaveBeenLastCalledWith(
+      expect.objectContaining({ younger: '/data/warming/2024.png', change: true }),
+    );
+    expect(fields?.temperature?.note).toContain('Berkeley Earth');
+    expect(shown.storyDate?.()).toEqual({
+      when: 'Today',
+      what: 'Measured warming since 1850–1900',
+    });
+    expect(again).toHaveBeenCalled();
+    // A million years ago: the models' own maps, and the header its own.
+    const before = setTemperature.mock.calls.length;
+    shown.deepBar?.({ ...today, ma: 1 }, { ma: 1, scale: 'all' });
+    expect(setTemperature.mock.calls.slice(before).flat()).not.toContainEqual(
+      expect.objectContaining({ younger: expect.stringContaining('warming') as unknown }),
+    );
+    expect(shown.storyDate?.()).toBeNull();
   });
 });

@@ -24,13 +24,15 @@ export const MEASURED_NOTE =
 const FETCH_FROM_YEAR = 1750;
 
 /** The globe's Temperature surface the measured warming gives. */
-type Surface = NonNullable<ReturnType<typeof measuredAt>>;
+export type Surface = NonNullable<ReturnType<typeof measuredAt>>;
 
 export interface Measured {
   /** The chart's year, as it holds or draws; null when it is not shown. */
   at(year: number | null): void;
   /** The surface to colour the globe by now, if the measured warming has it. */
   surface(state: ViewState): Surface | null;
+  /** The latest measured warming, as today (#1289); null until it has loaded. */
+  latest(): Surface | null;
 }
 
 export function createMeasured(
@@ -59,6 +61,11 @@ export function createMeasured(
         fetched = true;
         context.prefetch(loaded.frames.map((frame) => url(frame.file)));
       }
+    },
+    latest() {
+      const loaded = warming.value();
+      if (loaded === null) warming.want();
+      return loaded === null ? null : measuredAt(loaded, Number.POSITIVE_INFINITY, url);
     },
     surface(state) {
       if (!chartShown(state) || state.temperatureShow !== 'change') return null;
