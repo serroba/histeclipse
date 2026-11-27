@@ -25,3 +25,31 @@ export function playhead(): Playhead {
     },
   };
 }
+
+/** A playhead along a part's own timeline (#1276): play's position on it, kept unrounded. */
+export interface AxisPlayhead {
+  /**
+   * Advance by `seconds` at `share` of the Normal pace from `shown`, along `axis`; return where
+   * play has reached, unrounded (the view keeps it rounded to a thousand years).
+   */
+  step(
+    axis: { at(ma: number): number; ma(seconds: number): number },
+    shown: number,
+    share: number,
+    seconds: number,
+  ): number;
+}
+
+export function axisPlayhead(): AxisPlayhead {
+  let along: number | null = null;
+  let reached: number | null = null;
+  return {
+    step(axis, shown, share, seconds) {
+      // The reader moved the slider (or play just began): carry on from what is shown.
+      if (along === null || reached === null || roundMa(reached) !== shown) along = axis.at(shown);
+      along += share * Math.min(Math.max(seconds, 0), LONGEST_FRAME);
+      reached = Math.max(0, axis.ma(along));
+      return reached;
+    },
+  };
+}
