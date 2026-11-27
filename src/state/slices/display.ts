@@ -126,7 +126,8 @@ export const DISPLAY_PARAMS: Params<DisplayState> = {
   mission: {
     key: 'mission',
     parse: (raw) => {
-      if (!/^d\d{5}$/i.test(raw)) throw new Error('expected a craft’s GCAT id, such as d00271');
+      // A craft beyond Earth orbit, or one that stayed about it (#800: s20580, Hubble).
+      if (!CRAFT_ID.test(raw)) throw new Error('expected a craft’s GCAT id, such as d00271');
       return raw.toLowerCase();
     },
     format: (id) => id,

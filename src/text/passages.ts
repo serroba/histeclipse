@@ -339,16 +339,19 @@ function missionText(mission: Mission): string {
  * across the years it flew; and where its craft came down, each a place to open inside it
  * (#716), so a search for Apollo finds the missions, not their parts.
  */
-export function missionPassages(craft: readonly Craft[]): Passage[] {
+export function missionPassages(
+  craft: readonly Craft[],
+  aboutEarth: readonly Craft[] = [],
+): Passage[] {
   const byLaunch = new Map<string, Craft[]>();
   for (const one of craft)
     byLaunch.set(one.launchTag, [...(byLaunch.get(one.launchTag) ?? []), one]);
-  return missions(craft, recordEnd(craft)).map((mission) => ({
+  return missions(craft, recordEnd(craft), aboutEarth).map((mission) => ({
     id: `mission:${mission.id}`,
     kind: 'mission',
     title: mission.title,
     text: missionText(mission),
-    sources: ['gcat', 'nssdcaChronology'],
+    sources: ['gcat', mission.credit],
     anchors: [
       {
         body: mission.aboutEarth ? 'earth' : 'sun',

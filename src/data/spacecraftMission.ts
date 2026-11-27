@@ -9,6 +9,7 @@
 import { apply, transpose, type Vector3 } from '../astro/matrix';
 import { earthFixedToJ2000, sunPositionJ2000 } from '../astro/precession';
 import type { JulianDay } from '../time/julianDay';
+import { ORBIT_MISSIONS, type OrbitMission } from './orbitMissions';
 import { gcatJd, type Craft } from './spacecraft';
 
 /** A moment of the journey: what happened, its meaning in a sentence, and when (UT JD). */
@@ -35,6 +36,10 @@ export interface Mission {
   /** The Sun–Earth L point it went to, if any: about Earth, its route is drawn turning with the
    * Sun (#995). */
   readonly lPoint: 'SEL1' | 'SEL2' | null;
+  /** It stayed in orbit about Earth (#800): framed close, on the ring it goes round. */
+  readonly inOrbit: boolean;
+  /** Whose its moments are, beside GCAT's record of the craft: an id in the sources' registry. */
+  readonly credit: 'nssdcaChronology' | OrbitMission['source'];
 }
 
 /** A year past its last encounter, a mission still flying is shown to (UT days). */
@@ -203,11 +208,51 @@ function missionOf(sent: readonly Craft[], today: number): Mission | null {
     aboutEarth: reach === null,
     reach,
     lPoint: lPointOf(craft),
+    inOrbit: false,
+    credit: 'nssdcaChronology',
   };
 }
 
-/** Every mission in the record, by launch, earliest first. */
-export function missions(craft: readonly Craft[], today: number): readonly Mission[] {
+/** A craft that stayed about Earth as a mission (#800), if its moments are known; else null. */
+function orbitMissionOf(craft: Craft, today: number): Mission | null {
+  const known = ORBIT_MISSIONS[craft.id];
+  if (known === undefined) return null;
+  const chapters = known.moments.map(({ name, meaning, date }) => ({
+    name,
+    meaning,
+    jd: gcatJd(date),
+  }));
+  const start = Math.min(...chapters.map(({ jd }) => jd));
+  const ended = craft.phases.at(-1)?.[2] ?? null;
+  return {
+    id: craft.id.toLowerCase(),
+    title: craft.mission ?? craft.name,
+    craft: [craft],
+    start,
+    // Still in orbit, it runs to today, not a year past its last moment as a cruise would.
+    end: Math.max(
+      start + 1,
+      ended === null ? today : gcatJd(ended),
+      ...chapters.map(({ jd }) => jd),
+    ),
+    chapters,
+    aboutEarth: true,
+    reach: null,
+    lPoint: null,
+    inOrbit: true,
+    credit: known.source,
+  };
+}
+
+/**
+ * Every mission in the record, by launch, earliest first: those beyond Earth orbit, and those of
+ * the craft `aboutEarth` whose moments are known (#800).
+ */
+export function missions(
+  craft: readonly Craft[],
+  today: number,
+  aboutEarth: readonly Craft[] = [],
+): readonly Mission[] {
   const byLaunch = new Map<string, Craft[]>();
   for (const each of craft) {
     const sent = byLaunch.get(each.launchTag);
@@ -216,6 +261,7 @@ export function missions(craft: readonly Craft[], today: number): readonly Missi
   }
   return [...byLaunch.values()]
     .map((sent) => missionOf(sent, today))
+    .concat(aboutEarth.map((each) => orbitMissionOf(each, today)))
     .filter((mission) => mission !== null)
     .sort((a, b) => a.start - b.start);
 }
@@ -265,6 +311,9 @@ export function besideTheSunLine(jd: number): string {
   return `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
 }
 
+/** A mission in orbit about Earth (#800), seen from high over the tropics, its ring whole. */
+const ORBIT_VIEW = '60.0000,0.0000,6.00';
+
 /** UT JD as a link's moment: "1977-08-20T19:37Z". */
 function linkMoment(jd: number): string {
   return `${new Date((jd - 2_440_587.5) * 86_400_000).toISOString().slice(0, 16)}Z`;
@@ -276,6 +325,8 @@ function linkMoment(jd: number): string {
  * from above the planets, out to a little past the farthest place it went.
  */
 export function missionView(mission: Mission): string {
+  if (mission.inOrbit)
+    return `focus=earth&cam=${ORBIT_VIEW}&layers=spacecraft&mission=${mission.id}&t=${linkMoment(mission.start)}`;
   const goesFar = mission.craft.some(({ phases }) => phases.some(([body]) => L_POINTS.has(body)));
   const fromEarth = mission.lPoint === null ? '89.0000,0.0000' : besideTheSunLine(mission.start);
   const camera =

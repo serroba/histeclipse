@@ -220,6 +220,19 @@ describe('where the bodies are, for the craft (#702)', () => {
       expect(Math.abs(Math.hypot(...(now?.km ?? [0, 0, 0])) - radius)).toBeLessThan(4.6);
     });
 
+    it('Given it followed as a mission (#800), Then it has no route over its years, only its ring', () => {
+      const followed = {
+        from: gcatJd('1990-04-24'),
+        to: gcatJd('2026-11-14'),
+        aboutEarth: true,
+        turning: false,
+      };
+      expect(craftRoutes([hubble], wheres, geocentric, gcatJd('2009-05-20'), followed)).toEqual([]);
+      const [now] = craftNow([hubble], wheres, geocentric, gcatJd('2009-05-20'), followed);
+      expect(now?.ring).toBe(true);
+      expect(now?.trail).toHaveLength(60);
+    });
+
     it('Given a moment before it was set free, Then it is not there', () => {
       expect(craftNow([hubble], wheres, geocentric, gcatJd('1990-04-20'))).toEqual([]);
       expect(wheres.where(hubble, gcatJd('1990-04-20'))).toBeNull();

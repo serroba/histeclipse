@@ -396,6 +396,11 @@ describe('parseViewState', () => {
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('mission=');
   });
 
+  it('Given a mission that stayed about Earth, Then its satellite-catalogue id is read too (#800)', () => {
+    expect(parseViewState('mission=S20580', NOW).state.mission).toBe('s20580');
+    expect(parseViewState('mission=x20580', NOW).warnings).not.toHaveLength(0);
+  });
+
   it('Given a destination named, Then it is read and written back, and absent by default (#726)', () => {
     const { state, warnings } = parseViewState('explore=human-origins', NOW);
     expect(warnings).toEqual([]);

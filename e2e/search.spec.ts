@@ -101,6 +101,35 @@ test('a reader searches for a mission and follows its journey (#712)', async ({ 
   expect(problems).toEqual([]);
 });
 
+test('a reader searches for Hubble and follows it as a mission about Earth, through its servicing flights (#800)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const dialog = page.getByRole('dialog', { name: 'Search' });
+  await test.step('Given the globe today', async () => {
+    await page.goto('./?cam=0,0,3');
+    await globeRendered(page);
+  });
+  await test.step('When they search for Hubble', async () => {
+    await page.getByRole('button', { name: 'Search the texts' }).click();
+    await dialog.getByRole('searchbox').fill('Hubble servicing');
+  });
+  await test.step('Then its mission is found, and opening it frames Earth close, from its launch', async () => {
+    await dialog.locator('[data-passage="mission:s20580"] .search-hit').click();
+    await expect(dialog).toBeHidden();
+    await expect(page).toHaveURL(/mission=s20580/);
+    // On Earth, close: the link need not name Earth, its default.
+    await expect(page).not.toHaveURL(/focus=/);
+    await expect(page).toHaveURL(/cam=60\.0000,0\.0000,6\.00/);
+    await expect(page).toHaveURL(/t=1990-04-24T00:00Z/);
+    const journey = page.getByRole('group', { name: 'Hubble Space Telescope: its journey' });
+    await expect(journey).toBeVisible({ timeout: 30_000 });
+    await expect(journey.getByRole('listitem')).toHaveCount(7);
+    await expect(journey.getByRole('listitem').last()).toHaveText(/^Last servicing 11 May 2009/);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('a reader opens a searched eclipse and the globe turns to its place (#942) @acceptance', async ({
   page,
 }) => {

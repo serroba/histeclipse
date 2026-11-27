@@ -188,7 +188,9 @@ export function trailMoments(jdTT: number, step: number, points = TRAIL_POINTS):
 
 /**
  * Each craft's whole route through a mission followed, seen at `jdTT`: at the same moments
- * every frame, so the bodies' places along it are kept.
+ * every frame, so the bodies' places along it are kept. A craft in orbit about Earth has none
+ * (#800): sampled over its years, its laps would be a jagged scrawl; its ring, the lap it has
+ * just made, is its trail.
  */
 export function craftRoutes(
   craft: readonly Craft[],
@@ -198,16 +200,18 @@ export function craftRoutes(
   followed: Followed,
 ): readonly CraftRoute[] {
   const { from, to } = followed;
-  return craft.map((each) => ({
-    id: each.id,
-    approximate: wheres.approximate(each),
-    points: Array.from({ length: ROUTE_POINTS + 1 }, (_, k) => {
-      const then = from + ((to - from) * k) / ROUTE_POINTS;
-      const where = wheres.where(each, then);
-      if (where === null || ('at' in where && where.at === 'Earth')) return null;
-      return followedPoint(where, then, geocentric, jdTT, followed);
-    }),
-  }));
+  return craft
+    .filter((each) => each.orbit === undefined)
+    .map((each) => ({
+      id: each.id,
+      approximate: wheres.approximate(each),
+      points: Array.from({ length: ROUTE_POINTS + 1 }, (_, k) => {
+        const then = from + ((to - from) * k) / ROUTE_POINTS;
+        const where = wheres.where(each, then);
+        if (where === null || ('at' in where && where.at === 'Earth')) return null;
+        return followedPoint(where, then, geocentric, jdTT, followed);
+      }),
+    }));
 }
 
 /** Where a craft had just been, newest first, back along its path from where it is now; none
