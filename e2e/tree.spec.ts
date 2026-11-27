@@ -4,7 +4,15 @@
  * line back to the root is lit and listed, each step a way to that group.
  */
 
-import { collectProblems, expect, globeRendered, GPU, openLayers, test } from './support';
+import {
+  collectProblems,
+  expect,
+  globeRendered,
+  GPU,
+  openLayers,
+  showDeepDetails,
+  test,
+} from './support';
 
 import treeFixture from './fixtures/tree-of-life.json' with { type: 'json' };
 
@@ -135,3 +143,46 @@ test(
     expect(problems).toEqual([]);
   },
 );
+
+test('a fossil genus on the tree leads to where it was found, ringed on the globe (#309) @acceptance', async ({
+  page,
+}) => {
+  // A small real subtree: Tyrannosaurus's place in it is the same as in the whole tree.
+  await page.route('**/data/tree-of-life.json', (route) => route.fulfill({ json: treeFixture }));
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const said = page.getByTestId('fossil-finds');
+  await test.step('Given the tree at Tyrannosaurus', async () => {
+    await page.goto('./?tree=ott664348');
+    await globeRendered(page);
+    await expect(page.getByTestId('tree-focus').getByRole('heading')).toHaveText(
+      'Tyrannosaurus †',
+      DRAWN,
+    );
+  });
+  await test.step('When they ask where it was found', async () => {
+    await page
+      .getByTestId('tree-focus')
+      .getByRole('button', { name: 'Where Tyrannosaurus was found' })
+      .click();
+  });
+  await test.step('Then deep time opens at its oldest finds, Fossils on, its sites ringed', async () => {
+    await expect(page).toHaveURL(/finds=dinosaurs:38613/);
+    await expect(page).toHaveURL(/ma=80(&|$)/);
+    await expect(page).toHaveURL(/layers=[a-z,]*fossils/);
+    await expect(page).not.toHaveURL(/tree=/);
+    await expect(globe).toHaveAttribute('data-fossil-finds', /^[1-9]\d*$/);
+    await showDeepDetails(page);
+    await expect(said).toBeVisible();
+    await expect(said).toContainText('Tyrannosaurus, ringed: found at');
+  });
+  await test.step('When they stop marking it', async () => {
+    await page.getByRole('button', { name: 'Stop marking Tyrannosaurus' }).click();
+  });
+  await test.step('Then the rings go, and the link no longer names it', async () => {
+    await expect(globe).toHaveAttribute('data-fossil-finds', 'off');
+    await expect(page).not.toHaveURL(/finds=/);
+    await expect(said).toBeHidden();
+  });
+  expect(problems).toEqual([]);
+});

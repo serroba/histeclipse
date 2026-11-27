@@ -4,7 +4,15 @@
  * taxon or at a genus.
  */
 
-import { loadLineages, type LineageGroup, type Lineages } from '../../data/lineages';
+import {
+  isGenus,
+  loadLineages,
+  type LineageGroup,
+  type Lineages,
+  type Place,
+} from '../../data/lineages';
+import { oldestFinds } from '../../data/fossilFinds';
+import type { FossilFinds } from '../../state/viewState';
 import { loadTreeOfLife, type TreeOfLife } from '../../data/treeOfLife';
 import { createLineagesSheet } from './lineagesSheet';
 import { createTreeSheet } from './treeSheet';
@@ -21,6 +29,57 @@ export interface TreeOfLifePart extends MountedPart {
   readonly openLineagesAt: (group: LineageGroup, genus: string) => void;
 }
 
+/** The ways to a genus from the sheets (#309): its finds on the globe, or its line through time. */
+function genusWays(
+  context: PartContext,
+  loadGroupLineages: (group: LineageGroup) => Promise<Lineages>,
+): {
+  readonly goToFinds: (ma: number, where: Place, finds: FossilFinds) => void;
+  readonly openFindsAt: (group: LineageGroup, genus: string) => void;
+  readonly openLineagesAt: (group: LineageGroup, genus: string) => void;
+} {
+  const { store } = context;
+
+  /** Deep time at a moment, facing a place, with the fossils on and these finds ringed (#309). */
+  function goToFinds(ma: number, where: Place, finds: FossilFinds): void {
+    context.goToDeepTime(ma, 'fossils', where);
+    store.set((state) => ({ ...state, finds }));
+  }
+
+  /** A genus's finds on the globe, from its first appearance, the tree of life closed (#309). */
+  function openFindsAt(group: LineageGroup, genus: string): void {
+    loadGroupLineages(group).then(
+      (lineages) => {
+        const node = lineages.nodes.find((each) => each.name === genus && isGenus(each));
+        const start = node === undefined ? null : oldestFinds(node.track);
+        if (node === undefined || start === null) {
+          context.notify(`${genus} has no placed finds in the lines through time.`);
+          return;
+        }
+        store.set((state) => ({ ...state, tree: null }));
+        goToFinds(start.ma, start, { group, pbdb: node.pbdb });
+      },
+      (error: unknown) => {
+        context.notify(`Could not load the genera’s finds: ${errorMessage(error)}`);
+      },
+    );
+  }
+
+  function openLineagesAt(group: LineageGroup, genus: string): void {
+    loadGroupLineages(group).then(
+      (lineages) => {
+        const pick = lineages.nodes.find((node) => node.name === genus)?.pbdb ?? null;
+        store.set((state) => ({ ...state, tree: null, lineages: { group, pick } }));
+      },
+      (error: unknown) => {
+        context.notify(`Could not load the lines through time: ${errorMessage(error)}`);
+      },
+    );
+  }
+
+  return { goToFinds, openFindsAt, openLineagesAt };
+}
+
 export function mountTreeOfLife(context: PartContext): TreeOfLifePart {
   const { base, fetchJson, store } = context;
   let treeOfLife: Promise<TreeOfLife> | null = null;
@@ -31,12 +90,28 @@ export function mountTreeOfLife(context: PartContext): TreeOfLifePart {
     });
     return treeOfLife;
   };
+  // Each fossil group's genera, a file per group, loaded when shown.
+  const lineagesLoading = new Map<LineageGroup, Promise<Lineages>>();
+  const loadGroupLineages = (group: LineageGroup): Promise<Lineages> => {
+    let loading = lineagesLoading.get(group);
+    if (loading === undefined) {
+      loading = loadLineages(`${base}data/time-tree/${group}.json`, fetchJson);
+      loading.catch(() => lineagesLoading.delete(group));
+      lineagesLoading.set(group, loading);
+    }
+    return loading;
+  };
+  const { goToFinds, openFindsAt, openLineagesAt } = genusWays(context, loadGroupLineages);
   const treeSheet = createTreeSheet(
     (tree) => {
       store.set((state) => ({ ...state, tree }));
     },
     loadTree,
     context.why('tree', 'Tree of life'),
+    (to, group, genus) => {
+      if (to === 'time') openLineagesAt(group, genus);
+      else openFindsAt(group, genus);
+    },
   );
   function openTreeAt(pick: TreePick): void {
     loadTree().then(
@@ -51,26 +126,15 @@ export function mountTreeOfLife(context: PartContext): TreeOfLifePart {
     );
   }
 
-  // Each fossil group's genera, a file per group, loaded when shown.
-  const lineagesLoading = new Map<LineageGroup, Promise<Lineages>>();
-  const loadGroupLineages = (group: LineageGroup): Promise<Lineages> => {
-    let loading = lineagesLoading.get(group);
-    if (loading === undefined) {
-      loading = loadLineages(`${base}data/time-tree/${group}.json`, fetchJson);
-      loading.catch(() => lineagesLoading.delete(group));
-      lineagesLoading.set(group, loading);
-    }
-    return loading;
-  };
   const lineagesSheet = createLineagesSheet(
     (lineages) => {
       store.set((state) => ({ ...state, lineages }));
     },
     loadGroupLineages,
     (ma) => `${base}data/paleodem/${String(ma)}.png`,
-    (ma, where) => {
+    (ma, where, finds) => {
       store.set((state) => ({ ...state, lineages: null }));
-      context.goToDeepTime(ma, 'fossils', where);
+      goToFinds(ma, where, finds);
     },
     context.why('lineages', 'Life through time'),
   );
@@ -83,16 +147,6 @@ export function mountTreeOfLife(context: PartContext): TreeOfLifePart {
       lineagesSheet.show(state.lineages);
     },
     openTreeAt,
-    openLineagesAt: (group, genus) => {
-      loadGroupLineages(group).then(
-        (lineages) => {
-          const pick = lineages.nodes.find((node) => node.name === genus)?.pbdb ?? null;
-          store.set((state) => ({ ...state, lineages: { group, pick } }));
-        },
-        (error: unknown) => {
-          context.notify(`Could not load the lines through time: ${errorMessage(error)}`);
-        },
-      );
-    },
+    openLineagesAt,
   };
 }

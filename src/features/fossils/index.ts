@@ -23,6 +23,8 @@ import { formatMa } from '../../time/format';
 import { errorMessage } from '../../util/errors';
 import { loadOnce } from '../../state/loadOnce';
 import { feature } from '../feature';
+import { createFinds } from './finds';
+import { findsLayer } from './findsLayer';
 import { fossilLayer } from './fossilLayer';
 import './fossils.css';
 
@@ -50,10 +52,12 @@ export const fossilsFeature = feature({
   needs: ['cards', 'tree'],
   picks: 'fossil',
   deepChip: { label: 'Fossils', why: 'fossils' },
-  // Shown in deep time, by the deep-time view: nothing to watch besides.
+  // Shown in deep time, by the deep-time view (which watches the genus marked, #309).
   watches: () => [],
   mount(context) {
     const cellsOnGlobe = context.globe.addLayer(fossilLayer);
+    const findsOnGlobe = context.globe.addLayer(findsLayer);
+    const finds = createFinds(context);
     const load = loadOnce<Fossils>({
       fetch: () => loadFossils(`${context.base}data/fossils.json`, context.fetchJson),
       what: 'the fossils',
@@ -113,6 +117,7 @@ export const fossilsFeature = feature({
         if (moment === null || !on) {
           at = null;
           cellsOnGlobe.update(null);
+          findsOnGlobe.update(null);
           return moment === null
             ? null
             : { offered: moment.scale === 'all', on: false, note: null };
@@ -130,11 +135,17 @@ export const fossilsFeature = feature({
         }
         at = fossilsAt(fossils, moment.ma);
         cellsOnGlobe.update(at.cells);
+        const marked = finds.shownAt(state.finds, moment.ma);
+        findsOnGlobe.update(marked.finds);
         const ma = nearestFinds(fossils, moment.ma);
         const go = (): void => {
           if (ma !== null) context.change((state) => ({ ...state, ma: roundMa(ma) }));
         };
-        return { offered, on: true, note: note(at, ma === null ? null : { ma, go }) };
+        return {
+          offered,
+          on: true,
+          note: [...note(at, ma === null ? null : { ma, go }), ...marked.note],
+        };
       },
       pick(key) {
         const card = cardFor(key);

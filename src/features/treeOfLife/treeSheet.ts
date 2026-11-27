@@ -13,13 +13,14 @@ import type * as Phoria2 from 'phoria2';
 import type * as Phoria2Charts from 'phoria2/charts';
 
 import type { TreeOfLife } from '../../data/treeOfLife';
-import { hasFlag, lineage } from '../../data/treeOfLife';
+import { fossilGenusAt, hasFlag, lineage } from '../../data/treeOfLife';
 import type { TreeLayout } from '../../data/treeLayout';
 import { nodeOfOtt, TREE_CLADES, TREE_KEYS, treeLayout } from '../../data/treeLayout';
 import type { TreeView } from '../../state/viewState';
 import { elementAt, valueAt } from '../../util/arrays';
 import { errorMessage } from '../../util/errors';
 import { element } from '../../ui/dom';
+import { fossilActions, type OnFossil } from './fossilActions';
 import '../../ui/stageSheet.css';
 
 export interface TreeSheet {
@@ -84,6 +85,8 @@ export function createTreeSheet(
   load: () => Promise<TreeOfLife>,
   /** The book that says where the tree comes from. */
   why: HTMLElement,
+  /** A fossil genus's finds on the globe, or its line through time (#309). */
+  onFossil: OnFossil,
 ): TreeSheet {
   const close = element(
     'button',
@@ -283,6 +286,7 @@ export function createTreeSheet(
             element('li', {}, crumb(elementAt(data.name, each), valueAt(data.ott, each))),
           ),
       ),
+      ...fossilActions(fossilGenusAt(data, node), onFossil),
     );
   }
 

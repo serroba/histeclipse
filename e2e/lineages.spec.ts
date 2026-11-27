@@ -100,10 +100,14 @@ test('a link picks out Tyrannosaurus, its line back to Dinosauria, and leads to 
   await test.step('When they go to see its fossils on the globe', async () => {
     await focus.getByRole('button', { name: /See its fossils on the globe/ }).click();
   });
-  await test.step('Then deep time opens at its start with Fossils on, the lines closed', async () => {
+  await test.step('Then deep time opens at its oldest finds with Fossils on, the lines closed', async () => {
     await expect(page).toHaveURL(/ma=\d+/);
     await expect(page).toHaveURL(/layers=[a-z,]*fossils/);
     await expect(page).not.toHaveURL(/lineages=/);
+    // The family's finds ringed (#309).
+    await expect(page).toHaveURL(/finds=dinosaurs:\d+/);
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-fossil-finds', /^[1-9]\d*$/);
+    await expect(page.getByTestId('fossil-finds')).toContainText('Tyrannosauridae, ringed');
   });
   expect(problems).toEqual([]);
 });

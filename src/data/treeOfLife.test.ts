@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import data from '../../public/data/tree-of-life.json';
 import fixture from '../../e2e/fixtures/tree-of-life.json';
-import { hasFlag, lineage, loadTreeOfLife, namedLineage, type TreeOfLife } from './treeOfLife';
+import {
+  fossilGenusAt,
+  hasFlag,
+  lineage,
+  loadTreeOfLife,
+  namedLineage,
+  type TreeOfLife,
+} from './treeOfLife';
 
 const serve = (body: unknown) => (): Promise<Response> => Promise.resolve(Response.json(body));
 const real = data as TreeOfLife;
@@ -69,5 +76,14 @@ describe('the tree of life (Open Tree of Life, trimmed)', () => {
     const mammals = real.ours.fossilGroups['mammals'] ?? -1;
     expect(hasFlag(real, mammals, 'taxonomyOnly')).toBe(false);
     expect(real.nodeFlags.some((flags) => (flags & real.flags.phylogeny) !== 0)).toBe(true);
+  });
+
+  it('knows a fossil genus the site shows, and its group, from any other taxon (#309)', () => {
+    const rex = real.ours.fossilGenera['Tyrannosaurus'] ?? -1;
+    expect(fossilGenusAt(real, rex)).toEqual({ genus: 'Tyrannosaurus', group: 'dinosaurs' });
+    const trilobite = Object.entries(real.ours.fossilGenera)[0];
+    expect(fossilGenusAt(real, trilobite?.[1] ?? -1)?.genus).toBe(trilobite?.[0]);
+    expect(fossilGenusAt(real, real.ours.fossilGroups['dinosaurs'] ?? -1)).toBeNull();
+    expect(fossilGenusAt(real, 0)).toBeNull();
   });
 });
