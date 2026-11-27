@@ -62,6 +62,8 @@ interface Province {
   readonly phases: readonly EventPhase[];
   /** Its sites, whose middle it is centred on. */
   readonly sites: readonly string[];
+  /** Its phases where play lingers to be read, by id (#1267). */
+  readonly keys?: readonly string[];
   /**
    * Where the camera goes next as its story moves on (#1266): from when, the sites whose middle
    * it looks at, and how far from them, in Earth radii.
@@ -107,6 +109,7 @@ const PROVINCES: readonly Province[] = [
     // Its start at Meishan (Burgess, Bowring & Shen 2014), before the boundary at 251.902.
     zero: 251.941,
     proxies: [MEISHAN_TEMPERATURES, PERMIAN_CARBON_DIOXIDE],
+    keys: ['lavas', 'sills', 'dying', 'carbon', 'recovery'],
     // To Meishan as the sea's life dies, then out to the world as its carbon peaks.
     tour: [
       [2 * KYR, ['meishan'], PROVINCE_DISTANCE],
@@ -135,6 +138,7 @@ const PROVINCES: readonly Province[] = [
       says: 'The extinction as Blackburn et al. (2013) date it: 100,000 ± 40,000 years from 201.564 million years ago. On land, cyclostratigraphy gives it 20,000 to 40,000 years (Deenen et al. 2010); in the sea, ash beds date it between 201.51 ± 0.15 and 201.36 ± 0.17 million years ago (as Lindström et al. 2021 review).',
     },
     proxies: [CAMP_CARBON_DIOXIDE],
+    keys: ['eruptions', 'carbon', 'pulses', 'jurassic'],
     // To the sea's record in Europe as its carbon builds, then out to the world as it pulses.
     tour: [
       [30 * KYR, ['kuhjoch', 'st-audries-bay'], PROVINCE_DISTANCE],
@@ -168,6 +172,9 @@ function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
     offer: `Watch ${province.name} in its own time`,
     ...(province.dated === undefined ? {} : { dated: province.dated }),
     ...(province.proxies === undefined ? {} : { proxies: province.proxies }),
+    lingers: province.phases
+      .filter((phase) => province.keys?.includes(phase.id) === true)
+      .map((phase) => phase.from),
     drawn: province.drawn,
     ma: province.zero,
     play(tools) {

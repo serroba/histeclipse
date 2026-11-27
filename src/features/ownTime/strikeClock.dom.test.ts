@@ -265,6 +265,29 @@ describe('the strike clock’s panel (#1173)', () => {
     expect(cursors[0]?.style.left).not.toBe('');
   });
 
+  it('lingers at its key moments to be read, and says so (#1267)', () => {
+    const moments: number[] = [];
+    const made = createStrikeClock({
+      title: 'The end-Permian, in its own time',
+      phases: PHASES,
+      scale: CRISIS_SCALE,
+      lingers: [0],
+      onMoment: (seconds) => moments.push(seconds),
+      onClose: vi.fn(),
+    });
+    const tag = made.root.querySelector<HTMLElement>('.strike-clock-slowed');
+    made.open(-1000 * 365.25 * 86_400);
+    frame(0);
+    expect(tag?.hidden).toBe(true);
+    frame(200);
+    // Stopped on the key moment, saying so; a while later, on past it.
+    expect(moments.at(-1)).toBe(0);
+    expect(tag?.hidden).toBe(false);
+    for (let now = 400; now <= 5000; now += 200) frame(now);
+    expect(tag?.hidden).toBe(true);
+    expect(moments.at(-1)).toBeGreaterThan(0);
+  });
+
   it('says nothing of a phase before the first, and takes a second open or pause in its stride', () => {
     const onMoment = vi.fn();
     const made = createStrikeClock({
