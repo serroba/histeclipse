@@ -9,11 +9,13 @@ import * as v from 'valibot';
 
 import { getJson, type Fetch } from '../util/fetchJson';
 import { pictureFor, type Pictures } from './pictures';
+import { HEADER_ADDED } from './header';
 
 const integer = v.pipe(v.number(), v.integer());
 
 const FossilsSchema = v.strictObject({
   schemaVersion: v.literal(2),
+  ...HEADER_ADDED,
   credit: v.pipe(v.string(), v.minLength(1)),
   source: v.pipe(v.string(), v.url()),
   accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),

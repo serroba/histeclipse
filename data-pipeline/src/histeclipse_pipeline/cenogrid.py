@@ -112,8 +112,15 @@ def cenogrid_file(short: list[list[float]], long: list[list[float]]) -> dict[str
     """Build the site's file: credit, units, and the two smooths, thinned."""
     return {
         "schemaVersion": 1,
+        "sources": ["westerhold2020"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "CC BY 4.0",
+        "accessed": "2026-11-12",
+        "changes": (
+            "Thinned to 10,000-year and 100,000-year means for this site; the day given as "
+            "accessed is the day this file was last written"
+        ),
         "paper": "https://doi.org/10.1126/science.aba6853",
         "age": "Ma (millions of years before present), astronomically tuned",
         "units": {"d18O": "‰ VPDB", "d13C": "‰ VPDB"},

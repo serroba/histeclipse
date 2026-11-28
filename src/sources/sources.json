@@ -597,6 +597,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1029/2019PA003723"
   },
+  "deenen2010": {
+    "name": "Deenen et al. 2010",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.epsl.2010.01.003"
+  },
   "deltaTLongTerm": {
     "name": "Stephenson et al. 2016",
     "kind": "paper",
@@ -991,6 +996,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1130/0091-7613(2002)030<0251:TAMEAT>2.0.CO;2"
   },
+  "hesselbo2004": {
+    "name": "Hesselbo et al. 2004",
+    "kind": "paper",
+    "url": "https://doi.org/10.1144/0016-764903-033"
+  },
   "hipparcos": {
     "name": "Hipparcos",
     "kind": "catalogue",
@@ -1010,6 +1020,12 @@
     "name": "HolVol",
     "kind": "dataset",
     "url": "https://doi.org/10.5194/essd-14-3167-2022",
+    "licence": "CC BY 4.0"
+  },
+  "hounslowAndrews2024": {
+    "name": "Hounslow & Andrews 2024",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.palaeo.2024.112579",
     "licence": "CC BY 4.0"
   },
   "hu2016": {
@@ -1265,6 +1281,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1002/2015GC005734"
   },
+  "kent2017": {
+    "name": "Kent et al. 2017",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.earscirev.2016.12.014"
+  },
   "keplerPressKit": {
     "name": "NASA/JPL: Kepler launch press kit",
     "kind": "reference",
@@ -1420,6 +1441,11 @@
     "name": "Li et al. 2008",
     "kind": "paper",
     "url": "https://doi.org/10.1016/j.precamres.2007.04.021"
+  },
+  "lindstrom2017": {
+    "name": "Lindström et al. 2017",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.palaeo.2016.12.025"
   },
   "lindstrom2021": {
     "name": "Lindström et al. 2021",
@@ -2136,6 +2162,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1038/ngeo2866"
   },
+  "ruhl2010": {
+    "name": "Ruhl et al. 2010",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.epsl.2010.04.008"
+  },
   "ruhl2011": {
     "name": "Ruhl et al. 2011",
     "kind": "paper",
@@ -2499,6 +2530,12 @@
     "url": "https://doi.org/10.1038/s41586-019-1676-3",
     "licence": "Springer Nature (all rights reserved); facts quoted"
   },
+  "weedon2018": {
+    "name": "Weedon et al. 2018",
+    "kind": "paper",
+    "url": "https://doi.org/10.1017/S0016756818000808",
+    "licence": "CC BY 4.0"
+  },
   "wells1963": {
     "name": "Wells 1963",
     "kind": "paper",
@@ -2580,6 +2617,12 @@
     "name": "Zhao et al. 2002",
     "kind": "paper",
     "url": "https://doi.org/10.1016/S0012-8252(02)00073-9"
+  },
+  "zhao2026": {
+    "name": "Zhao et al. 2026",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.gloplacha.2026.105690",
+    "licence": "CC BY 4.0"
   },
   "zi2010": {
     "name": "Zi et al. 2010",

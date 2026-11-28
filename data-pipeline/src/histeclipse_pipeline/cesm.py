@@ -189,8 +189,15 @@ def write_cesm(maps: list[tuple[int, Grid]], model_means: list[float], folder: P
         frames.append({"ma": ma, "file": f"{ma}.png", "mean": round(mean, 1)})
     index: dict[str, Json] = {
         "schemaVersion": 1,
+        "sources": ["cesm"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "CC BY 4.0",
+        "accessed": "2026-11-01",
+        "changes": (
+            "Regridded from about 3.75° to 1° and packed into 8-bit images; the day given as "
+            "accessed is the day this file was last written"
+        ),
         "columns": COLUMNS,
         "rows": ROWS,
         "coldest": COLDEST,

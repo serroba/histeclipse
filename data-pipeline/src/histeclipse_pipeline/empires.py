@@ -224,8 +224,15 @@ def index_file(centuries: dict[int, list[Polity]]) -> dict[str, Json]:
     """Which centuries have files, and the credit."""
     return {
         "schemaVersion": 1,
+        "sources": ["cliopatria"],
         "credit": CREDIT,
         "source": f"Cliopatria {CLIOPATRIA_VERSION}",
+        "licence": "CC BY 4.0",
+        "accessed": "2026-10-31",
+        "changes": (
+            "Borders simplified and split by century for this site; the day given as accessed "
+            "is the day this file was last written"
+        ),
         "centuries": as_json(sorted(centuries)),
     }
 

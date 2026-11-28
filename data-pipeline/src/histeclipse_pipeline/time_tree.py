@@ -334,9 +334,15 @@ def tree_file(
 
     return {
         "schemaVersion": 2,
+        "sources": ["pbdb", "paleodem"],
         "credit": CREDIT,
         "source": SOURCE,
         "accessed": accessed,
+        "licence": "CC BY 4.0",
+        "changes": (
+            "Its classification and finds for the group; places at their age on the PALEOMAP "
+            "reconstruction"
+        ),
         "id": group[0],
         "name": group[1],
         "stepMa": STEP_MA,

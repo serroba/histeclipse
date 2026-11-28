@@ -230,9 +230,12 @@ def rocks_file(units: list[Unit], accessed: str) -> dict[str, Json]:
     """Build the site's file: each unit with its rings (degrees x 100), name, rock, ages, colour."""
     return {
         "schemaVersion": 1,
+        "sources": ["macrostrat"],
         "credit": CREDIT,
         "source": SOURCE,
         "accessed": accessed,
+        "licence": "CC BY 4.0",
+        "changes": "World map units, simplified for this site",
         "scale": 100,
         "units": [
             {
