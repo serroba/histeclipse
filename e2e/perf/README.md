@@ -100,3 +100,18 @@ to the required CI gate. Its artifact contains screenshots, amplified difference
 Keep the 8192 source asset available for comparisons while evaluating the visual trade-off.
 
 Results and the decision to retain the 8192 map: [EARTH-MAP.md](EARTH-MAP.md).
+
+## Startup cost (#220)
+
+What the first view costs: the JavaScript loaded before the app starts (the entry and its
+preloads, raw and brotli), and over cold loads on a phone profile (Pixel 7, 4× CPU, slow 4G,
+the Mac's GPU) the median largest paint, globe's first frame and main-thread script time.
+
+```sh
+pnpm build
+node --experimental-strip-types e2e/perf/startup.ts 5 /
+node --experimental-strip-types e2e/perf/startup.ts 5 '/?t=2026-11-17T12:05Z&cam=20,0,4.5'
+```
+
+It serves `dist/` on `PORT` (default 4393) and prints JSON. A plain `/` is a first visit (the
+welcome shows); the link is a shared view. Run before and after a change, nothing else busy.
