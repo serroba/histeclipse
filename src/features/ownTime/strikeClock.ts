@@ -12,7 +12,7 @@ import { DEFAULT_PACE, PACE_LABELS, PACES, type Pace } from '../../deepTime/play
 import { element } from '../../ui/dom';
 import { setText } from '../../util/pageWrites';
 import { createTransport, type Transport } from '../../ui/transport';
-import { askFrame } from './frames';
+import { framePacer } from './frames';
 import { legendView, type LegendItem } from './legend';
 import { createLinger, type Linger } from './linger';
 import { lossView, type LossGauge, type LossView } from './lossGauge';
@@ -265,7 +265,7 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
   const scale = options.scale ?? STRIKE_SCALE;
   let position = 0;
   let frame: (() => void) | null = null;
-  let last: number | null = null;
+  const frames = framePacer();
 
   const transport = createTransport(
     {
@@ -304,22 +304,21 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
   }
 
   function tick(now: number): void {
-    const cost = last === null ? 0 : now - last;
-    last = now;
-    moveTo(position + playedOn(view, scale, [speed.value as Pace, cost, position]));
+    const gap = frames.gap(now);
+    moveTo(position + playedOn(view, scale, [speed.value as Pace, gap, position]));
     if (position >= scale.end) {
       stop();
       if (options.closeAtEnd === true) close();
       return;
     }
-    frame = askFrame(tick, cost);
+    frame = frames.ask(tick);
   }
 
   function start(): void {
     if (frame !== null) return;
     if (position >= scale.end) position = 0;
-    last = null;
-    frame = askFrame(tick, 0);
+    frames.reset();
+    frame = frames.ask(tick);
     root.dataset['playing'] = 'true';
     transport.render(true, position);
   }
