@@ -26,7 +26,10 @@ describe('the deep-time bar’s own notes', () => {
   });
 
   it('Given Temperature, Then its legend draws the models', () => {
-    const chip = createTemperatureChip(why(), { onModel: vi.fn(), onShow: vi.fn() });
+    const chip = createTemperatureChip(why(), {
+      onTemperatureModel: vi.fn(),
+      onTemperatureShow: vi.fn(),
+    });
     chip.render(TEMPERATURE);
     expect(chip.legend).toBeInstanceOf(HTMLElement);
   });

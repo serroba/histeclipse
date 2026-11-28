@@ -53,17 +53,18 @@ export interface TemperatureChip {
 
 export function createTemperatureChip(
   why: HTMLElement,
+  /** The bar's own: a model, or what the colours show, picked. */
   handlers: {
-    onModel(model: TemperatureModel): void;
-    onShow(show: TemperatureShow): void;
+    onTemperatureModel(model: TemperatureModel): void;
+    onTemperatureShow(show: TemperatureShow): void;
   },
 ): TemperatureChip {
   const legend = createTemperatureLegend(why, {
     onModel: (model) => {
-      handlers.onModel(model);
+      handlers.onTemperatureModel(model);
     },
     onShow: (show) => {
-      handlers.onShow(show);
+      handlers.onTemperatureShow(show);
     },
   });
   return {

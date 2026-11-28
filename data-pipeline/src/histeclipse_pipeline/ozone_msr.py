@@ -273,9 +273,15 @@ def index_file(years: list[dict[str, Json]], omitted: list[int]) -> dict[str, Js
     """Make the index of the Octobers written, with whom to credit and how to read them."""
     return {
         "schemaVersion": 1,
+        "sources": ["msr2Ozone"],
         "credit": CREDIT,
         "source": SOURCE,
         "licence": LICENCE,
+        "accessed": "2026-11-16",
+        "changes": (
+            "October of each year, thinned to one degree for this site; the day given as "
+            "accessed is the day this file was last written"
+        ),
         "month": MONTH,
         "holeDU": HOLE_DU,
         "encoding": {"offsetDU": OFFSET_DU, "stepDU": STEP_DU},

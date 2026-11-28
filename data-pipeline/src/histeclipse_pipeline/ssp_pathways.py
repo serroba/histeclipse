@@ -308,9 +308,16 @@ def pathways(inputs: Inputs) -> dict[str, Json]:
         )
     return {
         "schemaVersion": 1,
+        "sources": ["rcmip", "ar6AnnexIII"],
         "credit": f"{RCMIP_CREDIT}; {EMISSIONS_ORIGIN}; {CONCENTRATION_ORIGIN}; {AR6_CREDIT}",
         "source": AR6_SOURCE,
         "licence": LICENCE,
+        "accessed": "2026-11-12",
+        "changes": (
+            "Each scenario's CO2 emissions, CO2 concentration and forcing as lists of points, "
+            "with the history each continues; the day given as accessed is the day this file "
+            "was last written"
+        ),
         "historyEnd": HISTORY_END,
         "variables": _VARIABLES,
         "history": history,

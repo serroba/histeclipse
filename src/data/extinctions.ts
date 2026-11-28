@@ -11,11 +11,13 @@ import * as v from 'valibot';
 import type { GeoPoint } from '../core/geo';
 import { getJson, type Fetch } from '../util/fetchJson';
 import { pointThen } from './placesThen';
+import { HEADER_ADDED } from './header';
 
 const integer = v.pipe(v.number(), v.integer());
 
 const ExtinctionSitesSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   credit: v.pipe(v.string(), v.minLength(1)),
   source: v.pipe(v.string(), v.url()),
   accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),

@@ -1,8 +1,10 @@
 /**
  * The temperature maps in deep time as a feature (#380, #457, #909): what the bar says of them,
  * and the globe coloured by them. Outside this folder, import from here only (#487). Over the
- * ice ages, beside the globe, global temperature over 800,000 years with the moment marked: the
- * chart the planetary boundaries' story opens on (#434), as part of the layer.
+ * ice ages, in deep time's bar above the slider, global temperature over 800,000 years with the
+ * moment marked: the chart the planetary boundaries' story opens on (#434), as part of the layer.
+ * While the story has the globe on its Holocene chapter, its own chart shows it, and the bar's
+ * does not.
  */
 
 import { feature } from '../feature';
@@ -22,6 +24,7 @@ export const temperatureFeature = feature({
     state.temperatureShow,
     state.mode,
     state.focus,
+    state.boundaries,
   ],
   mount(context) {
     const chart = createChartPart(context);

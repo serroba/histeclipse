@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import holocene from '../../../public/data/holocene-temperature.json';
 import type { HoloceneTemperature } from '../../data/holoceneTemperature';
-import type { LayerHost } from '../../globe/layerHost';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { Capability, FeatureContext } from '../feature';
 
@@ -43,12 +42,12 @@ const { temperatureFeature } = await import('.');
 
 const data = {} as HoloceneTemperature;
 
-describe('temperature over 800,000 years beside the globe (#434)', () => {
+describe('temperature over 800,000 years in deep time’s bar (#434)', () => {
   it('Given a view, Then the chart held at its year, its echoes not taken for the reader’s moves', async () => {
     charts.made.length = 0;
     const container = document.createElement('div');
     const moveTo = vi.fn();
-    const panel = holocenePanel(moveTo)({ container } as unknown as LayerHost);
+    const panel = holocenePanel(container, moveTo);
     const root = container.querySelector<HTMLElement>('.holocene-panel');
     expect(root?.hidden).toBe(true);
     panel.update({ data, year: -19_050 });
@@ -66,14 +65,14 @@ describe('temperature over 800,000 years beside the globe (#434)', () => {
     expect(moveTo).toHaveBeenCalledWith(-120_000);
     panel.update(null);
     expect(root?.hidden).toBe(true);
-    panel.dispose?.();
+    panel.dispose();
     expect(charts.made[0]?.disposed).toBe(true);
   });
 
   it('Given a view moved on before the chart loads, Then it starts at the last one asked (#220)', async () => {
     charts.made.length = 0;
     const container = document.createElement('div');
-    const panel = holocenePanel(vi.fn())({ container } as unknown as LayerHost);
+    const panel = holocenePanel(container, vi.fn());
     panel.update({ data, year: -19_050 });
     panel.update({ data, year: -9_050 });
     await vi.waitFor(() => {
@@ -85,7 +84,7 @@ describe('temperature over 800,000 years beside the globe (#434)', () => {
   it('Given play reached today, Then the chart draws on from there to its latest year (#1276)', async () => {
     charts.made.length = 0;
     const container = document.createElement('div');
-    const panel = holocenePanel(vi.fn())({ container } as unknown as LayerHost);
+    const panel = holocenePanel(container, vi.fn());
     panel.update({ data, year: 1890 });
     await vi.waitFor(() => {
       expect(charts.made).toHaveLength(1);
@@ -106,12 +105,8 @@ describe('temperature over 800,000 years beside the globe (#434)', () => {
       notify: vi.fn(),
       refresh,
       change,
-      globe: {
-        addLayer: (factory: (host: LayerHost) => unknown) =>
-          factory({ container } as unknown as LayerHost),
-      },
       temperatureMaps: { setTemperature: vi.fn(), prefetch: vi.fn() },
-      deepTime: { again: vi.fn() },
+      deepTime: { again: vi.fn(), chartSlot: container },
     } as unknown as FeatureContext<Capability>;
     const shown = temperatureFeature.mount(context, context);
     const base = defaultViewState(new Date('2026-01-01T00:00:00Z'));

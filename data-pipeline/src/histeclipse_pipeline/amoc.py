@@ -336,9 +336,26 @@ def index_file(series: list[Series], accessed: str) -> dict[str, Json]:
     """Build the manifest: credit, and every series side by side."""
     return {
         "schemaVersion": 1,
+        "sources": [
+            "rapidMoc",
+            "caesar2021",
+            "caesar2018",
+            "rahmstorf2015",
+            "thornalley2018",
+            "terhaar2025",
+        ],
         "credit": CREDIT,
         "source": SOURCE,
         "accessed": accessed,
+        "licence": (
+            "Open Government Licence v3.0 (RAPID); none stated (Caesar et al. 2021's "
+            "compilation of Caesar 2018, Rahmstorf 2015 and Thornalley 2018); CC BY-NC-ND 4.0 "
+            "(Terhaar et al. 2025)"
+        ),
+        "changes": (
+            "Each source kept apart, in its own units: RAPID as monthly means, the proxy and "
+            "reanalysis series as their authors give them"
+        ),
         "disputed": (
             "Whether the AMOC has already weakened is disputed: the temperature indices "
             "(Caesar 2018, Rahmstorf 2015) and Thornalley 2018 read a decline since the 19th or "

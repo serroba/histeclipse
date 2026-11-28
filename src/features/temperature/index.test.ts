@@ -4,7 +4,17 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { Capability, FeatureContext } from '../feature';
-import { chartShown, maOfChart, temperatureFeature } from '.';
+
+// The chart's panel in deep time's bar: what it is shown, by the context it was made for.
+const panelViews = vi.hoisted(() => new Map<HTMLElement, unknown[]>());
+vi.mock('./holocenePanel', () => ({
+  holocenePanel: (slot: HTMLElement) => {
+    const views = panelViews.get(slot) ?? [];
+    return { update: (view: unknown) => views.push(view), dispose: () => undefined };
+  },
+}));
+
+const { chartShown, maOfChart, temperatureFeature } = await import('.');
 
 const base = defaultViewState(new Date('2026-01-01T00:00:00Z'));
 const off: ViewState = { ...base, ma: 100, deepScale: 'all' };
@@ -17,7 +27,9 @@ function fakeContext() {
   const again = vi.fn();
   const setTemperature = vi.fn();
   const prefetch = vi.fn();
+  const chartSlot = {} as HTMLElement;
   const panels: unknown[] = [];
+  panelViews.set(chartSlot, panels);
   const refresh = vi.fn();
   const change = vi.fn();
   const fetchJson = vi.fn(
@@ -29,10 +41,8 @@ function fakeContext() {
     notify,
     refresh,
     change,
-    // The chart's panel: what it is shown.
-    globe: { addLayer: () => ({ update: (view: unknown) => panels.push(view) }) },
     temperatureMaps: { setTemperature, prefetch },
-    deepTime: { again },
+    deepTime: { again, chartSlot },
   } as unknown as FeatureContext<Capability>;
   return {
     context,
@@ -59,6 +69,7 @@ describe('the temperature maps as a feature', () => {
       on.temperatureShow,
       on.mode,
       on.focus,
+      on.boundaries,
     ]);
   });
 
@@ -104,7 +115,7 @@ describe('the temperature maps as a feature', () => {
     expect(prefetch).toHaveBeenCalled();
   });
 
-  it('shows the chart over 800,000 years beside the globe only on the ice ages it covers (#434)', () => {
+  it('shows the chart over 800,000 years in the bar only on the ice ages it covers (#434)', () => {
     const ice: ViewState = { ...on, ma: 0.021, deepScale: 'ice' };
     expect(chartShown(ice)).toBe(true);
     expect(chartShown({ ...ice, ma: 1.2 })).toBe(false);
@@ -112,6 +123,8 @@ describe('the temperature maps as a feature', () => {
     expect(chartShown({ ...ice, layers: off.layers })).toBe(false);
     expect(chartShown({ ...ice, ma: null })).toBe(false);
     expect(chartShown({ ...ice, focus: 'moon' })).toBe(false);
+    // The boundaries' story on its Holocene chapter shows its own chart: not two.
+    expect(chartShown({ ...ice, boundaries: 'holocene' })).toBe(false);
   });
 
   it('takes a year on the chart to deep time’s moment, to the thousand years, within its reach', () => {

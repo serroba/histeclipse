@@ -477,7 +477,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     notify(warning);
   });
 
-  // Drawn on the globe as layers of their own (#379).
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureCore: FeatureCore = {
     base,
@@ -515,6 +514,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         deepTime.playFrom(ma, scale, maPerSecond);
       },
       ...deepTime.held,
+      chartSlot: deepTime.chartSlot,
     },
     strikes: {
       playImpact: (spec) => globe.playImpact(spec),

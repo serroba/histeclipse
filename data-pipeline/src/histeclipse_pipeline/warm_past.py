@@ -362,9 +362,16 @@ def index_file(periods: list[Json]) -> dict[str, Json]:
     """Build the manifest the web app reads: credit, encoding, grid shape and the periods."""
     return {
         "schemaVersion": SCHEMA_VERSION,
+        "sources": ["pmipAtlas", "ar6Fig713"],
         "credit": CREDIT,
         "source": SOURCE,
         "licence": "MIT (atlas); CC BY 4.0 (AR6 Figure 7.13 data; CMIP6 model output)",
+        "accessed": "2026-11-12",
+        "changes": (
+            "Change from each model's pre-industrial control; regridded to 1° and packed into "
+            "8-bit images for this site; the day given as accessed is the day this file was "
+            "last written"
+        ),
         "quantity": "near-surface air temperature change",
         "units": "°C",
         "baseline": "pre-industrial control (CMIP6 piControl, 1850 conditions)",
