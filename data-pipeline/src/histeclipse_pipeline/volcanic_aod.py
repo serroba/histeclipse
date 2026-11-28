@@ -140,10 +140,16 @@ def holvol_file(annual: Annual, accessed: str) -> dict[str, Json]:
     """Build the site's file: annual SAOD, global and by band, oldest first."""
     return {
         "schemaVersion": 1,
+        "sources": ["holvol"],
         "credit": HOLVOL_CREDIT,
         "source": HOLVOL_SOURCE,
         "paper": "https://doi.org/10.5194/essd-14-3167-2022",
         "accessed": accessed,
+        "licence": "CC BY 4.0",
+        "changes": (
+            "Annual means of the monthly zonal-mean optical depth, global and by latitude "
+            "band, each latitude weighted by its cosine"
+        ),
         "unit": "",
         "wavelength": 550,
         "what": (
