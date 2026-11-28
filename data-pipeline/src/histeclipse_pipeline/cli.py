@@ -58,6 +58,7 @@ from histeclipse_pipeline.living_pins import check_living_pins, drifted, report
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
 from histeclipse_pipeline.macrostrat import fetch_rocks
+from histeclipse_pipeline.marine_diversity import write_rates
 from histeclipse_pipeline.measured_warming import fetch_measured_warming
 from histeclipse_pipeline.moon_orbits import fetch_moon_orbits
 from histeclipse_pipeline.natural_forcing import fetch_natural_forcing
@@ -340,6 +341,12 @@ def fossils(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write fossil occurrences of four groups at their age's places (PBDB, CC BY 4.0)."""
     count = fetch_fossils(args.out)
     return _say(f"wrote {count} fossil occurrences to {args.out}")
+
+
+def marine_extinctions(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write each stage's share of marine genera lost (PBDB, three-timer and gap-filler rates)."""
+    count = write_rates(args.out, Path(".cache/marine-diversity"))
+    return _say(f"wrote {count} stages' extinction rates to {args.out}")
 
 
 def impacts(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -945,6 +952,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "fossils": (
         fossils,
         "write fossil occurrences of four groups at their age's places (PBDB, CC BY 4.0)",
+        "output JSON file",
+    ),
+    "marine-extinctions": (
+        marine_extinctions,
+        "write each stage's share of marine genera lost (PBDB; Alroy's three-timer, gap-filler)",
         "output JSON file",
     ),
     "impacts": (

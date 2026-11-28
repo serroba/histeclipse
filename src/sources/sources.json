@@ -78,6 +78,18 @@
     "cite": "The Joint ALMA Observatory’s and the ALMA Science Portal’s pages: its antennas, baselines and early science",
     "url": "https://www.almaobservatory.org/en/about-alma/"
   },
+  "alroy2008": {
+    "name": "Alroy 2008",
+    "kind": "paper",
+    "cite": "Alroy, J. (2008), Dynamics of origination and extinction in the marine fossil record, PNAS 105 (Supplement 1), 11536–11542. Our summary: from the Paleobiology Database, rates of origination and extinction for marine invertebrate genera through the Phanerozoic, worked out by “three-timer” counts that correct for how often the record misses a genus that was alive; the site uses the method to count each stage’s losses",
+    "url": "https://doi.org/10.1073/pnas.0802597105"
+  },
+  "alroy2014": {
+    "name": "Alroy 2014",
+    "kind": "paper",
+    "cite": "Alroy, J. (2014), Accurate and precise estimates of origination and extinction rates, Paleobiology 40(3), 374–397. Our summary: compares ways of counting origination and extinction from fossil finds, and proposes “gap-filler” rates, which count a genus found again two intervals on as having survived, as more accurate and precise; the site uses them to count each stage’s losses",
+    "url": "https://doi.org/10.1666/13036"
+  },
   "altwegg2015": {
     "name": "Altwegg et al. 2015",
     "kind": "paper",
@@ -2170,6 +2182,13 @@
     "cite": "The Paleobiology Database, fossil occurrences and classification of four groups of animals",
     "url": "https://paleobiodb.org",
     "licence": "CC BY 4.0"
+  },
+  "pbdbMarineGenera": {
+    "name": "Paleobiology Database: marine genera",
+    "kind": "dataset",
+    "cite": "The Paleobiology Database (paleobiodb.org), every marine animal occurrence identified to a genus, Cambrian to Neogene (847,720 occurrences, accessed 28 November 2026). Changed: each occurrence placed in the one stage its age range lies within (about three in four), and each stage’s share of genera lost counted for this site by gap-filler (Alroy 2014) and three-timer (Alroy 2008) rates, and by last finds",
+    "url": "https://paleobiodb.org",
+    "licence": "CC0, as its data service states for this download"
   },
   "penn2018": {
     "name": "Penn, Deutsch & Payne 2018",
