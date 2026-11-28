@@ -239,6 +239,12 @@
     "url": "https://www.bom.gov.au/climate/history/enso/",
     "licence": "© Commonwealth of Australia, Bureau of Meteorology; no licence stated on the page"
   },
+  "bond2023": {
+    "name": "Bond et al. 2023",
+    "kind": "paper",
+    "url": "https://doi.org/10.1038/s41561-023-01303-2",
+    "licence": "CC BY 4.0"
+  },
   "bondGrasby2017": {
     "name": "Bond & Grasby 2017",
     "kind": "paper",
@@ -2160,6 +2166,12 @@
     "kind": "model",
     "url": "https://rhodesmill.org/skyfield/",
     "licence": "MIT"
+  },
+  "somlyay2023": {
+    "name": "Somlyay et al. 2023",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.epsl.2023.118190",
+    "licence": "CC BY-NC-ND 4.0"
   },
   "song2012": {
     "name": "Song et al. 2012",

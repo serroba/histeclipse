@@ -110,16 +110,21 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
   it('key each clock’s marks and colours: no ice where there was none (#1268)', () => {
     const swatches = (id: string, ma: number) =>
       ownTimeOf(DATA, id, ma)?.legend?.map(([swatch]) => swatch);
-    // The end-Permian's oxygen-poor seas keyed too (#1230); the end-Triassic draws none.
-    expect(swatches('end-permian-extinction', 251.9)).toEqual([
-      'cause',
-      'record',
-      'smoke',
-      'lava',
-      'basalt',
-      'anoxia',
-    ]);
-    expect(swatches('end-triassic-extinction', 201.5)).not.toContain('anoxia');
+    // The end-Permian's and end-Triassic's oxygen-poor seas keyed too (#1230); the Guadalupian's none.
+    for (const [id, ma] of [
+      ['end-permian-extinction', 251.9],
+      ['end-triassic-extinction', 201.5],
+    ] as const) {
+      expect(swatches(id, ma), id).toEqual([
+        'cause',
+        'record',
+        'smoke',
+        'lava',
+        'basalt',
+        'anoxia',
+      ]);
+    }
+    expect(swatches('end-guadalupian-extinction', 259.8)).not.toContain('anoxia');
     expect(swatches('end-ordovician-extinction', 444)).toEqual([
       'cause',
       'record',
@@ -127,6 +132,11 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
       'anoxia',
     ]);
     expect(swatches('late-devonian-extinction', 372)).toEqual(['cause', 'record', 'anoxia']);
+  });
+
+  it('say the end-Triassic’s oxygen-poor seas with both sides (#1230)', () => {
+    const event = ownTimeOf(DATA, 'end-triassic-extinction', 201.5);
+    expect(event?.drawn).toMatch(/Somlyay et al\. \(2023\).*Bond et al\. \(2023\)/);
   });
 
   it('draw the end-Permian’s oxygen-poor seas with its fumes, as they spread and ebb (#1230)', () => {
