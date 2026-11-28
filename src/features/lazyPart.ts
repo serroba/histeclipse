@@ -23,14 +23,23 @@ export interface PartFront<Context extends Pick<PartContext, 'notify'>> {
   body(): Promise<(context: Context) => MountedPart>;
 }
 
+/**
+ * A place on the page for a part's elements before they have loaded: it makes no box of its own,
+ * so what is put in it is laid out as the page's own child, where the part's would have been.
+ */
+export function partSlot(): HTMLElement {
+  const slot = document.createElement('div');
+  slot.className = 'lazy-part';
+  // Through the CSSOM, not a style attribute, which the site's policy would refuse.
+  slot.style.display = 'contents';
+  return slot;
+}
+
 export function lazyPart<Context extends Pick<PartContext, 'notify'>>(
   front: PartFront<Context>,
   context: Context,
 ): MountedPart {
-  const slot = document.createElement('div');
-  slot.className = 'lazy-part';
-  // No box of its own: what is put in it is laid out as the page's own child.
-  slot.style.display = 'contents';
+  const slot = partSlot();
   let body: MountedPart | null = null;
   let loading = false;
   let latest: ViewState | null = null;
