@@ -156,9 +156,16 @@ def index_file(maps: list[Json], curves: list[Json]) -> dict[str, Json]:
     first, last = BASE
     return {
         "schemaVersion": 1,
+        "sources": ["hadex3"],
         "credit": CREDIT,
         "source": SOURCE,
         "licence": LICENCE,
+        "accessed": "2026-11-12",
+        "changes": (
+            "Trends, their significance and land means computed for this site; maps packed "
+            "into 8-bit images; the day given as accessed is the day this file was last "
+            "written"
+        ),
         "version": VERSION,
         "baseline": f"{first}\u2013{last}",
         "coverage": "land with stations",
