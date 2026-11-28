@@ -1,8 +1,7 @@
 /**
  * A sheet whose code loads the first time it is asked to show (#220): until then a hidden stand-in
  * holds its place on the page, and the sheet's dialog takes that place once made. What is shown
- * is always the view asked for last, however long the load took. Here while the tree of life's
- * sheets are its only users; to `ui/` when another feature's sheet loads this way.
+ * is always the view asked for last, however long the load took.
  */
 
 /** What a sheet is, to be shown lazily: its dialog, and how a view is shown in it. */
