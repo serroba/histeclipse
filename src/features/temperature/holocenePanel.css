@@ -1,32 +1,32 @@
-/* Temperature over 800,000 years beside the globe on the ice ages (#434), in the column of panels. */
+/* Temperature over 800,000 years in deep time's bar (#434), above the slider. */
 .holocene-panel {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  background: rgb(10 16 32 / 0.88);
-  color: var(--ink);
-  font-size: 12px;
+  margin: 4px 0 8px;
 }
 
 .holocene-panel[hidden] {
   display: none;
 }
 
+.holocene-panel figcaption {
+  margin-bottom: 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
 .holocene-panel-chart {
   position: relative;
-  height: 190px;
+  /* Room for the globe above the bar on a short screen; the story's size on a tall one. */
+  height: clamp(140px, 25vh, 260px);
 }
 
-.holocene-panel-credit {
-  margin: 6px 0 0;
-  color: var(--ink-muted);
-  font-size: 11px;
-  line-height: 1.4;
-}
+/* On a phone the bar shares the screen with the globe: the chart alone, its words in the layer's Why. */
+@media (max-width: 600px) {
+  .holocene-panel figcaption,
+  .holocene-panel .holocene-chart .legend {
+    display: none;
+  }
 
-/* Too small for the chart's own key, low on the right: the caption names the lines instead. */
-.holocene-panel .holocene-chart .legend {
-  display: none;
+  .holocene-panel-chart {
+    height: 150px;
+  }
 }

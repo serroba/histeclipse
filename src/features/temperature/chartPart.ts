@@ -1,7 +1,7 @@
 /**
- * The temperature chart over the ice ages as part of the Temperature layer (#434): shown beside
- * the globe with the moment marked; dragged, it moves the view. Play goes at its pace (#1276),
- * and from 1850 on it the globe shows the measured warming (#1283).
+ * The temperature chart over the ice ages as part of the Temperature layer (#434): shown in deep
+ * time's bar, above the slider, with the moment marked; dragged, it moves the view. Play goes at
+ * its pace (#1276), and from 1850 on it the globe shows the measured warming (#1283).
  */
 
 import {
@@ -26,7 +26,10 @@ import { createMeasured, MEASURED_NOTE, type Measured, type Surface } from './me
 /** The oldest moment the chart reaches, Ma: beyond, over the ice ages, it is not shown. */
 const CHART_REACHES_MA = 0.8;
 
-/** Whether the chart shows beside the globe: Temperature on, over the ice ages it covers. */
+/**
+ * Whether the bar shows the chart: Temperature on, over the ice ages it covers. Not while the
+ * boundaries' story has the globe on its Holocene chapter: its own chart shows it then.
+ */
 export function chartShown(state: ViewState): boolean {
   return (
     state.layers.has('temperature') &&
@@ -34,7 +37,8 @@ export function chartShown(state: ViewState): boolean {
     state.focus === 'earth' &&
     state.deepScale === 'ice' &&
     state.ma !== null &&
-    state.ma <= CHART_REACHES_MA
+    state.ma <= CHART_REACHES_MA &&
+    state.boundaries !== 'holocene'
   );
 }
 
@@ -186,17 +190,15 @@ export function createChartPart(
       ? null
       : { what: measured.surface(lastState) === null ? null : MEASURED_WHAT },
   );
-  const chartPanel = context.globe.addLayer(
-    holocenePanel((year) => {
-      // The reader's drag, or the chart drawing on past 1950: kept finer than the view (#1285).
-      measured.at(year);
-      paint();
-      followed = Math.min(CHART_REACHES_MA, Math.max(0, maOfYear(year)));
-      lender.set(year);
-      const ma = maOfChart(year);
-      context.change((state) => (state.ma === ma ? state : { ...state, ma }));
-    }),
-  );
+  const chartPanel = holocenePanel(context.deepTime.chartSlot, (year) => {
+    // The reader's drag, or the chart drawing on past 1950: kept finer than the view (#1285).
+    measured.at(year);
+    paint();
+    followed = Math.min(CHART_REACHES_MA, Math.max(0, maOfYear(year)));
+    lender.set(year);
+    const ma = maOfChart(year);
+    context.change((state) => (state.ma === ma ? state : { ...state, ma }));
+  });
   let shownAt: number | null = null;
   let shownData: HoloceneTemperature | null = null;
   // Where play along the chart has reached, finer than the moment the view keeps (#1276).

@@ -514,6 +514,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         deepTime.playFrom(ma, scale, maPerSecond);
       },
       ...deepTime.held,
+      chartSlot: deepTime.chartSlot,
     },
     strikes: {
       playImpact: (spec) => globe.playImpact(spec),

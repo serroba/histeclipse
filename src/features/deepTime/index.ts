@@ -376,6 +376,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   return {
     bar: deepBar.root,
     evidence: deepBar.evidence,
+    chartSlot: deepBar.chartSlot,
     hypotheses: sketchView.root,
     glance: glance.root,
     yearsScale: yearsSpan.root,

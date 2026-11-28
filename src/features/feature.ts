@@ -136,6 +136,8 @@ export interface Capabilities {
     resume(): void;
     /** The pace deep time plays at. */
     pace(): Pace;
+    /** Above the bar's slider: where a layer's chart of the moment goes (#434). */
+    readonly chartSlot: HTMLElement;
   };
   /**
    * The ice ages' Earth on the globe: the shelf the sea left bare, the ice sheets, the sea ice,
