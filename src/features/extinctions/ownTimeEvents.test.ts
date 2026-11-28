@@ -107,10 +107,11 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     expect(update).toHaveBeenLastCalledWith(null);
   });
 
-  it('chart the Late Devonian’s measured conodonts beside its clock (#1229)', () => {
-    expect(
-      ownTimeOf(DATA, 'late-devonian-extinction', 372)?.proxies?.map((each) => each.name),
-    ).toEqual(['Oxygen isotopes']);
+  it('chart the end-Ordovician’s measured sea beside its clock (#1229)', () => {
+    const names = (id: string, ma: number) =>
+      ownTimeOf(DATA, id, ma)?.proxies?.map((each) => each.name);
+    expect(names('end-ordovician-extinction', 444)).toEqual(['Temperature', 'Carbon isotopes']);
+    expect(names('late-devonian-extinction', 372)).toEqual(['Oxygen isotopes']);
   });
 
   it('key each clock’s marks and colours: no ice where there was none (#1268)', () => {

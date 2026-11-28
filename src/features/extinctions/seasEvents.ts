@@ -11,6 +11,7 @@ import type { EventPhase, OwnTimeEvent, ProxyChart } from '../ownTime';
 import { ANOXIC_EXTENTS, patchesAt, scaleFor, type AnoxicExtent } from './anoxicExtent';
 import { END_ORDOVICIAN, LATE_DEVONIAN } from './coldPhases';
 import { DEVONIAN_OXYGEN_ISOTOPES } from './devonianOxygenIsotopes';
+import { ORDOVICIAN_CARBON_ISOTOPES, ORDOVICIAN_TEMPERATURES } from './ordovicianProxies';
 import { seasLegend } from './legends';
 import { seasLayer, type SeasMoment } from './seasLayer';
 import { devonianSeas, ordovicianSeas, type Seas } from './seasModel';
@@ -45,6 +46,7 @@ export const COLD: readonly ColdCrisis[] = [
     zero: 445.2,
     drawn:
       'Drawn to illustrate: white, the ice sheet’s reach, its timing following the studies and its size drawn to be seen; murky olive, oxygen-poor water over the sea.',
+    proxies: [ORDOVICIAN_TEMPERATURES, ORDOVICIAN_CARBON_ISOTOPES],
     seas: ordovicianSeas,
   },
   {
