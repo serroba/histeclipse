@@ -28,7 +28,8 @@ const Angle = v.pipe(v.number(), v.minValue(0), v.maxValue(360));
 /** A mean orbit's elements, as the pipeline writes them, for moons and asteroids alike. */
 export const MEAN_ORBIT_ENTRIES = {
   axisKm: v.pipe(v.number(), v.minValue(1)),
-  eccentricity: v.pipe(v.number(), v.minValue(0), v.maxValue(0.5)),
+  /** An ellipse's: the moons' are near 0, Sedna's 0.85. */
+  eccentricity: v.pipe(v.number(), v.minValue(0), v.maxValue(0.95)),
   inclination: v.pipe(v.number(), v.minValue(0), v.maxValue(90)),
   /** Mean longitude at J2000, degrees; its motion a day; half its gain a day squared. */
   longitude: v.tuple([Angle, v.number(), v.number()]),
@@ -87,11 +88,7 @@ export function moonPosition(orbit: MeanOrbit, jdTT: number): readonly [number, 
   const peri = (orbit.pericentre[0] + orbit.pericentre[1] * t) * RADIANS;
   const node = (orbit.node[0] + orbit.node[1] * t) * RADIANS;
   const e = orbit.eccentricity;
-  const mean = lambda - peri;
-  let anomaly = mean;
-  for (let step = 0; step < 6; step += 1) {
-    anomaly -= (anomaly - e * Math.sin(anomaly) - mean) / (1 - e * Math.cos(anomaly));
-  }
+  const anomaly = eccentricAnomaly(lambda - peri, e);
   const distance = orbit.axisKm * (1 - e * Math.cos(anomaly));
   const f =
     2 *
@@ -108,6 +105,24 @@ export function moonPosition(orbit: MeanOrbit, jdTT: number): readonly [number, 
     px * x[1] + py * y[1] + pz * z[1],
     px * x[2] + py * y[2] + pz * z[2],
   ];
+}
+
+/**
+ * Kepler's equation E − e sin E = M solved for E, radians. M is brought within half a turn of 0
+ * and Newton's steps started from M + e sin M, which settles for any ellipse drawn here, the
+ * most stretched (Sedna's, e = 0.85) included; started from M itself, a stretched orbit's first
+ * step near its pericentre overshoots.
+ */
+export function eccentricAnomaly(meanAnomaly: number, e: number): number {
+  const turn = 2 * Math.PI;
+  const mean = meanAnomaly - turn * Math.round(meanAnomaly / turn);
+  let anomaly = mean + e * Math.sin(mean);
+  for (let pass = 0; pass < 30; pass += 1) {
+    const step = (anomaly - e * Math.sin(anomaly) - mean) / (1 - e * Math.cos(anomaly));
+    anomaly -= step;
+    if (Math.abs(step) < 1e-13) break;
+  }
+  return anomaly;
 }
 
 type Axis = readonly [number, number, number];

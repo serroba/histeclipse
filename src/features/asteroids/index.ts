@@ -1,14 +1,14 @@
 /**
- * The asteroid belt (#372), the first feature on the contract (#380): its large asteroids'
- * orbits loaded the first time it is on, each drawn where it is at the moment shown, the
- * largest named, a tap on a name opening its card.
+ * The asteroids and dwarf planets (#372, #1329), the first feature on the contract (#380): the
+ * small bodies' orbits loaded the first time the layer is on, each drawn where it is at the
+ * moment shown, the largest and the chosen named, a tap on a name opening its card.
  */
 
 import { loadOnce } from '../../state/loadOnce';
 import { feature } from '../feature';
 import { asteroidBelt } from './beltLayer';
 import { asteroidCard } from './card';
-import { asteroidPosition, loadAsteroids, type Asteroids } from './orbits';
+import { asteroidPosition, isNamed, loadAsteroids, type Asteroids } from './orbits';
 import './asteroids.css';
 
 export const asteroidsFeature = feature({
@@ -55,6 +55,7 @@ export const asteroidsFeature = feature({
               number: asteroid.number,
               name: asteroid.name,
               diameterKm: asteroid.diameterKm,
+              named: isNamed(asteroid),
               km: [x - ex, y - ey, z - ez],
             };
           }),
@@ -64,8 +65,8 @@ export const asteroidsFeature = feature({
       pick(id) {
         const asteroids = load.value();
         const asteroid = asteroids?.asteroids.find((each) => each.number === id);
-        if (asteroid !== undefined && asteroids !== null && shownAt !== null) {
-          context.cards.show(asteroidCard(asteroid, asteroids.fitted, shownAt));
+        if (asteroid !== undefined && shownAt !== null) {
+          context.cards.show(asteroidCard(asteroid, shownAt));
         }
       },
     };
