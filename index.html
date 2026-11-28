@@ -46,6 +46,71 @@
   </head>
   <body>
     <div id="app"></div>
+    <!-- The header's name and date, drawn with the page (#220): until the app has started, the
+         date it will show is already there, the same size, so the reader sees it at once. Only
+         where it is sure of the words: today, or a Gregorian t=, on the globe. The app replaces
+         it when it lays the page out. -->
+    <script id="boot-hud">
+      (function () {
+        var query = new URLSearchParams(location.search);
+        var mode = query.get('mode') || 'globe';
+        var calendar = query.get('cal') || 'gregorian';
+        if (query.has('ma') || query.has('boundaries') || mode !== 'globe') return;
+        if (calendar !== 'gregorian') return;
+        var at = new Date();
+        var written = query.get('t');
+        if (written) {
+          var parts = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(written);
+          if (!parts || Number(parts[1]) < 1583) return;
+          at = new Date(Date.UTC(+parts[1], +parts[2] - 1, +parts[3], +parts[4], +parts[5]));
+        }
+        var months = [
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December',
+        ];
+        var two = function (n) {
+          return (n < 10 ? '0' : '') + n;
+        };
+        var make = function (tag, className, text) {
+          var made = document.createElement(tag);
+          if (className) made.className = className;
+          if (text) made.textContent = text;
+          return made;
+        };
+        var hud = make('header', 'hud');
+        hud.setAttribute('aria-hidden', 'true');
+        var name = make('h1');
+        name.append(make('a', 'home', 'histeclipse'));
+        var when = make('p', 'hud-when');
+        var button = make('button', 'hud-date-button');
+        button.type = 'button';
+        button.tabIndex = -1;
+        button.append(
+          make(
+            'time',
+            'hud-date',
+            at.getUTCDate() + ' ' + months[at.getUTCMonth()] + ' ' + at.getUTCFullYear() + ' CE',
+          ),
+        );
+        when.append(
+          button,
+          ' ',
+          make('span', 'hud-time', two(at.getUTCHours()) + ':' + two(at.getUTCMinutes()) + ' UT'),
+        );
+        hud.append(name, when);
+        document.getElementById('app').append(hud);
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
