@@ -12,6 +12,7 @@ import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 export const SUN_LAYERS = ['visible', 'magnetogram', '304', '171', '193', '131'] as const;
 export type SunLayer = (typeof SUN_LAYERS)[number];
@@ -22,6 +23,7 @@ const moment = v.pipe(v.string(), v.isoTimestamp());
 const SunImagesSchema = v.pipe(
   v.strictObject({
     schemaVersion: v.literal(3),
+    ...HEADER_ADDED,
     credit: v.pipe(v.string(), v.minLength(1)),
     diskRadius: v.pipe(v.number(), v.gtValue(0), v.maxValue(0.5)),
     layers: v.array(

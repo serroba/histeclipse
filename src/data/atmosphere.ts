@@ -9,6 +9,7 @@ import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 const GasSchema = v.strictObject({
   id: v.picklist(['co2', 'ch4']),
@@ -33,6 +34,7 @@ const GasSchema = v.strictObject({
 
 const AtmosphereSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   source: v.pipe(v.string(), v.url()),
   gases: v.array(GasSchema),
 });

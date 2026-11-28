@@ -150,6 +150,20 @@ def deep_air_file(
     """Build the site's file: the CO2 fit and estimates by proxy, and the O2 estimate."""
     return {
         "schemaVersion": 1,
+        "sources": ["foster", "mills"],
+        "credit": (
+            "CO2: Foster, Royer & Lunt 2017, Nature Communications 8, 14845; O2: Mills, "
+            "Krause, Jarvis & Cramer 2023, Annual Review of Earth and Planetary Sciences 51, "
+            "253-276"
+        ),
+        "licence": "CC BY 4.0",
+        "accessed": "2026-11-03",
+        "changes": (
+            "The CO2 fit with its bands and the compilation's estimates by proxy, each as its "
+            "source gives it; the O2 estimate each million years with the range of the "
+            "methods combined; the day given as accessed is the day this file was last "
+            "written"
+        ),
         "co2": {
             "credit": "Foster, Royer & Lunt 2017, Nature Communications 8, 14845, CC BY 4.0",
             "doi": "10.1038/ncomms14845",

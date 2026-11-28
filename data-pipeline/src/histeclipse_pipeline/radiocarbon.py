@@ -105,7 +105,14 @@ def radiocarbon_file(
     """Build the site's file: each curve's citation and its columns."""
     return {
         "schemaVersion": 1,
+        "sources": ["intcal20", "shcal20"],
+        "credit": (
+            "IntCal20 (Reimer et al. 2020) and SHCal20 (Hogg et al. 2020), as the IntCal "
+            "group publishes them"
+        ),
         "accessed": accessed,
+        "licence": "CC BY 4.0",
+        "changes": "Every row kept, as calibrating needs them",
         "curves": {
             key: {
                 "cite": source.cite,

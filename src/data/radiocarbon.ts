@@ -13,6 +13,7 @@ import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 const column = v.pipe(v.array(v.number()), v.minLength(2));
 
@@ -39,6 +40,7 @@ const CurveSchema = v.pipe(
 
 const RadiocarbonSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
   curves: v.strictObject({ intcal20: CurveSchema, shcal20: CurveSchema }),
 });

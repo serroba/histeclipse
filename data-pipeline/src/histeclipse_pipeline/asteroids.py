@@ -289,8 +289,20 @@ def fetch_asteroids(  # pragma: no cover - needs network access
         report.append(f"{asteroid.number} {asteroid.name} ({asteroid.group}): {off} degrees off")
     data = {
         "schemaVersion": 2,
+        "sources": ["jplHorizonsAsteroids", "jplSbdb"],
+        "credit": (
+            "JPL Horizons (where each body is) and JPL's Small-Body Database (which bodies, "
+            "their names and diameters), NASA/JPL"
+        ),
         "source": "https://ssd.jpl.nasa.gov/horizons/",
         "list": "https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html",
+        "licence": "NASA/JPL, public domain",
+        "accessed": "2026-11-28",
+        "changes": (
+            "Each body's orbit fitted for this site to its positions from Horizons: mean "
+            "elements whose angles turn steadily, with up to two swings; the day given as "
+            "accessed is the day this file was last written"
+        ),
         "smallestKm": SMALLEST_KM,
         "epochJdTT": J2000,
         "asteroids": asteroids,

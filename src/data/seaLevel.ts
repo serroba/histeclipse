@@ -7,6 +7,7 @@
 import * as v from 'valibot';
 
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 const metres = v.array(v.pipe(v.number(), v.minValue(-500), v.maxValue(500)));
 
@@ -39,6 +40,7 @@ const SeriesSchema = v.pipe(
 
 const IndexSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   series: v.pipe(v.array(SeriesSchema), v.minLength(1)),
 });
 

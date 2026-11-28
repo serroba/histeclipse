@@ -23,6 +23,7 @@ import * as v from 'valibot';
 
 import { getJson, type Fetch } from '../../util/fetchJson';
 import { MEAN_ORBIT_ENTRIES, moonPosition } from '../../astro/moonOrbits';
+import { HEADER_ADDED } from '../../data/header';
 
 /** The groups a body is drawn in, from the Sun outwards. */
 export const BODY_GROUPS = [
@@ -60,6 +61,7 @@ const AsteroidSchema = v.strictObject({
 
 const AsteroidsSchema = v.strictObject({
   schemaVersion: v.literal(2),
+  ...HEADER_ADDED,
   source: v.pipe(v.string(), v.url()),
   list: v.pipe(v.string(), v.url()),
   smallestKm: v.pipe(v.number(), v.minValue(1)),
