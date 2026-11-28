@@ -10,7 +10,9 @@
 import * as v from 'valibot';
 
 import { valueAt } from '../util/arrays';
+import { LINEAGE_GROUPS, type LineageGroup } from './lineages';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 const Index = v.pipe(v.number(), v.integer(), v.minValue(0));
 const IndexMap = v.record(v.string(), Index);
@@ -18,6 +20,7 @@ const IndexMap = v.record(v.string(), Index);
 const TreeOfLifeSchema = v.pipe(
   v.strictObject({
     schemaVersion: v.literal(1),
+    ...HEADER_ADDED,
     accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
     credit: v.pipe(v.string(), v.minLength(1)),
     source: v.pipe(v.string(), v.url()),
@@ -82,4 +85,26 @@ export function namedLineage(tree: TreeOfLife, node: number): readonly string[] 
 /** Whether a node has one of the file's flags. */
 export function hasFlag(tree: TreeOfLife, node: number, flag: keyof TreeOfLife['flags']): boolean {
   return (valueAt(tree.nodeFlags, node) & tree.flags[flag]) !== 0;
+}
+
+/**
+ * A fossil genus the site shows, and its group (#309): what a node is, if it is one. The group is
+ * the one it shares the most ancestors with, not the one it sits under: in the synthesis some
+ * genera hang beside the node their group is named by (Tyrannosaurus beside Dinosauria).
+ */
+export function fossilGenusAt(
+  tree: TreeOfLife,
+  node: number,
+): { readonly genus: string; readonly group: LineageGroup } | null {
+  const genus = Object.entries(tree.ours.fossilGenera).find(([, at]) => at === node)?.[0];
+  if (genus === undefined) return null;
+  const line = new Set(lineage(tree, node));
+  let best: { group: LineageGroup; shared: number } | null = null;
+  for (const group of LINEAGE_GROUPS) {
+    const at = tree.ours.fossilGroups[group];
+    if (at === undefined) continue;
+    const shared = lineage(tree, at).filter((each) => line.has(each)).length;
+    if (best === null || shared > best.shared) best = { group, shared };
+  }
+  return best === null ? null : { genus, group: best.group };
 }

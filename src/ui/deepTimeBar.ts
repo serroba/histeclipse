@@ -108,6 +108,8 @@ export interface DeepTimeBar {
   readonly root: HTMLElement;
   /** "How do we know?", for the date panel (#1137): shown on the reconstructions' spans. */
   readonly evidence: HTMLElement;
+  /** Above the slider: where a layer's chart of the moment goes (#434), dragged to move it. */
+  readonly chartSlot: HTMLElement;
   render(view: DeepTimeView | null): void;
 }
 
@@ -196,6 +198,7 @@ export function createDeepTimeBar(
   const temperatureWhy = handlers.why('temperature', 'Temperature');
   const factsWhy = handlers.why('earth-facts', 'Poles, magnetic field, tilt, day and Sun');
   const airWhy = handlers.why('air', 'Air');
+  const chartSlot = element('div', { class: 'deep-chart-slot' });
   // What the map rests on, asked plainly: a reconstruction should say so. In the date panel (#1137).
   const evidenceButton = element(
     'button',
@@ -298,7 +301,7 @@ export function createDeepTimeBar(
     { class: 'deep-time', 'aria-label': 'Deep time', hidden: '' },
     handle,
     element('div', { class: 'time-scale-row' }, ...(scale ? [scale] : []), crumbs.root),
-    temperature.chart,
+    chartSlot,
     element('div', { class: 'deep-controls' }, play, older, track, younger),
     element(
       'p',
@@ -318,7 +321,7 @@ export function createDeepTimeBar(
     handle,
     details,
     storageKey: 'histeclipse.deepSheet',
-    ignore: 'input, select, .deep-controls, .temperature-chart',
+    ignore: 'input, select, .deep-controls, .deep-chart-slot',
   });
 
   transport.join(root);
@@ -336,6 +339,7 @@ export function createDeepTimeBar(
   const bar: DeepTimeBar = {
     root,
     evidence: evidenceButton,
+    chartSlot,
     render(view) {
       current = view;
       root.hidden = view === null;

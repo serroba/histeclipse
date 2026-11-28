@@ -88,18 +88,30 @@ describe("deep time's slice", () => {
     land: DEEP_DEFAULTS.land,
     snowball: DEEP_DEFAULTS.snowball,
     water: 'inherited',
+    finds: { group: 'dinosaurs', pbdb: 38613 },
   };
 
   it('reads back what it writes', () => {
     const query = written(DEEP_PARAMS, away);
     expect(query).toBe(
-      'ma=66.04&scale=eons&dw=124%2C76&dispersal=b&species=neanderthal&story=humans&growth=fast&theia=immediate&water=inherited',
+      'ma=66.04&scale=eons&dw=124%2C76&dispersal=b&species=neanderthal&story=humans&growth=fast&theia=immediate&finds=dinosaurs%3A38613&water=inherited',
     );
     expect(readSlice(DEEP_PARAMS, DEEP_DEFAULTS, readerOf(query))).toEqual(away);
   });
 
   it('writes nothing for the years, with every default', () => {
     expect(written(DEEP_PARAMS, DEEP_DEFAULTS)).toBe('');
+  });
+
+  it('reads a fossil group and a PBDB number as the finds to mark, and nothing else (#309)', () => {
+    const warnings: string[] = [];
+    const read = (query: string): DeepState['finds'] =>
+      readSlice(DEEP_PARAMS, DEEP_DEFAULTS, readerOf(query, warnings)).finds;
+    expect(read('finds=mammals:12')).toEqual({ group: 'mammals', pbdb: 12 });
+    expect(read('finds=birds:12')).toBeNull();
+    expect(read('finds=mammals')).toBeNull();
+    expect(read('finds=mammals:12:3')).toBeNull();
+    expect(warnings).toHaveLength(3);
   });
 
   it('keeps ma within Earth’s age, to a thousandth', () => {

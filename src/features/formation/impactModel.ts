@@ -36,6 +36,8 @@ export const MOON_RADIUS = 0.273;
 export const MOON_ORBIT = 3.8;
 /** The Roche limit, inside which Earth's tides keep debris from gathering. */
 export const ROCHE = 2.9;
+/** How far past the Roche limit a spreading piece goes before it is swept into the Moon. */
+const SWEPT = 0.5;
 /** Where the Moon is thrown straight into orbit, when it forms within hours: far outside the
  * Roche limit, a nearly circular orbit with its periapsis 7.1 Earth radii out in Kegerreis et
  * al. 2022's example, drawn at 7. */
@@ -200,6 +202,8 @@ export interface Piece {
   readonly fate: 'moon' | 'falls' | 'spreads';
   /** How far out it is thrown before it settles, as a share of its radius. */
   readonly fling: number;
+  /** When it leaves the inner disc, as a share of the clearing (0 to 1). */
+  readonly delay: number;
 }
 
 /** A number from 0 to 1 for `index` and `salt`, the same each time. */
@@ -221,6 +225,7 @@ export function pieces(count: number): readonly Piece[] {
       y: (hash(index, 3) - 0.5) * 0.12 * r,
       fate: outer ? 'moon' : hash(index, 4) < 0.5 ? 'falls' : 'spreads',
       fling: 0.1 + 0.5 * hash(index, 5),
+      delay: hash(index, 6),
     };
   });
 }
@@ -306,6 +311,15 @@ function inSynestia(
   };
 }
 
+/**
+ * How far the inner disc has cleared at `seconds` (0 to 1): over the last two decades, on a log
+ * scale, of the time `hit` takes to clear it, most of it late, as it spreads (Salmon & Canup 2012).
+ */
+function clearing(seconds: number, hit: Hit): number {
+  const [, end] = timing(hit).clear;
+  return smooth(logShare(seconds, end / 100, end));
+}
+
 /** Where `piece` is at `seconds` since the impact, after `played` seconds of play. */
 export function pieceAt(
   piece: Piece,
@@ -315,7 +329,7 @@ export function pieceAt(
 ): PieceMoment | null {
   if (seconds <= 0) return null;
   const struck = strikeAngle(hit);
-  const { gather, clear } = timing(hit);
+  const { gather } = timing(hit);
   // Thrown out into an arm that wraps round, the further out the later, settled within a day.
   const s = smooth(logShare(seconds, 2 * MINUTE, DAY));
   const lag = s ** (1 + piece.r / 3);
@@ -337,27 +351,34 @@ export function pieceAt(
     ];
     return g >= 1 ? null : { place, heat, opacity: 1 - g * g };
   }
-  // The inner disc over a century: part falls back onto Earth, part spreads out to the Moon.
-  const g = smooth(logShare(seconds, ...clear));
-  if (g >= 1) return null;
-  const to = piece.fate === 'falls' ? 1 : ROCHE;
+  // The inner disc over a century: part falls back onto Earth, part spreads out past the Roche
+  // limit to be swept into the Moon, each piece in its own time, so the disc thins (#1311).
+  const own = Math.min(1, Math.max(0, (clearing(seconds, hit) - 0.7 * piece.delay) / 0.3));
+  if (own >= 1) return null;
+  const to = piece.fate === 'falls' ? 1 : ROCHE + SWEPT;
+  const out = r + (to - r) * own;
   return {
-    place: onDisc(r + (to - r) * g, angle, piece.y * s * (1 - g)),
+    place: onDisc(out, angle, piece.y * s * (1 - own)),
     heat,
-    opacity: 1 - g,
+    // Falling, it dims as it goes; spreading, as it crosses the limit and is swept up.
+    opacity:
+      piece.fate === 'falls' || own === 0 ? 1 - own : Math.min(1, (ROCHE + SWEPT - out) / SWEPT),
   };
 }
 
-/** The colour of something as hot as `heat` (0 to 1): white-hot, to orange, to dull red. */
-export function glowColour(heat: number): Triple {
-  const h = Math.min(1, Math.max(0, heat));
-  return [0.45 + 0.55 * Math.min(1, h * 1.6), 0.12 + 0.8 * h ** 1.5, 0.05 + 0.6 * h ** 3];
-}
-
-/** The Moon's colour at `heat`: molten orange, cooling to grey rock. */
-export function moonColour(heat: number): Triple {
-  const h = Math.min(1, Math.max(0, heat));
-  return [0.55 + 0.45 * h, 0.55 - 0.13 * h, 0.55 - 0.42 * h];
+/**
+ * The inner disc as a sheet at `seconds` since the impact (#1311): molten and partly vapour, from
+ * Earth's surface out to the Roche limit, settled within a day, thinning as it clears; how much is
+ * seen (0 to 1) and how hot. None for a synestia, which has no disc.
+ */
+export function innerDiscAt(
+  seconds: number,
+  hit: Hit = CANONICAL,
+): { opacity: number; heat: number } | null {
+  if (seconds <= 0 || hit.outcome === 'synestia') return null;
+  const opacity = smooth(logShare(seconds, HOUR, DAY)) * (1 - clearing(seconds, hit));
+  if (opacity <= 0) return null;
+  return { opacity, heat: 1 - 0.75 * logShare(seconds, HOUR, 100 * YEAR) };
 }
 
 /** How far out the camera stands to see it all: past the Moon's orbit, with room. */

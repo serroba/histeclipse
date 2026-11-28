@@ -12,6 +12,9 @@ import { DEFAULT_PACE, PACE_LABELS, PACES, type Pace } from '../../deepTime/play
 import { element } from '../../ui/dom';
 import { setText } from '../../util/pageWrites';
 import { createTransport, type Transport } from '../../ui/transport';
+import { framePacer } from './frames';
+import { legendView, type LegendItem } from './legend';
+import { createLinger, type Linger } from './linger';
 import { lossView, type LossGauge, type LossView } from './lossGauge';
 import { phaseAt, type EventPhase } from './phases';
 import { proxyView, type ProxyChart, type ProxyView } from './proxyChart';
@@ -40,10 +43,14 @@ export interface StrikeClockOptions {
   readonly dated?: DatedWindow;
   /** What on the globe is drawn to illustrate, not measured, and what its colours are (#1226). */
   readonly drawn?: string;
+  /** Its marks and colours on the globe, as a key (#1268). */
+  readonly legend?: readonly LegendItem[];
   /** What its extinction took, as a gauge of the life left (#1223). */
   readonly loss?: LossGauge;
-  /** A measured record, drawn above the slider on its scale (#1229). */
-  readonly proxy?: ProxyChart;
+  /** Measured records, drawn above the slider on its scale (#1229). */
+  readonly proxies?: readonly ProxyChart[];
+  /** Its key moments, seconds since the event: play lingers there to be read (#1267). */
+  readonly lingers?: readonly number[];
   /** The moment changed: `seconds` since the event. */
   onMoment(seconds: number): void;
   /** The reader closed it. */
@@ -65,6 +72,10 @@ export interface StrikeClock {
 interface ClockView {
   readonly root: HTMLElement;
   readonly when: HTMLElement;
+  /** Said while play lingers at a key moment (#1267). */
+  readonly slowed: HTMLElement;
+  /** Where play lingers: its key moments (#1267). */
+  readonly linger: Linger;
   readonly phaseTitle: HTMLElement;
   readonly phaseText: HTMLElement;
   readonly sources: HTMLElement;
@@ -123,14 +134,19 @@ function clockView(
     dated,
     drawn,
     loss: gauge,
-    proxy: record,
-  }: Pick<StrikeClockOptions, 'title' | 'dated' | 'drawn' | 'loss' | 'proxy'>,
+    proxies = [],
+    lingers = [],
+    legend = [],
+  }: Pick<
+    StrikeClockOptions,
+    'title' | 'dated' | 'drawn' | 'loss' | 'proxies' | 'lingers' | 'legend'
+  >,
   scale: ClockScale,
   transport: Transport,
 ): ClockView {
   const [band, says] = datedBand(scale, dated);
   const loss = gauge === undefined ? null : lossView(gauge);
-  const proxy = record === undefined ? null : proxyView(record, scale);
+  const proxy = proxyView(proxies, scale);
   const speed = element(
     'select',
     { class: 'strike-clock-speed', 'aria-label': 'Speed' },
@@ -154,6 +170,7 @@ function clockView(
   const foldButton = element('button', { type: 'button', class: 'strike-clock-fold' }, 'Less');
   const view = {
     when: element('p', { class: 'strike-clock-when', 'aria-live': 'polite' }),
+    slowed: element('p', { class: 'strike-clock-slowed', hidden: '' }, 'Slowed to read'),
     phaseTitle: element('h3', { class: 'strike-clock-phase' }),
     phaseText: element('p', { class: 'strike-clock-text' }),
     sources: element('p', { class: 'strike-clock-sources' }),
@@ -163,6 +180,7 @@ function clockView(
     { class: 'strike-clock', role: 'dialog', 'aria-label': title, hidden: '' },
     element('header', {}, element('h2', {}, title), foldButton, closeButton),
     view.when,
+    view.slowed,
     view.phaseTitle,
     view.phaseText,
     view.sources,
@@ -177,10 +195,12 @@ function clockView(
     ),
     ...(says === undefined ? [] : [says]),
     element('p', { class: 'strike-clock-hint' }, scale.hint),
+    ...[legendView(legend)].filter((each) => each !== null),
     ...(drawn === undefined ? [] : [element('p', { class: 'strike-clock-drawn' }, drawn)]),
     element('div', { class: 'strike-clock-controls' }, transport.play, speed),
   );
-  const made = { root, speed, closeButton, foldButton, loss, proxy, ...view };
+  const linger = createLinger(lingers.map((seconds) => scale.positionAt(seconds)));
+  const made = { root, speed, closeButton, foldButton, loss, proxy, linger, ...view };
   foldable(made);
   return made;
 }
@@ -215,11 +235,37 @@ function showMoment(
   );
 }
 
+/** Say, or stop saying, that play has slowed to read (#1267): written only when it changes. */
+function slowed(view: Pick<ClockView, 'slowed'>, now: boolean): void {
+  if (view.slowed.hidden === now) view.slowed.hidden = !now;
+}
+
+/**
+ * How far play moves from `position` in a frame `ms` after the last, at `pace`: by at most a
+ * fifth of a second of play, so a hitch pauses it, never skips; at the scale's own pace there
+ * (Chicxulub's slower over the approach, faster once the sky has cleared; #1187); lingering at
+ * its key moments to be read, and saying so (#1267).
+ */
+function playedOn(
+  view: Pick<ClockView, 'slowed' | 'linger'>,
+  scale: ClockScale,
+  [pace, ms, position]: readonly [Pace, number, number],
+): number {
+  const seconds = Math.min(0.2, ms / 1000);
+  const { delta, lingering } = view.linger.step(
+    position,
+    scale.advance(pace, seconds, position),
+    seconds,
+  );
+  slowed(view, lingering);
+  return delta;
+}
+
 export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
   const scale = options.scale ?? STRIKE_SCALE;
   let position = 0;
-  let frame: number | null = null;
-  let last: number | null = null;
+  let frame: (() => void) | null = null;
+  const frames = framePacer();
 
   const transport = createTransport(
     {
@@ -258,31 +304,27 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
   }
 
   function tick(now: number): void {
-    // A late frame moves it on by at most a fifth of a second: a hitch pauses it, never skips.
-    const seconds = last === null ? 0 : Math.min(0.2, (now - last) / 1000);
-    last = now;
-    // At the scale's own pace there: Chicxulub's slower over the approach, faster once the sky
-    // has cleared (#1187).
-    moveTo(position + scale.advance(speed.value as Pace, seconds, position));
+    const gap = frames.gap(now);
+    moveTo(position + playedOn(view, scale, [speed.value as Pace, gap, position]));
     if (position >= scale.end) {
       stop();
       if (options.closeAtEnd === true) close();
       return;
     }
-    frame = requestAnimationFrame(tick);
+    frame = frames.ask(tick);
   }
 
   function start(): void {
     if (frame !== null) return;
     if (position >= scale.end) position = 0;
-    last = null;
-    frame = requestAnimationFrame(tick);
+    frames.reset();
+    frame = frames.ask(tick);
     root.dataset['playing'] = 'true';
     transport.render(true, position);
   }
 
   function stop(): void {
-    if (frame !== null) cancelAnimationFrame(frame);
+    frame?.();
     frame = null;
     root.dataset['playing'] = 'false';
     transport.render(false, position);

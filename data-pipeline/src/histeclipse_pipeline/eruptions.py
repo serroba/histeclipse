@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 import h5py
 import numpy as np
 
+from histeclipse_pipeline.header import header
 from histeclipse_pipeline.sky import verified
 
 if TYPE_CHECKING:
@@ -76,10 +77,27 @@ def eruptions_file(rows: list[dict[str, Json]], accessed: str) -> dict[str, Json
     """Build the site's file: the eruptions as columns, oldest first."""
     regions = sorted({str(row["region"]) for row in rows})
     return {
-        "schemaVersion": 1,
-        "accessed": accessed,
-        "credit": (
-            "HolVol v1.0 (Sigl, Toohey, McConnell, Cole-Dai & Severi 2021), PANGAEA, CC BY 4.0"
+        **header(
+            version=1,
+            sources=["holvol"],
+            credit=(
+                "HolVol v1.0 (Sigl, Toohey, McConnell, Cole-Dai & Severi 2021), PANGAEA, CC BY 4.0"
+            ),
+            licence="CC BY 4.0",
+            accessed=accessed,
+            changes=(
+                "Kept each eruption's year, latitude, sulfur and its uncertainty, as columns, "
+                "oldest first; years rounded to whole years and sulfur to two decimals; months "
+                "dropped; the latitudes the authors give an eruption with "
+                "no known volcano named as the region they stand for"
+            ),
+            units={
+                "year": "astronomical year (0 is 1 BCE)",
+                "latitude": "degrees north",
+                "region": "index into regions",
+                "sulfur": "Tg S into the stratosphere",
+                "sigma": "Tg S, 1 sigma",
+            },
         ),
         "source": "https://doi.org/10.1594/PANGAEA.928646",
         "regions": list(regions),

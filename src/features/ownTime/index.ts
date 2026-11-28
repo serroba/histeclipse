@@ -22,6 +22,8 @@ import type { LayerCapability } from '../../globe/layerCapabilities';
 import type { GlobeLayer, LayerFactory } from '../../globe/layerHost';
 import type { Capabilities, FeatureCore } from '../feature';
 import type { LossGauge } from './lossGauge';
+import { createGuide, type GuideView } from './guide';
+import type { LegendItem } from './legend';
 import type { ProxyChart } from './proxyChart';
 import type { EventPhase } from './phases';
 import {
@@ -50,6 +52,11 @@ interface OwnTimePlay {
 export { phase, phaseAt, type EventPhase } from './phases';
 export type { DatedWindow } from './strikeClock';
 export type { LossGauge } from './lossGauge';
+export type { LossGroups } from './lossGroups';
+export type { LossRecovery, Recovery } from './lossRecovery';
+export type { LossHistory } from './lossHistory';
+export { createGuide, IDLE_MS, type Guide, type GuideView } from './guide';
+export type { LegendItem } from './legend';
 export type { ProxyChart, ProxyReading } from './proxyChart';
 
 export interface OwnTimeEvent {
@@ -80,8 +87,14 @@ export interface OwnTimeEvent {
   readonly drawn?: string;
   /** What its extinction took, as a gauge of the life left on its clock (#1223). */
   readonly loss?: LossGauge;
-  /** A measured record, drawn above its clock's slider (#1229). */
-  readonly proxy?: ProxyChart;
+  /** Measured records, drawn above its clock's slider (#1229). */
+  readonly proxies?: readonly ProxyChart[];
+  /** Its marks and colours on the globe, as a key under its clock (#1268). */
+  readonly legend?: readonly LegendItem[];
+  /** Its key moments, seconds since it: its clock's play lingers there to be read (#1267). */
+  readonly lingers?: readonly number[];
+  /** Where the camera looks as its clock plays, turned back there when left alone (#1266). */
+  readonly views?: readonly GuideView[];
   /**
    * When its clock's zero is, Ma, where dated more closely than the moment it is watched from
    * (#1222): the end-Permian's start at Meishan, 251.941 Ma, not the 251.9 its card is at.
@@ -105,6 +118,8 @@ export interface OwnTime {
    * age and period it shows, not the one deep time is held at; null with none open.
    */
   lent(): StoryDate | null;
+  /** Whether a clock is open: it has the camera, and nothing else should turn it. */
+  watching(): boolean;
 }
 
 /** Seconds in a million years. */
@@ -121,6 +136,32 @@ export function handover(pace: Pace): 'clock' | 'offer' {
 }
 
 type Lent = Pick<Capabilities, 'strikes' | 'deepTime' | 'overPage'>;
+
+/** A clock starting further right than this share of the page sits beside the globe (#1266). */
+const BESIDE = 0.35;
+
+/**
+ * Keep the globe centred in the space left of `root` while it sits beside it, as the boundaries'
+ * sheet does, so what the camera turns to is not behind it (#1266). Returns how to stop.
+ */
+function keepClear(
+  root: HTMLElement,
+  globe: Pick<Capabilities['strikes'], 'setInsets'>,
+): () => void {
+  const inset = (): void => {
+    const box = root.getBoundingClientRect();
+    const beside = box.width > 0 && box.left > window.innerWidth * BESIDE;
+    globe.setInsets({ right: beside ? window.innerWidth - box.left : 0 });
+  };
+  const observer = new ResizeObserver(inset);
+  observer.observe(root);
+  window.addEventListener('resize', inset);
+  return () => {
+    observer.disconnect();
+    window.removeEventListener('resize', inset);
+    globe.setInsets({ right: 0 });
+  };
+}
 
 /**
  * The moment lent deep time's header (#1222): the header is written again only when its words
@@ -184,10 +225,14 @@ function marked(event: OwnTimeEvent): {
   dated?: DatedWindow;
   drawn?: string;
   loss?: LossGauge;
-  proxy?: ProxyChart;
+  proxies?: readonly ProxyChart[];
+  lingers?: readonly number[];
+  legend?: readonly LegendItem[];
 } {
   return {
-    ...(event.proxy === undefined ? {} : { proxy: event.proxy }),
+    ...(event.proxies === undefined ? {} : { proxies: event.proxies }),
+    ...(event.lingers === undefined ? {} : { lingers: event.lingers }),
+    ...(event.legend === undefined ? {} : { legend: event.legend }),
     ...(event.dated === undefined ? {} : { dated: event.dated }),
     ...(event.drawn === undefined ? {} : { drawn: event.drawn }),
     ...(event.loss === undefined ? {} : { loss: event.loss }),
@@ -224,6 +269,7 @@ export function createOwnTime(
   let offered: { readonly key: string; readonly rank: number; readonly until: number } | null =
     null;
   const lender = createLender(core);
+  let stopClear = (): void => undefined;
 
   function watch(event: OwnTimeEvent, ma: number | null): void {
     offer.hide();
@@ -234,6 +280,7 @@ export function createOwnTime(
     const held = ma !== null && lent.deepTime.hold();
     if (ma !== null) core.change((state) => (state.ma === null ? state : { ...state, ma }));
     const playing = event.play(tools);
+    const guide = createGuide(event.views ?? [], { camera: lent.strikes, input: lent.strikes.on });
     const deep = carried(core, event);
     open = { key: event.key, rank: event.rank ?? 0 };
     const zero = event.ma ?? ma;
@@ -245,6 +292,7 @@ export function createOwnTime(
       ...marked(event),
       onMoment: (seconds) => {
         playing.at(seconds);
+        guide.at(seconds);
         deep.at(seconds);
         if (zero === null) return;
         const at = zero - seconds / MYR;
@@ -252,6 +300,8 @@ export function createOwnTime(
       },
       onClose: () => {
         playing.end();
+        guide.end();
+        stopClear();
         open = null;
         document.documentElement.toggleAttribute('data-own-time', false);
         lender.lend(null);
@@ -261,6 +311,7 @@ export function createOwnTime(
       closeAtEnd: event.deep !== undefined,
     });
     lent.overPage.add(clock.root);
+    stopClear = keepClear(clock.root, lent.strikes);
     clock.open(deep.from(ma));
   }
 
@@ -285,5 +336,6 @@ export function createOwnTime(
       return 'offer';
     },
     lent: lender.lent,
+    watching: () => open !== null,
   };
 }

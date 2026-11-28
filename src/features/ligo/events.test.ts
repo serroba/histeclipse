@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { WAVE_CHAPTERS } from '../../state/slices/display';
-import { SOURCES, WHYS } from '../../sources/registry';
+import { WHYS } from '../../sources/content';
+import { SOURCES } from '../../sources/registry';
 import { NEUTRON_STAR_KM, openingChapter, separationKm, WAVE_EVENTS } from './events';
 import { chirp, GW170817_MODEL, newtonianStrain } from './strain';
 

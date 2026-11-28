@@ -15,7 +15,7 @@ describe('the layers’ icons on the zoom rail', () => {
     expect(Object.values(icons).map((icon) => icon.getAttribute('aria-label'))).toEqual([
       'Orbits',
       'Spacecraft',
-      'Asteroid belt',
+      'Asteroids and dwarf planets',
       'Why here?',
     ]);
     for (const icon of Object.values(icons)) {

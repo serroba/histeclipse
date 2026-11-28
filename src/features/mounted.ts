@@ -8,6 +8,7 @@ import { changed } from '../state/store';
 import { begin, end } from '../util/frameLedger';
 import type { Brief, LayerLoad } from '../state/activeLayers';
 import type { HereFact } from '../sources/registry';
+import type { PlayAxis } from '../deepTime/playAxis';
 import type { StoryDate } from '../deepTime/storyDate';
 import type { Layer, ViewState } from '../state/viewState';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
@@ -18,6 +19,7 @@ import type {
   DeepMoment,
   Feature,
   FeatureCore,
+  FeatureInstance,
   LayerAction,
 } from './feature';
 import { createFormation } from './formation';
@@ -34,6 +36,8 @@ export interface Features {
   deepBar(state: ViewState, moment: DeepMoment): Required<DeepBarFields>;
   /** Deep time (#1077): the finds of all the features, Ma, that play eases near. */
   finds(state: ViewState): number[];
+  /** Deep time (#1276): the first feature's own timeline play follows while it shows, if any. */
+  playAxis(state: ViewState): PlayAxis | null;
   /** Deep time left. */
   deepOff(state: ViewState): void;
   /** Watch Earth and the Moon form now, as a milestone's card asks (#1218): whether it opened. */
@@ -94,6 +98,27 @@ export function deepChipsOf(features: readonly Feature[]): DeepChip[] {
 /** Whether the reader asks for less motion. */
 const lessMotion = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/** The first feature's own timeline play follows while it shows, if any (#1276). */
+function firstAxis(
+  mounted: readonly { readonly shown: FeatureInstance }[],
+  state: ViewState,
+): PlayAxis | null {
+  for (const { shown } of mounted) {
+    const axis = shown.playAxis?.(state) ?? null;
+    if (axis !== null) return axis;
+  }
+  return null;
+}
+
+/** The first date a feature lends deep time's header, if any (#1285). */
+function firstDate(mounted: readonly { readonly shown: FeatureInstance }[]): StoryDate | null {
+  for (const { shown } of mounted) {
+    const date = shown.storyDate?.() ?? null;
+    if (date !== null) return date;
+  }
+  return null;
+}
+
 export function mountFeatures(
   features: readonly Feature[],
   core: FeatureCore,
@@ -152,6 +177,7 @@ export function mountFeatures(
     finds(state) {
       return mounted.flatMap(({ shown }) => shown.finds?.(state) ?? []);
     },
+    playAxis: (state) => firstAxis(mounted, state),
     deepOff(state) {
       for (const { shown } of mounted) shown.deep?.(state, null);
     },
@@ -174,6 +200,7 @@ export function mountFeatures(
         const facts = [shown.here?.(state) ?? []].flat();
         return facts.map((fact) => [feature.id, fact] as const);
       }),
-    storyDate: () => ownTime.lent(),
+    // An own-time clock's moment, or else a feature's date (#1285).
+    storyDate: () => ownTime.lent() ?? firstDate(mounted),
   };
 }

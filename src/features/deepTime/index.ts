@@ -205,6 +205,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     store,
     shown: (state) => shown(state),
     finds: (state) => context.finds(state),
+    axis: (state) => context.playAxis(state),
     loop: (tick) => animationLoop(tick),
     changed: () => {
       showDeepTime(store.get());
@@ -375,6 +376,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   return {
     bar: deepBar.root,
     evidence: deepBar.evidence,
+    chartSlot: deepBar.chartSlot,
     hypotheses: sketchView.root,
     glance: glance.root,
     yearsScale: yearsSpan.root,

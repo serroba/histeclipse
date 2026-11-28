@@ -129,3 +129,47 @@ describe('the view of a mission to a Sun–Earth L point (#995)', () => {
     expect(above).toBeCloseTo(0.35 / Math.hypot(0.75, 0.55, 0.35), 3);
   });
 });
+
+describe('a mission that stays about Earth (#800)', () => {
+  const withOrbit = missions(record.craft, TODAY, record.aboutEarth);
+  const hubble = missionNamed(withOrbit, 'S20580');
+
+  it('Given Hubble, Then it is a mission from its launch on Discovery to today, through its five servicing flights', () => {
+    expect(hubble?.title).toBe('Hubble Space Telescope');
+    expect(hubble?.inOrbit).toBe(true);
+    expect(hubble?.aboutEarth).toBe(true);
+    expect(hubble?.credit).toBe('nasaHubbleMissions');
+    expect(
+      hubble?.chapters.map(({ jd }) =>
+        new Date((jd - 2_440_587.5) * 86_400_000).toISOString().slice(0, 10),
+      ),
+    ).toEqual([
+      '1990-04-24',
+      '1990-04-25',
+      '1993-12-02',
+      '1997-02-11',
+      '1999-12-19',
+      '2002-03-01',
+      '2009-05-11',
+    ]);
+    expect(hubble?.start).toBe(gcatJd('1990-04-24'));
+    expect(hubble?.end).toBe(TODAY);
+  });
+
+  it('Then it is framed close on Earth, its ring whole, from its launch', () => {
+    if (hubble === null) throw new Error('no Hubble mission');
+    expect(missionView(hubble)).toBe(
+      'focus=earth&cam=60.0000,0.0000,6.00&layers=spacecraft&mission=s20580&t=1990-04-24T00:00Z',
+    );
+  });
+
+  it('Then the craft about Earth with no moments known are not missions, and the rest keep their order', () => {
+    expect(withOrbit).toHaveLength(all.length + 1);
+    expect(missionNamed(withOrbit, 'S13777')).toBeNull();
+    const starts = withOrbit.map(({ start }) => start);
+    expect(starts).toEqual([...starts].sort((a, b) => a - b));
+    expect(all.every(({ inOrbit, credit }) => !inOrbit && credit === 'nssdcaChronology')).toBe(
+      true,
+    );
+  });
+});

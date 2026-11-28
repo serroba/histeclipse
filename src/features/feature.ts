@@ -7,10 +7,12 @@
  * What the layer is, as the reader is offered it, is described below the view's state, where the
  * link, the chips and the search read it (#904): its id, name, spans, icon and why in
  * `src/layers/<id>.ts`, listed in `src/layers/layers.ts`. Its why's text is
- * `src/sources/whys/<id>.json` (#906), its sources entries in `sources/sources.json`, and its
+ * `src/sources/whys/<id>.json` (#906), its sources entries in `sources/sources.json` (and their references in `sources/citations.json`), and its
  * styles a `.css` file in its folder (#382).
  */
 
+import type { PlayAxis } from '../deepTime/playAxis';
+import type { StoryDate } from '../deepTime/storyDate';
 import type { Pace } from '../deepTime/playSpeed';
 import type { Fetch } from '../util/fetchJson';
 import type { Globe } from '../globe/globe';
@@ -134,6 +136,8 @@ export interface Capabilities {
     resume(): void;
     /** The pace deep time plays at. */
     pace(): Pace;
+    /** Above the bar's slider: where a layer's chart of the moment goes (#434). */
+    readonly chartSlot: HTMLElement;
   };
   /**
    * The ice ages' Earth on the globe: the shelf the sea left bare, the ice sheets, the sea ice,
@@ -166,7 +170,7 @@ export interface Capabilities {
   /** The globe coloured by temperature in deep time, and the maps ahead fetched as it plays. */
   readonly temperatureMaps: Pick<Globe, 'setTemperature' | 'prefetch'>;
   /** A crater's strike: played on the globe turned to it, and written on `on` as it happens. */
-  readonly strikes: Pick<Globe, 'playImpact' | 'flyTo' | 'zoomTo'> & {
+  readonly strikes: Pick<Globe, 'playImpact' | 'flyTo' | 'zoomTo' | 'setInsets'> & {
     readonly on: HTMLElement;
   };
   /** Radiocarbon's calibration curves, loaded once. */
@@ -247,6 +251,16 @@ export interface FeatureInstance {
   deepBar?(state: ViewState, moment: DeepMoment): DeepBarFields;
   /** Deep time (#1077): the moments, Ma, of the finds its layer shows, that play eases near. */
   finds?(state: ViewState): readonly number[];
+  /**
+   * Deep time (#1276): its own timeline that play follows while it shows, such as the
+   * temperature chart's pace over the ice ages; null while it does not.
+   */
+  playAxis?(state: ViewState): PlayAxis | null;
+  /**
+   * Deep time (#1285): a date it lends the header and bar, finer than the moment the view keeps,
+   * such as the temperature chart's year through the last thousand years; null while it has none.
+   */
+  storyDate?(): StoryDate | null;
   /** One of its markers was tapped: all that follows `<picks>:` in the marker's pick. */
   pick?(id: string): void;
   /** Another marker was tapped: a card of this feature's still loading should not open. */

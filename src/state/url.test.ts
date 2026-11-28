@@ -103,6 +103,7 @@ describe('parseViewState', () => {
       land: 'dhuime',
       snowball: 'hard',
       water: 'delivered',
+      finds: null,
       why: null,
       tree: null,
       craters: null,
@@ -396,6 +397,11 @@ describe('parseViewState', () => {
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('mission=');
   });
 
+  it('Given a mission that stayed about Earth, Then its satellite-catalogue id is read too (#800)', () => {
+    expect(parseViewState('mission=S20580', NOW).state.mission).toBe('s20580');
+    expect(parseViewState('mission=x20580', NOW).warnings).not.toHaveLength(0);
+  });
+
   it('Given a destination named, Then it is read and written back, and absent by default (#726)', () => {
     const { state, warnings } = parseViewState('explore=human-origins', NOW);
     expect(warnings).toEqual([]);
@@ -685,6 +691,12 @@ describe('serializeViewState', () => {
     land: fc.constantFrom(...LAND_MODELS),
     snowball: fc.constantFrom(...SNOWBALL_MODELS),
     water: fc.constantFrom(...WATER_MODELS),
+    finds: fc.option(
+      fc.record({
+        group: fc.constantFrom(...LINEAGE_GROUPS),
+        pbdb: fc.integer({ min: 0, max: 9_999_999 }),
+      }),
+    ),
     why: fc.constantFrom(null, ...WHY_VIEWS),
     tree: fc.oneof(
       fc.constant(null),

@@ -405,6 +405,23 @@ def fit_orbit(
     )
 
 
+def eccentric_anomaly(mean_anomaly: float, e: float) -> float:
+    """Solve Kepler's equation E - e sin E = M for E, radians (as the site does).
+
+    M is brought within half a turn of 0 and Newton's steps started from M + e sin M, which
+    settles for any ellipse the site draws, the most stretched (Sedna's, e = 0.85) included;
+    started from M itself, a stretched orbit's first step near its pericentre overshoots.
+    """
+    mean = math.remainder(mean_anomaly, 2 * math.pi)
+    anomaly = mean + e * math.sin(mean)
+    for _ in range(30):
+        step = (anomaly - e * math.sin(anomaly) - mean) / (1 - e * math.cos(anomaly))
+        anomaly -= step
+        if abs(step) < 1e-13:  # noqa: PLR2004
+            break
+    return anomaly
+
+
 def position(orbit: Orbit, jd: float) -> Vector:
     """Where the mean orbit puts the moon, km from its planet, ICRF (as the site works it)."""
     t = jd - J2000
@@ -412,10 +429,7 @@ def position(orbit: Orbit, jd: float) -> Vector:
     peri = math.radians(evaluate(list(orbit.pericentre), t))
     node = math.radians(evaluate(list(orbit.node), t))
     e = orbit.eccentricity
-    mean_anomaly = lam - peri
-    anomaly = mean_anomaly
-    for _ in range(8):
-        anomaly -= (anomaly - e * math.sin(anomaly) - mean_anomaly) / (1 - e * math.cos(anomaly))
+    anomaly = eccentric_anomaly(lam - peri, e)
     distance = orbit.axis * (1 - e * math.cos(anomaly))
     f = 2 * math.atan2(
         math.sqrt(1 + e) * math.sin(anomaly / 2), math.sqrt(1 - e) * math.cos(anomaly / 2)

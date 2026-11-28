@@ -33,6 +33,7 @@ function fakeContext(
   const strikes = {
     playImpact: vi.fn(() => playing),
     flyTo: vi.fn(),
+    setInsets: vi.fn(),
     zoomTo: vi.fn(),
     on: document.createElement('div'),
   };
@@ -74,9 +75,14 @@ async function loaded(state: ViewState, options: Parameters<typeof fakeContext>[
 
 const clockTitle = () => document.querySelector('.strike-clock')?.getAttribute('aria-label');
 
+/** The fumes drawn last: what a province's clock gave its fumes, not its facts (#1268). */
+function fumed(drawn: readonly unknown[]): unknown {
+  return drawn.findLast((each) => typeof each === 'object' && each !== null && 'spread' in each);
+}
+
 describe('the extinctions as a feature', () => {
   it('asks for the cards, the timeline and the shared clock, and is shown again as deep time changes', () => {
-    expect(extinctionsFeature.needs).toEqual(['cards', 'timeline', 'ownTime']);
+    expect(extinctionsFeature.needs).toEqual(['cards', 'timeline', 'ownTime', 'strikes']);
     expect(extinctionsFeature.watches(on)).toEqual([on.layers, on.mode, on.ma, on.deepScale]);
   });
 
@@ -153,13 +159,22 @@ describe('the extinctions as a feature', () => {
     expect(strikes.zoomTo).toHaveBeenCalledWith(3.4);
   });
 
+  it('turns the globe to the extinction deep time is near, unless motion is to be less (#1266)', async () => {
+    const { strikes } = await loaded({ ...on, ma: 252 });
+    expect(strikes.flyTo).toHaveBeenCalledTimes(1);
+    expect(strikes.zoomTo).toHaveBeenLastCalledWith(3.2);
+    document.body.replaceChildren();
+    const still = await loaded({ ...on, ma: 252 }, { lessMotion: true });
+    expect(still.strikes.flyTo).not.toHaveBeenCalled();
+  });
+
   it('watches the end-Permian from a card, the traps fuming', async () => {
     const { shown, cards, drawn, strikes } = await loaded({ ...on, ma: 252 });
     shown.pick?.('norilsk');
     cards.at(-1)?.action?.run();
     expect(clockTitle()).toBe('The end-Permian, in its own time');
     expect(strikes.zoomTo).toHaveBeenCalledWith(2.3);
-    expect(drawn.at(-1)).toMatchObject({ spread: 9, fuming: { lava: 0, gas: 0, haze: 0 } });
+    expect(fumed(drawn)).toMatchObject({ spread: 8.5, fuming: { lava: 0, gas: 0, haze: 0 } });
   });
 
   it('watches the end-Triassic and the end-Guadalupian from their cards, each province fuming (#1201)', async () => {
@@ -168,8 +183,8 @@ describe('the extinctions as a feature', () => {
     triassic.cards.at(-1)?.action?.run();
     expect(clockTitle()).toBe('The end-Triassic, in its own time');
     // Centred between its lavas, now on either side of the Atlantic.
-    const camp = triassic.drawn.at(-1) as { center: { longitude: number }; spread: number };
-    expect(camp.spread).toBe(14);
+    const camp = fumed(triassic.drawn) as { center: { longitude: number }; spread: number };
+    expect(camp.spread).toBe(12.1);
     expect(camp.center.longitude).toBeGreaterThan(-25);
     expect(camp.center.longitude).toBeLessThan(-5);
     document.body.replaceChildren();
@@ -177,7 +192,7 @@ describe('the extinctions as a feature', () => {
     guadalupian.shown.pick?.('emeishan-traps');
     guadalupian.cards.at(-1)?.action?.run();
     expect(clockTitle()).toBe('The end-Guadalupian, in its own time');
-    expect(guadalupian.drawn.at(-1)).toMatchObject({ spread: 4 });
+    expect(fumed(guadalupian.drawn)).toMatchObject({ spread: 2.7 });
   });
 
   it('watches the end-Ordovician’s ice and the Late Devonian’s seas from their cards (#1202)', async () => {
@@ -185,7 +200,9 @@ describe('the extinctions as a feature', () => {
     ordovician.shown.pick?.('dobs-linn');
     ordovician.cards.at(-1)?.action?.run();
     expect(clockTitle()).toBe('The end-Ordovician, in its own time');
-    expect(ordovician.drawn.at(-1)).toMatchObject({ spread: 22, seas: { ice: 14, anoxia: 0 } });
+    expect(ordovician.drawn.at(-1)).toMatchObject({ seas: { ice: 14, anoxia: 0 } });
+    // Its oxygen-poor water over 15% of the seafloor, in nine patches (#1230).
+    expect(ordovician.drawn.at(-1)).toHaveProperty('patches.length', 9);
     document.body.replaceChildren();
     const devonian = await loaded({ ...on, ma: 372.2 });
     devonian.shown.pick?.('viluy-traps');

@@ -9,6 +9,7 @@
     "playwright.views.config.ts",
     "e2e/views/*.ts",
     "e2e/perf/*.perf.ts",
+    "e2e/perf/startup.ts",
     "e2e/components/*.ts"
   ]
 }

@@ -14,7 +14,7 @@ export interface SeaMapsContext {
   readonly fetchJson: Fetch;
   readonly paint: (packed: PackedMonth | null) => void;
   readonly notify: (message: string) => void;
-  /** Asks for the feature to be shown again: the index has loaded. */
+  /** Asks for the feature to be shown again: the index, or the month shown, has loaded. */
   readonly refresh: () => void;
 }
 
@@ -31,5 +31,6 @@ export function seaMaps(context: SeaMapsContext): SeaMaps {
     file: mapFile,
     look: (maps) => ({ bound: maps.bound }),
     map: 'the sea temperature map',
+    arrived: context.refresh,
   });
 }

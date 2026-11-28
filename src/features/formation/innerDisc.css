@@ -1,0 +1,11 @@
+/* The Roche limit's name over the inner disc after the giant impact (#1311). */
+.formation-roche {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: rgb(255 255 255 / 0.75);
+  font-size: 0.7rem;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 0 3px rgb(0 0 0 / 0.9);
+}

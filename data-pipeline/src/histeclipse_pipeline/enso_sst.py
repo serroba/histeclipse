@@ -156,11 +156,16 @@ def index_file(first: tuple[int, int], last: tuple[int, int], accessed: str) -> 
     """Build the manifest the web app reads: credit, scale, encoding and the months there are."""
     return {
         "schemaVersion": 1,
+        "sources": ["huang2021oisst"],
         "credit": CREDIT,
         "source": SOURCE,
         "paper": PAPER,
         "licence": LICENCE,
         "accessed": accessed,
+        "changes": (
+            "Anomalies against 1991-2020 computed for this site, averaged onto a 1° grid and "
+            "packed into 8-bit images"
+        ),
         "units": "°C",
         "baseline": f"{BASE[0]}\N{EN DASH}{BASE[1]}, each calendar month against its own mean",
         "bound": BOUND,

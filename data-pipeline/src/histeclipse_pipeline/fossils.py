@@ -132,9 +132,15 @@ def fossils_file(groups: list[Group], accessed: str) -> dict[str, Json]:
     pictured = sorted(name for name, cells in leading.items() if cells >= PICTURED_CELLS)
     return {
         "schemaVersion": 2,
+        "sources": ["pbdb", "paleodem"],
         "credit": CREDIT,
         "source": SOURCE,
         "accessed": accessed,
+        "licence": "CC BY 4.0",
+        "changes": (
+            "Places at their age on the PALEOMAP reconstruction; counted by 5 Myr and 5° for "
+            "this site"
+        ),
         "stepMa": STEP_MA,
         "cellDegrees": CELL,
         "genera": list[Json](names),

@@ -31,6 +31,11 @@ export interface MonthlyMapsContext<Index> {
   readonly map: string;
   readonly paint: (packed: PackedMonth | null) => void;
   readonly notify: (message: string) => void;
+  /**
+   * Called once the month shown has loaded, after it is painted: what is said of the place in
+   * "Why here?" reads the map, so it is said again (#1293).
+   */
+  readonly arrived?: () => void;
 }
 
 export interface MonthlyMaps<Index> {
@@ -51,10 +56,14 @@ export function monthlyMaps<Index>(context: MonthlyMapsContext<Index>): MonthlyM
   // each month would take the other's map away and paint it again, two repaints of the whole
   // history map for one month (#1045).
   let painting = false;
+  // The map painted last, so showing the same month again repaints nothing (#1293).
+  let painted: PackedMonth | null = null;
 
   function paint(packed: PackedMonth | null): void {
     if (packed === null && !painting) return;
+    if (packed !== null && packed === painted) return;
     painting = packed !== null;
+    painted = packed;
     context.paint(packed);
   }
 
@@ -75,7 +84,9 @@ export function monthlyMaps<Index>(context: MonthlyMapsContext<Index>): MonthlyM
         loading.delete(file);
         const packed = { ...context.look(maps), image };
         keep(file, packed);
-        if (wanted === file) paint(packed);
+        if (wanted !== file) return;
+        paint(packed);
+        context.arrived?.();
       },
       (error: unknown) => {
         loading.delete(file);

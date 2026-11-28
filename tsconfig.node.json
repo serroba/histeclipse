@@ -12,6 +12,7 @@
     "vite.config.ts",
     "vite.components.config.ts",
     "vite.models.ts",
+    "vite.catalog.ts",
     "vite.csp.ts",
     "eslint.config.js",
     "eslint.boundaries.js",

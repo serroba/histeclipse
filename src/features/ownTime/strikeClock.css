@@ -86,6 +86,8 @@
     .strike-clock-hint,
     .strike-clock-drawn,
     .loss-gauge-says,
+    .loss-groups,
+    .loss-recoveries,
     .proxy-says
   ) {
   display: none;
@@ -97,9 +99,36 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Said while play lingers at a key moment: the pace, not the events, has slowed (#1267). */
+.strike-clock-slowed {
+  align-self: flex-start;
+  margin: 0;
+  padding: 1px 8px;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  border-radius: 10px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.strike-clock:not([data-playing='true']) .strike-clock-slowed {
+  display: none;
+}
+
 @media (max-width: 600px) {
   .strike-clock-when {
     font-size: 18px;
+  }
+}
+
+/* A short screen, as the first iPhone SE's (#1301): folded, the globe's key waits behind More and
+   the record's plot is lower, so the moment, its losses, the record and the slider fit unscrolled. */
+@media (max-height: 600px) {
+  .strike-clock[data-folded] .strike-clock-legend {
+    display: none;
+  }
+
+  .strike-clock[data-folded] .proxy-plot {
+    height: 40px;
   }
 }
 
@@ -161,6 +190,34 @@
 
 .strike-clock-marks li:last-child {
   transform: translateX(-100%);
+}
+
+/* A narrow screen, as the first iPhone SE's (#1301): the marks, too close for one line each, break
+   onto two, the track making room for them. */
+@media (max-width: 360px) {
+  .strike-clock-track {
+    padding-bottom: 28px;
+  }
+
+  .strike-clock-marks {
+    height: 26px;
+    line-height: 1.2;
+  }
+
+  .strike-clock-marks li {
+    width: max-content;
+    max-width: 9.5ch;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .strike-clock-marks li:first-child {
+    text-align: left;
+  }
+
+  .strike-clock-marks li:last-child {
+    text-align: right;
+  }
 }
 
 .strike-clock-hint,
@@ -306,10 +363,131 @@
   line-height: 1.35;
 }
 
+/* The extinction against every stage's losses (#1269): bars as wide as each stage, as tall as
+   its share lost, the extinction's own marked. */
+.loss-history {
+  margin: 2px 0 0;
+}
+
+.loss-history-title {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.loss-history-plot {
+  position: relative;
+  height: 36px;
+  margin-top: 2px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.2);
+}
+
+.loss-history-bar {
+  position: absolute;
+  bottom: 0;
+  background: rgb(255 255 255 / 0.22);
+}
+
+.loss-history-marked {
+  z-index: 1;
+  /* A crisis stage can be a few pixels of half a billion years: kept wide enough to see. */
+  min-width: 4px;
+  background: rgb(240 110 90);
+}
+
+.loss-history-ends {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-muted);
+  font-size: 10px;
+}
+
+/* Who an extinction took (#1269): a group a row, its share lost as a bar. */
+.loss-groups {
+  margin: 4px 0 0;
+}
+
+.loss-group-list {
+  display: grid;
+  gap: 2px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.loss-group {
+  display: grid;
+  grid-template-columns: 1fr 64px;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.loss-group-track {
+  height: 5px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.loss-group-bar {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.4);
+}
+
+.loss-group-last .loss-group-bar {
+  background: rgb(240 110 90);
+}
+
+/* How long life took to come back (#1269): a study a row, quickest first. */
+.loss-recoveries {
+  margin: 4px 0 0;
+}
+
+.loss-recovery-list {
+  display: grid;
+  gap: 2px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+}
+
+.loss-recovery-took {
+  font-variant-numeric: tabular-nums;
+}
+
+.loss-recovery-whose {
+  color: var(--ink-muted);
+}
+
 /* A measured record above the slider (#1229): inset as the slider's marks are, so each reading
    sits over its moment and the thumb is its cursor. */
 .proxy-chart {
   margin: 0;
+}
+
+.proxy-picks {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 4px;
+}
+
+.proxy-pick {
+  padding: 2px 8px;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 10px;
+  background: none;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.proxy-pick[aria-pressed='true'] {
+  border-color: rgb(255 255 255 / 0.5);
+  color: inherit;
 }
 
 .proxy-title {
@@ -401,4 +579,66 @@
   color: var(--ink-muted);
   font-size: 11px;
   line-height: 1.35;
+}
+
+/* The key to an event's marks and colours on the globe (#1268), each in the globe's own colour. */
+.strike-clock-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  list-style: none;
+}
+
+.strike-clock-legend li {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
+.legend-cause {
+  border: 2px solid rgb(235 70 60);
+  border-radius: 50%;
+  background: rgb(235 70 60 / 0.3);
+}
+
+.legend-record {
+  width: 7px;
+  height: 7px;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.5);
+}
+
+.legend-smoke {
+  border-radius: 50%;
+  background: linear-gradient(90deg, rgb(204 196 184), rgb(41 33 28));
+}
+
+.legend-lava {
+  background: rgb(242 128 31);
+}
+
+.legend-basalt {
+  border: 1px solid rgb(255 255 255 / 0.25);
+  background: rgb(30 27 25);
+}
+
+.legend-ice {
+  background: rgb(240 247 255);
+}
+
+.legend-anoxia {
+  border: 1px solid rgb(255 255 255 / 0.25);
+  background: rgb(56 54 18);
 }

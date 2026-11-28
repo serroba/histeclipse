@@ -10,6 +10,8 @@
  */
 
 import type { LossGauge } from '../ownTime';
+import { RECOVERIES } from './recoveries';
+import { withHistory } from './stageLosses';
 
 const DAY = 86_400;
 const YEAR = 365.25 * DAY;
@@ -26,7 +28,8 @@ function others(sepkoski: number, bambach: number, mcghee: number): string {
   return `other counts give ${String(sepkoski)}% (Sepkoski), ${String(bambach)}% (Bambach et al.) and ${String(mcghee)}% (McGhee et al.), as Bond & Grasby set them side by side`;
 }
 
-export const LOSSES: Readonly<Record<string, LossGauge>> = {
+/** What each extinction took, as the studies estimate it. */
+const STATED: Readonly<Record<string, LossGauge>> = {
   'end-ordovician-extinction': {
     what: WHAT,
     // Stanley's Fig. 4 favours 45–46%; his text gives 42–43%, or 43–44% with fewer late
@@ -73,6 +76,15 @@ export const LOSSES: Readonly<Record<string, LossGauge>> = {
     says: `Lost: 38–40% ${STANLEY}; ${others(39, 34, 40)}. Drawn falling from the darkness to a century on: the timing is drawn, the total estimated.`,
   },
 };
+
+/** Each estimate, with its extinction drawn against every stage's losses (#1269). */
+export const LOSSES: Readonly<Record<string, LossGauge>> = Object.fromEntries(
+  Object.entries(STATED).map(([id, gauge]) => {
+    const recovery = RECOVERIES[id];
+    const counted = withHistory(id, gauge);
+    return [id, recovery === undefined ? counted : { ...counted, recovery }];
+  }),
+);
 
 /** `text` with a capital first letter. */
 function capitalised(text: string): string {

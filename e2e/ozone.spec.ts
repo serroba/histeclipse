@@ -181,6 +181,15 @@ test('in the ozone section a tap on the globe clears the panels, and the panel b
     const after = await panel.boundingBox();
     expect(after?.y).toBeCloseTo((before?.y ?? 0) + 24, 0);
   });
+  await test.step('When they tap the grip, Then the panel folds away to it, and a tap shows it again (#1279)', async () => {
+    await grip.click();
+    await expect(panel).toBeHidden();
+    await expect(grip).toHaveAttribute('aria-expanded', 'false');
+    await expect(grip).toContainText('Show panels');
+    await grip.click();
+    await expect(panel).toBeVisible();
+    await expect(grip).toHaveAttribute('aria-expanded', 'true');
+  });
   await test.step('When they tap the globe, Then the panels clear for a full view, and no place is picked', async () => {
     await tapGlobe();
     await expect(page.locator('#app')).toHaveAttribute('data-panels', 'hidden');

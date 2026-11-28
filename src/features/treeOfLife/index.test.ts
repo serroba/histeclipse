@@ -1,5 +1,7 @@
+// @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type * as Lineage from '../../data/lineages';
 import type { Lineages } from '../../data/lineages';
 import type { TreeOfLife } from '../../data/treeOfLife';
 import { createStore } from '../../state/store';
@@ -9,16 +11,32 @@ import { mountTreeOfLife } from '.';
 
 // The sheets build DOM and the loaders parse whole files: stand-ins record what the part asks.
 type Request = (view: unknown) => void;
-type OnGlobe = (ma: number, where: unknown) => void;
+type OnGlobe = (ma: number, where: unknown, finds: unknown) => void;
+type OnFossil = (to: 'globe' | 'time', group: 'dinosaurs', genus: string) => void;
 const sheets = vi.hoisted(() => ({
-  tree: { show: vi.fn(), request: null as Request | null },
-  lineages: { show: vi.fn(), onGlobe: null as OnGlobe | null },
+  tree: {
+    dialog: document.createElement('dialog'),
+    show: vi.fn(),
+    request: null as Request | null,
+    onFossil: null as OnFossil | null,
+  },
+  lineages: {
+    dialog: document.createElement('dialog'),
+    show: vi.fn(),
+    onGlobe: null as OnGlobe | null,
+  },
 }));
 const loads = vi.hoisted(() => ({ tree: vi.fn(), lineages: vi.fn() }));
 vi.mock('./treeSheet', () => ({
-  createTreeSheet: (request: (view: unknown) => void) => {
+  createTreeSheet: (
+    request: (view: unknown) => void,
+    _load: unknown,
+    _why: unknown,
+    onFossil: OnFossil,
+  ) => {
     sheets.tree.request = request;
-    return { dialog: 'tree-dialog', show: sheets.tree.show };
+    sheets.tree.onFossil = onFossil;
+    return { dialog: sheets.tree.dialog, show: sheets.tree.show };
   },
 }));
 vi.mock('./lineagesSheet', () => ({
@@ -26,21 +44,34 @@ vi.mock('./lineagesSheet', () => ({
     _request: unknown,
     _load: unknown,
     floor: (ma: number) => string,
-    onGlobe: (ma: number, where: unknown) => void,
+    onGlobe: OnGlobe,
   ) => {
     sheets.lineages.onGlobe = onGlobe;
     expect(floor(250)).toBe('/data/paleodem/250.png');
-    return { dialog: 'lineages-dialog', show: sheets.lineages.show };
+    return { dialog: sheets.lineages.dialog, show: sheets.lineages.show };
   },
 }));
 vi.mock('../../data/treeOfLife', () => ({ loadTreeOfLife: loads.tree }));
-vi.mock('../../data/lineages', () => ({ loadLineages: loads.lineages }));
+vi.mock('../../data/lineages', async (actual) => ({
+  ...(await actual<typeof Lineage>()),
+  loadLineages: loads.lineages,
+}));
 
 const tree = { ott: [101, 202, 303] } as unknown as TreeOfLife;
+const genus = (index: number, name: string, pbdb: number, first: number) => ({
+  index,
+  name,
+  pbdb,
+  first,
+  parent: -1,
+  children: [],
+  track: [{ ma: first, latitude: 40, longitude: -100, finds: 3 }],
+});
 const dinosaurs = {
   nodes: [
-    { name: 'Tyrannosaurus', pbdb: 7 },
-    { name: 'Velociraptor', pbdb: 9 },
+    genus(0, 'Tyrannosaurus', 7, 70),
+    genus(1, 'Velociraptor', 9, 75),
+    { ...genus(2, 'Footprintia', 11, 80), track: [] },
   ],
 } as unknown as Lineages;
 
@@ -77,6 +108,18 @@ function mount() {
   return { part: mountTreeOfLife(context), store, notify, goToDeepTime };
 }
 
+/** The sheets made, as the view opening them makes them, so their callbacks are known. */
+async function openSheets(
+  part: ReturnType<typeof mount>['part'],
+  store: ReturnType<typeof mount>['store'],
+) {
+  part.render({ ...store.get(), tree: 'all', lineages: { group: 'dinosaurs', pick: null } });
+  await vi.waitFor(() => {
+    expect(sheets.tree.onFossil).not.toBeNull();
+    expect(sheets.lineages.onGlobe).not.toBeNull();
+  });
+}
+
 /** Let the loads' promises settle. */
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -86,16 +129,24 @@ describe('the tree of life part', () => {
     loads.lineages.mockReset();
     sheets.tree.show.mockReset();
     sheets.lineages.show.mockReset();
+    sheets.tree.onFossil = null;
+    sheets.lineages.onGlobe = null;
   });
 
-  it('puts both sheets on the page and shows what the view says of them', () => {
+  it('holds both sheets’ places on the page, and loads each the first time the view shows it (#220)', async () => {
     const { part, store } = mount();
-    expect(part.elements).toEqual(['tree-dialog', 'lineages-dialog']);
+    const page = document.createElement('div');
+    page.append(...part.elements);
+    expect(part.elements.every((element) => element.hidden === true)).toBe(true);
     const state = { ...store.get(), tree: 'all' as const };
     expect(part.watches(state)).toEqual(['all', null]);
     part.render(state);
-    expect(sheets.tree.show).toHaveBeenCalledWith('all');
-    expect(sheets.lineages.show).toHaveBeenCalledWith(null);
+    await vi.waitFor(() => {
+      expect(sheets.tree.show).toHaveBeenCalledWith('all');
+    });
+    expect(page.firstElementChild).toBe(sheets.tree.dialog);
+    // The lines, not asked for, are neither loaded nor shown.
+    expect(sheets.lineages.show).not.toHaveBeenCalled();
   });
 
   it('opens the tree at the node picked, or the whole tree when none is', async () => {
@@ -122,8 +173,9 @@ describe('the tree of life part', () => {
     expect(store.get().tree).toEqual({ ott: 101 });
   });
 
-  it('lets the sheet ask for a view of the tree', () => {
-    const { store } = mount();
+  it('lets the sheet ask for a view of the tree', async () => {
+    const { part, store } = mount();
+    await openSheets(part, store);
     sheets.tree.request?.({ ott: 5 });
     expect(store.get().tree).toEqual({ ott: 5 });
   });
@@ -151,12 +203,53 @@ describe('the tree of life part', () => {
     expect(store.get().lineages).toEqual({ group: 'dinosaurs', pick: 7 });
   });
 
-  it('closes the lines and goes to deep time with the fossils on', () => {
-    const { store, goToDeepTime } = mount();
+  it('closes the lines and goes to deep time with the fossils on', async () => {
+    const { part, store, goToDeepTime } = mount();
+    await openSheets(part, store);
     store.set((state) => ({ ...state, lineages: { group: 'dinosaurs', pick: 7 } }));
     const where = { lat: 10, lon: 20 };
-    sheets.lineages.onGlobe?.(150, where);
+    sheets.lineages.onGlobe?.(150, where, { group: 'dinosaurs', pbdb: 7 });
     expect(store.get().lineages).toBeNull();
     expect(goToDeepTime).toHaveBeenCalledWith(150, 'fossils', where);
+    // Its finds ringed there (#309).
+    expect(store.get().finds).toEqual({ group: 'dinosaurs', pbdb: 7 });
+  });
+
+  it('goes from a fossil genus on the tree to where it was found, or to its line (#309)', async () => {
+    loads.lineages.mockResolvedValue(dinosaurs);
+    const { part, store, goToDeepTime, notify } = mount();
+    await openSheets(part, store);
+    store.set((state) => ({ ...state, tree: { ott: 5 } }));
+    sheets.tree.onFossil?.('globe', 'dinosaurs', 'Velociraptor');
+    await settled();
+    expect(store.get().tree).toBeNull();
+    expect(goToDeepTime).toHaveBeenCalledWith(75, 'fossils', {
+      ma: 75,
+      latitude: 40,
+      longitude: -100,
+      finds: 3,
+    });
+    expect(store.get().finds).toEqual({ group: 'dinosaurs', pbdb: 9 });
+    // A name with no placed finds: said, and nothing moves.
+    sheets.tree.onFossil?.('globe', 'dinosaurs', 'Footprintia');
+    await settled();
+    expect(notify).toHaveBeenCalledWith(
+      'Footprintia has no placed finds in the lines through time.',
+    );
+    expect(goToDeepTime).toHaveBeenCalledTimes(1);
+    store.set((state) => ({ ...state, tree: { ott: 5 } }));
+    sheets.tree.onFossil?.('time', 'dinosaurs', 'Tyrannosaurus');
+    await settled();
+    expect(store.get().tree).toBeNull();
+    expect(store.get().lineages).toEqual({ group: 'dinosaurs', pick: 7 });
+  });
+
+  it('says when the finds fail to load', async () => {
+    loads.lineages.mockRejectedValue(new Error('offline'));
+    const { part, store, notify } = mount();
+    await openSheets(part, store);
+    sheets.tree.onFossil?.('globe', 'dinosaurs', 'Velociraptor');
+    await settled();
+    expect(notify).toHaveBeenCalledWith('Could not load the genera’s finds: offline');
   });
 });

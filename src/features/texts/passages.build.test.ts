@@ -18,7 +18,7 @@ import eclipses from '../../../public/data/famous-eclipses.json';
 import spacecraft from '../../../public/data/spacecraft.json';
 import { loadFamousEclipses } from '../../data/famousEclipses';
 import { loadSpacecraft } from '../../data/spacecraft';
-import { WHYS } from '../../sources/registry';
+import { WHYS } from '../../sources/content';
 import { LAYER_GROUPS } from '../../state/layerCatalog';
 import { MOON_FACTS } from '../../text/moonFacts';
 import {
@@ -46,7 +46,7 @@ describe('the passages file', () => {
         ),
         ...moonPassages(MOON_FACTS),
         ...eclipsePassages(famous),
-        ...missionPassages(record.craft),
+        ...missionPassages(record.craft, record.aboutEarth),
         ...storyPassages(),
         ...telescopePassages(await loadTelescopes('telescopes.json', serve(telescopes))),
         ...extinctionPassages(

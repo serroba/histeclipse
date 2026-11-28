@@ -1,7 +1,7 @@
 import { installVirtualDisplay } from './virtualDisplay';
 /** Steps shared by the end-to-end features, and the test they run in. */
 
-import { expect, test as base, type Locator, type Page } from '@playwright/test';
+import { expect, test as base, type Locator, type Page, type Request } from '@playwright/test';
 
 export { expect };
 
@@ -81,6 +81,39 @@ export function collectProblems(page: Page): string[] {
     }
   });
   return problems;
+}
+
+/**
+ * Waits until no request the page made is still out, for a moment. Unlike `networkidle`, a
+ * request is let pass once its URL has loaded: the files the page preloads by hand
+ * (`boot-preloads` in index.html) are fetched again by the app, served from the preload, and
+ * Playwright never hears that second request end, so on the live site `networkidle` never came
+ * and the daily run failed (#1295). Call before the page goes anywhere, await `settled` after.
+ */
+export function watchLoads(page: Page): { settled: () => Promise<void> } {
+  const loaded = new Set<string>();
+  const out = new Set<Request>();
+  page.on('request', (request) => out.add(request));
+  page.on('requestfinished', (request) => {
+    out.delete(request);
+    loaded.add(request.url());
+  });
+  page.on('requestfailed', (request) => out.delete(request));
+  const pending = (): number => [...out].filter((request) => !loaded.has(request.url())).length;
+  return {
+    settled: async () => {
+      let quietSince = Date.now();
+      await expect
+        .poll(
+          () => {
+            if (pending() > 0) quietSince = Date.now();
+            return Date.now() - quietSince;
+          },
+          { timeout: 20_000, intervals: [100] },
+        )
+        .toBeGreaterThanOrEqual(500);
+    },
+  };
 }
 
 export async function globeRendered(page: Page): Promise<void> {

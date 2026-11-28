@@ -190,8 +190,15 @@ def ways_file(
     """Build the site's file: the moments, the ways of life, each region's outline and levels."""
     return {
         "schemaVersion": 1,
+        "sources": ["archaeoglobe"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "CC0 1.0",
+        "accessed": "2026-11-03",
+        "changes": (
+            "Consensus assessments, with region outlines simplified for this site; the day "
+            "given as accessed is the day this file was last written"
+        ),
         "scale": 100,
         "years": [year for _, year in MOMENTS],
         "ways": [way for way, _ in WAYS],

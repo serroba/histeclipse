@@ -14,6 +14,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
+from histeclipse_pipeline.header import header
 from histeclipse_pipeline.sky import verified
 
 if TYPE_CHECKING:
@@ -86,10 +87,16 @@ def checked(ages: object, labels: object) -> PolarityScale:
 def polarity_file(scale: PolarityScale, accessed: str) -> dict[str, Json]:
     """Build the site's file: the reversal ages and the chrons."""
     return {
-        "schemaVersion": 1,
-        "credit": "Geomagnetic polarity time scale of GTS 2020 (Ogg 2020), as carried by PmagPy",
+        **header(
+            version=1,
+            sources=["gts2020Polarity", "pmagpy"],
+            credit="Geomagnetic polarity time scale of GTS 2020 (Ogg 2020), as carried by PmagPy",
+            licence="none stated (GTS 2020); BSD-3-Clause (PmagPy, which carries it)",
+            accessed=accessed,
+            changes="The reversal ages and chron names as PmagPy's source lists them",
+            units={"boundaries": "Ma", "young": "Ma"},
+        ),
         "source": f"https://github.com/PmagPy/PmagPy/blob/{PMAGPY_COMMIT}/pmagpy/pmag.py",
-        "accessed": accessed,
         "boundaries": list(scale.boundaries),
         "chrons": [{"name": name, "young": young} for name, young in scale.chrons],
     }

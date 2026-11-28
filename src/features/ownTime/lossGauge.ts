@@ -9,6 +9,9 @@
 
 import { element } from '../../ui/dom';
 import { setText } from '../../util/pageWrites';
+import { groupsView, type LossGroups } from './lossGroups';
+import { historyView, type LossHistory } from './lossHistory';
+import { recoveryView, type LossRecovery } from './lossRecovery';
 
 /** A span of an extinction's clock its losses are drawn falling across, and its share of them. */
 export interface LossPulse {
@@ -27,6 +30,12 @@ export interface LossGauge {
   readonly pulses: readonly LossPulse[];
   /** Whose estimate, how it compares with others, and what is drawn, not measured. */
   readonly says: string;
+  /** The extinction against every stage's losses, where counted (#1269). */
+  readonly history?: LossHistory;
+  /** Who it took: groups readers know, and the share of each lost (#1269). */
+  readonly groups?: LossGroups;
+  /** How long life took to come back, as each study measures it (#1269). */
+  readonly recovery?: LossRecovery;
 }
 
 /** How far through its losses the extinction is at `seconds`, 0–1. */
@@ -58,7 +67,11 @@ export function lossView(gauge: LossGauge): LossView {
   const sure = element('span', { class: 'loss-gauge-sure' });
   const maybe = element('span', { class: 'loss-gauge-maybe' });
   const bar = element('div', { class: 'loss-gauge-bar', 'aria-hidden': 'true' }, sure, maybe);
-  const root = element('div', { class: 'loss-gauge' }, label, bar, says);
+  const history = gauge.history === undefined ? [] : [historyView(gauge.history)];
+  const groups = gauge.groups === undefined ? [] : [groupsView(gauge.groups)];
+  const recovery = gauge.recovery === undefined ? [] : [recoveryView(gauge.recovery)];
+  const parts = [label, bar, ...history, ...groups, ...recovery, says];
+  const root = element('div', { class: 'loss-gauge' }, ...parts);
   return {
     root,
     at(seconds) {

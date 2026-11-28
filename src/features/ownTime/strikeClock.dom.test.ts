@@ -24,6 +24,7 @@ const PHASES: readonly EventPhase[] = [
 let frames: ((now: number) => void)[] = [];
 
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
   frames = [];
   vi.stubGlobal('requestAnimationFrame', (callback: (now: number) => void) => {
     frames.push(callback);
@@ -34,11 +35,13 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
   document.body.replaceChildren();
 });
 
-/** Run the frame asked for, at `now` ms. */
+/** Run the frame asked for, at `now` ms; after a slow frame, once the clock's wait is over. */
 function frame(now: number): void {
+  if (vi.isFakeTimers()) vi.runOnlyPendingTimers();
   const next = frames.shift();
   next?.(now);
 }
@@ -203,17 +206,20 @@ describe('the strike clock’s panel (#1173)', () => {
       title: 'The end-Permian, in its own time',
       phases: PHASES,
       scale: CRISIS_SCALE,
-      proxy: {
-        title: 'Temperature',
-        low: 20,
-        high: 30,
-        series: ['A'],
-        readings: [
-          { seconds: 0, value: 25, series: 0 },
-          { seconds: 0, value: 40, series: 0, between: [0, 1e12] },
-        ],
-        says: 'Measured.',
-      },
+      proxies: [
+        {
+          name: 'Temperature',
+          title: 'Temperature',
+          low: 20,
+          high: 30,
+          series: ['A'],
+          readings: [
+            { seconds: 0, value: 25, series: 0 },
+            { seconds: 0, value: 40, series: 0, between: [0, 1e12] },
+          ],
+          says: 'Measured.',
+        },
+      ],
       onMoment: vi.fn(),
       onClose: vi.fn(),
     });
@@ -228,6 +234,110 @@ describe('the strike clock’s panel (#1173)', () => {
     const cursor = made.root.querySelector<HTMLElement>('.proxy-cursor');
     expect(Number.parseFloat(cursor?.style.left ?? '')).toBeCloseTo(at, 6);
     expect(made.root.querySelector('.proxy-key')?.textContent).toBe('A');
+  });
+
+  it('shows one of several records at a time, picked by name (#1229)', () => {
+    const record = (name: string, value: number) => ({
+      name,
+      title: `${name}, measured`,
+      low: 0,
+      high: 10,
+      series: ['A'],
+      readings: [{ seconds: 0, value, series: 0 }],
+      says: 'Measured.',
+    });
+    const made = createStrikeClock({
+      title: 'The end-Permian, in its own time',
+      phases: PHASES,
+      scale: CRISIS_SCALE,
+      proxies: [record('Temperature', 5), record('Carbon dioxide', 8)],
+      onMoment: vi.fn(),
+      onClose: vi.fn(),
+    });
+    made.open(0);
+    const charts = [...made.root.querySelectorAll<HTMLElement>('.proxy-chart')];
+    const picks = [...made.root.querySelectorAll<HTMLButtonElement>('.proxy-pick')];
+    expect(picks.map((each) => each.textContent)).toEqual(['Temperature', 'Carbon dioxide']);
+    expect(charts.map((each) => each.hidden)).toEqual([false, true]);
+    picks[1]?.click();
+    expect(charts.map((each) => each.hidden)).toEqual([true, false]);
+    expect(picks.map((each) => each.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
+    // Both cursors follow the moment, shown or not.
+    const cursors = [...made.root.querySelectorAll<HTMLElement>('.proxy-cursor')];
+    expect(cursors[0]?.style.left).toBe(cursors[1]?.style.left);
+    expect(cursors[0]?.style.left).not.toBe('');
+  });
+
+  it('lingers at its key moments to be read, and says so (#1267)', () => {
+    const moments: number[] = [];
+    const made = createStrikeClock({
+      title: 'The end-Permian, in its own time',
+      phases: PHASES,
+      scale: CRISIS_SCALE,
+      lingers: [0],
+      onMoment: (seconds) => moments.push(seconds),
+      onClose: vi.fn(),
+    });
+    const tag = made.root.querySelector<HTMLElement>('.strike-clock-slowed');
+    made.open(-1000 * 365.25 * 86_400);
+    frame(0);
+    expect(tag?.hidden).toBe(true);
+    frame(200);
+    // Stopped on the key moment, saying so; a while later, on past it.
+    expect(moments.at(-1)).toBe(0);
+    expect(tag?.hidden).toBe(false);
+    for (let now = 400; now <= 5000; now += 200) frame(now);
+    expect(tag?.hidden).toBe(true);
+    expect(moments.at(-1)).toBeGreaterThan(0);
+  });
+
+  it('keys its marks and colours on the globe, where it has any (#1268)', () => {
+    expect(clock().made.root.querySelector('.strike-clock-legend')).toBeNull();
+    const made = createStrikeClock({
+      title: 'The end-Permian, in its own time',
+      phases: PHASES,
+      legend: [
+        ['cause', 'The lava province'],
+        ['lava', 'Lava flowing'],
+      ],
+      onMoment: vi.fn(),
+      onClose: vi.fn(),
+    });
+    const items = [...made.root.querySelectorAll('.strike-clock-legend li')];
+    expect(items.map((each) => each.textContent)).toEqual(['The lava province', 'Lava flowing']);
+    expect(items[1]?.querySelector('.legend-swatch')?.className).toBe('legend-swatch legend-lava');
+  });
+
+  it('after a slow frame, waits as long as it took before the next, so the page keeps up', () => {
+    const { made } = clock();
+    made.open();
+    frames.shift()?.(0);
+    // A quick frame: the next is asked for at once.
+    frames.shift()?.(16);
+    expect(frames).toHaveLength(1);
+    // A slow one, as with software graphics: the next waits as long as it took, at most 500 ms.
+    frames.shift()?.(316);
+    expect(frames).toHaveLength(0);
+    vi.advanceTimersByTime(299);
+    expect(frames).toHaveLength(0);
+    vi.advanceTimersByTime(1);
+    expect(frames).toHaveLength(1);
+    // The frame after the wait is quick again: the wait is not counted as its own time, so the
+    // next is asked for at once, not held back by the one hitch for good (#1309).
+    frames.shift()?.(632);
+    expect(frames).toHaveLength(1);
+    // Another slow one waits again.
+    frames.shift()?.(1032);
+    expect(frames).toHaveLength(0);
+    vi.advanceTimersByTime(400);
+    expect(frames).toHaveLength(1);
+    frames.shift()?.(1448);
+    expect(frames).toHaveLength(1);
+    // Paused while it waits: nothing more is asked for.
+    frames.shift()?.(3448);
+    made.root.querySelector<HTMLButtonElement>('.strike-clock-play')?.click();
+    vi.advanceTimersByTime(500);
+    expect(frames).toHaveLength(0);
   });
 
   it('says nothing of a phase before the first, and takes a second open or pause in its stride', () => {

@@ -190,6 +190,8 @@ export const SURFACE_PRIORITY = {
   telescopes: 35,
   impacts: 40,
   extinctions: 45,
+  // One genus's sites before the counts, so the counts give way to what was asked for (#309).
+  fossilFinds: 48,
   fossils: 50,
   minorStates: 60,
 } as const;

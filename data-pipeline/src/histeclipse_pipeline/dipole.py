@@ -17,6 +17,7 @@ import urllib.request
 import zipfile
 from typing import TYPE_CHECKING
 
+from histeclipse_pipeline.header import header
 from histeclipse_pipeline.sky import verified
 
 if TYPE_CHECKING:
@@ -54,11 +55,20 @@ def dipole_file(rows: list[tuple[float, float]], accessed: str) -> dict[str, Jso
     """Build the site's file: the series within reach, as columns."""
     kept = [(ka, dipole) for ka, dipole in rows if ka <= REACH_KA]
     return {
-        "schemaVersion": 1,
-        "accessed": accessed,
-        "credit": (
-            "GGF100k (Panovska, Constable & Korte 2018), dipole moment every 50 years, "
-            "EarthRef ERDA 2382; no licence stated, cited as the published result"
+        **header(
+            version=1,
+            sources=["ggf100k"],
+            credit=(
+                "GGF100k (Panovska, Constable & Korte 2018), dipole moment every 50 years, "
+                "EarthRef ERDA 2382; no licence stated, cited as the published result"
+            ),
+            licence="none stated",
+            accessed=accessed,
+            changes=(
+                f"Kept the last {REACH_KA:g} thousand years, youngest first; "
+                "values rounded to four decimals"
+            ),
+            units={"ka": "thousand years before 1950", "dipole": "10^22 A m^2"},
         ),
         "source": "https://doi.org/10.1029/2018GC007966",
         "ka": [ka for ka, _ in kept],

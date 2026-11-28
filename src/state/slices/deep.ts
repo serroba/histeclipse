@@ -22,6 +22,8 @@
  *   before the reconstructions reach: when the Moon-forming impact struck, where the oceans'
  *   water came from (#1142), how much of the surface was land, and how far a snowball's ice
  *   reached. Absent means the first of each.
+ * - `finds` is a fossil group, `:` and a PBDB number (`dinosaurs:38613`): the genus, or group of
+ *   genera, whose finds Fossils marks on the globe (#309). Absent means none.
  */
 
 import { COAST_SOURCES, DEFAULT_COAST, type CoastSource } from '../../deepTime/coastline';
@@ -52,6 +54,7 @@ import {
   type TemperatureShow,
 } from '../../deepTime/temperatureModels';
 import { HUMAN_SPECIES, type HumanSpecies } from '../../data/humanClaims';
+import { LINEAGE_GROUPS, type LineageGroup } from '../../data/lineages';
 import { choice, type Params } from '../slice';
 
 /** Timmermann & Friedrich's dispersal model: off, or the early or the late exit from Africa. */
@@ -69,6 +72,12 @@ const STORIES = ['off', 'humans'] as const;
 type Story = (typeof STORIES)[number];
 
 const MA_RANGE = { min: 0, max: EARTH_AGE_MA } as const;
+
+/** A genus, or a group of genera, whose finds Fossils marks (#309): its group and PBDB number. */
+export interface FossilFinds {
+  readonly group: LineageGroup;
+  readonly pbdb: number;
+}
 
 export interface DeepState {
   /** Deep time: millions of years ago the globe shows Earth's surface for; null for history. */
@@ -97,6 +106,8 @@ export interface DeepState {
   readonly growth: GrowthModel;
   /** How the impact went (#1220). */
   readonly theia: TheiaModel;
+  /** Whose finds Fossils marks on the globe (#309); null for none. */
+  readonly finds: FossilFinds | null;
   readonly land: LandModel;
   readonly snowball: SnowballModel;
   readonly water: WaterModel;
@@ -116,6 +127,7 @@ export const DEEP_DEFAULTS: DeepState = {
   impact: DEFAULT_IMPACT_MODEL,
   growth: DEFAULT_GROWTH_MODEL,
   theia: DEFAULT_THEIA_MODEL,
+  finds: null,
   land: DEFAULT_LAND_MODEL,
   snowball: DEFAULT_SNOWBALL_MODEL,
   water: DEFAULT_WATER_MODEL,
@@ -158,6 +170,11 @@ export const DEEP_PARAMS: Params<DeepState> = {
   impact: choice('impact', IMPACT_MODELS, DEEP_DEFAULTS.impact),
   growth: choice('growth', GROWTH_MODELS, DEEP_DEFAULTS.growth),
   theia: choice('theia', THEIA_MODELS, DEEP_DEFAULTS.theia),
+  finds: {
+    key: 'finds',
+    parse: parseFinds,
+    format: (finds) => (finds === null ? null : `${finds.group}:${String(finds.pbdb)}`),
+  },
   land: choice('land', LAND_MODELS, DEEP_DEFAULTS.land),
   snowball: choice('snowball', SNOWBALL_MODELS, DEEP_DEFAULTS.snowball),
   water: choice('water', WATER_MODELS, DEEP_DEFAULTS.water),
@@ -172,4 +189,16 @@ function parseMa(raw: string): number {
     );
   }
   return roundMa(ma);
+}
+
+/** `finds=` a fossil group, `:` and a PBDB number (#309). */
+function parseFinds(raw: string): FossilFinds {
+  const match = /^([a-z]+):(\d{1,7})$/.exec(raw);
+  const group = LINEAGE_GROUPS.find((each) => each === match?.[1]);
+  if (match === null || group === undefined) {
+    throw new Error(
+      `expected ${LINEAGE_GROUPS.join(', ')}, : and a PBDB number, such as dinosaurs:38613`,
+    );
+  }
+  return { group, pbdb: Number(match[2]) };
 }

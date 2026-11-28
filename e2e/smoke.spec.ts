@@ -14,6 +14,7 @@ import {
   LIVE_GPU,
   pickSpan,
   test,
+  watchLoads,
 } from './support';
 
 // Commit SHA the deployment is expected to serve. Empty or unset skips the release check.
@@ -22,15 +23,48 @@ const expectedVersion = process.env['EXPECTED_VERSION'] ?? '';
 // The 621 BCE lunar eclipse from Babylon, as someone might share it.
 const SHARED_LINK = '?t=-620-04-22T07:20&loc=32.5422,44.4209&cam=30,40,3&sel=lunar:-0620-04-22';
 
+test('the header’s date is drawn with the page, before the app starts, and handed over (#220)', async ({
+  page,
+}) => {
+  // The app's code held back, as on a slow phone: the page's own header is what shows meanwhile.
+  await page.route('**/assets/index-*.js', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await route.continue();
+  });
+  await test.step('Given a link to a Gregorian date, Then its date and time show before the app', async () => {
+    // Not waiting for the load: that waits for the app's code, which then replaces the header.
+    await page.goto('./?t=2026-11-17T12:05Z&cam=20,0,4.5', { waitUntil: 'commit' });
+    const early = page.locator('header.hud[aria-hidden="true"]');
+    await expect(early.locator('.hud-date')).toHaveText('17 November 2026 CE');
+    await expect(early.locator('.hud-time')).toHaveText('12:05 UT');
+  });
+  await test.step('Then the app takes the header over, saying the same', async () => {
+    await globeRendered(page);
+    await expect(page.locator('header.hud')).toHaveCount(1);
+    await expect(page.locator('header.hud[aria-hidden]')).toHaveCount(0);
+    await expect(page.locator('.hud-date')).toHaveText('17 November 2026 CE');
+    await expect(page.locator('.hud-time')).toHaveText('12:05 UT');
+  });
+  await test.step('Given deep time, Then nothing is guessed: the app draws the header', async () => {
+    await page.goto('./?ma=66', { waitUntil: 'commit' });
+    // Once the page's own script has run, before the app's.
+    await page.waitForFunction(() => document.getElementById('boot-hud') !== null);
+    await expect(page.locator('header.hud')).toHaveCount(0);
+    await globeRendered(page);
+    await expect(page.locator('header.hud')).toHaveCount(1);
+  });
+});
+
 test('loads the globe without errors or failed requests @acceptance', LIVE, async ({ page }) => {
   const problems = collectProblems(page);
+  const loads = watchLoads(page);
   const response = await page.goto('./');
 
   expect(response?.status()).toBe(200);
   await expect(page).toHaveTitle('histeclipse');
   await expect(page.getByRole('heading', { level: 1, name: 'histeclipse' })).toBeVisible();
   await globeRendered(page);
-  await page.waitForLoadState('networkidle');
+  await loads.settled();
   expect(problems).toEqual([]);
 });
 
@@ -453,6 +487,8 @@ test('Back and Forward restore the eclipse and view @acceptance @mobile', async 
 });
 
 test('Back restores the rendered camera after zooming an eclipse @acceptance', async ({ page }) => {
+  // A zoom in and back out, each waited for in rendered frames: up to 29 s on CI (#1246).
+  test.slow();
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');
   await page.goto('./?t=2024-04-08T18:17&cam=0,0,4.5&layers=eclipses');

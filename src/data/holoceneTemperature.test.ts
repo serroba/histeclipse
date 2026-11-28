@@ -4,6 +4,7 @@ import json from '../../public/data/holocene-temperature.json';
 import {
   bandPath,
   chartDateText,
+  chartSecondsAt,
   completePoints,
   corridorOf,
   DRAW_MS,
@@ -11,6 +12,7 @@ import {
   latestYear,
   linePath,
   loadHoloceneTemperature,
+  maAtChartSeconds,
   PANELS,
   msAt,
   reachedAt,
@@ -147,5 +149,24 @@ describe('the chart’s scales', () => {
     expect(linePath(points, 100, 50)).toBe('M0.0 0.0L100.0 50.0');
     expect(bandPath(points, 100, 50)).toBe('M100.0 50.0L100.0 50.0Z');
     expect(bandPath([[0, 0, null, null]], 100, 50)).toBe('');
+  });
+});
+
+describe('the chart’s own clock, which deep time plays at while it shows (#1276)', () => {
+  it('gives each panel its time: the ice ages 12 s, the Holocene 7, the industrial era 3', () => {
+    // Its left edge: 800,000 years before 2000.
+    expect(chartSecondsAt(0.80195)).toBeCloseTo(0, 6);
+    expect(chartSecondsAt(0.02 + 0.00195)).toBeCloseTo(12, 6);
+    expect(chartSecondsAt((1950 - 1750) / 1e6)).toBeCloseTo(19, 6);
+    // Deep time's present, 1950: most of the way through the industrial era's three seconds.
+    expect(chartSecondsAt(0)).toBeCloseTo(19 + (3 * 200) / 280, 6);
+  });
+
+  it('reads its seconds back as the moment they reach', () => {
+    for (const ma of [0.8, 0.5, 0.021, 0.005, 0.0001, 0]) {
+      expect(maAtChartSeconds(chartSecondsAt(ma))).toBeCloseTo(ma, 9);
+    }
+    // Past its right edge: the years after 1950, before deep time's present.
+    expect(maAtChartSeconds(DRAW_MS / 1000)).toBeLessThan(0);
   });
 });

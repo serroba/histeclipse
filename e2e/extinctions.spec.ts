@@ -35,11 +35,28 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await expect(clock).toBeVisible();
     await expect(globe).toHaveAttribute('data-fumes', 'on');
     await expect(clock.locator('.strike-clock-when')).toHaveText(/before the extinction$/);
+    await expect(clock).toHaveAttribute('data-playing', 'true');
+    // Paused to read it: playing, each frame of the fuming globe takes CI's software graphics
+    // so long that every step waits seconds. How it plays is the unit tests'.
+    await clock.getByRole('button', { name: 'Pause' }).click();
     // Nothing lost yet (#1223).
     await expect(clock.locator('.loss-gauge-label')).toHaveText('Marine genera left: 100%');
+    // Against every stage since the Cambrian, its own marked (#1269).
+    const history = clock.locator('.loss-history');
+    await expect(history).toContainText(/here \d+%, an ordinary stage \d+%/);
+    await expect(history.locator('.loss-history-marked')).toHaveCount(1);
+    // And who it took, by group: on phones, behind More (#1269).
+    const groups = clock.locator('.loss-group');
+    await expect(groups).toHaveCount(6);
+    await expect(groups.filter({ hasText: 'Trilobites' })).toContainText('the last of them');
     // The sea's warming at Meishan, measured, above the slider (#1229).
-    await expect(clock.locator('.proxy-chart')).toContainText('Sea-surface temperature at Meishan');
-    await expect(clock.locator('.proxy-dot')).toHaveCount(42);
+    const record = clock.locator('.proxy-chart:visible');
+    await expect(record).toContainText('Sea-surface temperature at Meishan');
+    await expect(record.locator('.proxy-dot')).toHaveCount(42);
+    // And carbon dioxide, worked out from fossil plants, picked by name.
+    await clock.getByRole('button', { name: 'Carbon dioxide' }).click();
+    await expect(record).toContainText('Carbon dioxide, ppm, worked out from fossil plants');
+    await expect(record.locator('.proxy-dot')).toHaveCount(72);
   });
   await test.step('And the header says the clock’s age, in the Permian, the bar’s own pace set aside (#1222)', async () => {
     await expect(page.locator('.hud-date')).toHaveText(/^252\.\d million years ago$/);
@@ -49,10 +66,11 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await expect(clock.locator('.strike-clock-drawn')).toContainText('Drawn to illustrate');
   });
   await test.step('When they move the slider to the extinction, Then it says the phase and its sources', async () => {
-    await clock.getByRole('button', { name: 'Pause' }).click();
     const slider = clock.getByRole('slider');
     await slider.fill('4.1');
     await expect(clock.locator('.strike-clock-phase')).toHaveText('The Great Dying');
+    // And what was lost, pinned at Meishan with whose count it is (#1268).
+    await expect(page.locator('.extinction-fact')).toContainText('81% by Stanley’s count');
     await expect(clock.locator('.strike-clock-sources a').first()).toHaveAttribute(
       'href',
       /^https:\/\/doi\.org\/10\./,
@@ -64,6 +82,8 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await expect(page.locator('.hud-detail')).toContainText('Triassic');
     // And the gauge has fallen by what Stanley (2016) estimates was lost (#1223).
     await expect(clock.locator('.loss-gauge-label')).toHaveText('Marine genera left: 38%');
+    // The camera has drawn out to see the traps and Meishan on one side of the world (#1266).
+    await expect(globe).toHaveAttribute('data-distance', '4.50');
   });
   await test.step('When they close it, the fumes go', async () => {
     await clock.getByRole('button', { name: 'Close' }).click();

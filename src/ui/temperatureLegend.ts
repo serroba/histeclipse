@@ -13,7 +13,6 @@ import {
   type TemperatureShow,
 } from '../deepTime/temperatureModels';
 import { element } from './dom';
-import type { TemperatureChartView } from './temperatureChart';
 
 /** One model's mean at the moment shown and today, °C; `mean` null beyond its reach. */
 interface TemperatureReading {
@@ -38,8 +37,6 @@ export interface TemperatureView {
   readonly readings: readonly TemperatureReading[];
   /** What the site says about the map shown, if anything. */
   readonly note: string | null;
-  /** Over the ice ages, temperature over 800,000 years above the scale (#434); else absent. */
-  readonly chart?: TemperatureChartView | null;
 }
 
 type Stops = readonly (readonly [number, string])[];
