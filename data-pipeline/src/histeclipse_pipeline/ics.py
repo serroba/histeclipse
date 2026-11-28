@@ -116,8 +116,16 @@ def chart_file(units: list[Unit]) -> dict[str, Json]:
     """Build the site's file: the chart's units, oldest first."""
     return {
         "schemaVersion": 1,
+        "sources": ["ics"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "CC BY 4.0",
+        "accessed": "2026-11-03",
+        "changes": (
+            "Each unit kept with its English name, rank, parent, start and end with their "
+            "margins of error, whether its start is marked uncertain, and the chart's colour; "
+            "the day given as accessed is the day this file was last written"
+        ),
         "version": VERSION,
         "units": [
             {

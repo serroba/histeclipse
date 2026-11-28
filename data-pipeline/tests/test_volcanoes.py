@@ -145,7 +145,7 @@ def test_the_site_files_hold_compact_eruptions_and_the_cards_details_apart() -> 
             "lastYear": -8299,
         },
     ]
-    assert details_file(volcanoes)["volcanoes"] == {
+    assert details_file(volcanoes, "2026-11-03")["volcanoes"] == {
         "211020": {
             "summary": "One of the best-known volcanoes.",
             "photo": {

@@ -102,8 +102,15 @@ def write_boundaries(
         _ = (folder / f"{ma}.json").write_text(compact + "\n")
     index: dict[str, Json] = {
         "schemaVersion": 1,
+        "sources": ["cao2024"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "CC BY 4.0",
+        "accessed": "2026-11-23",
+        "changes": (
+            "Plate boundaries resolved with pyGPlates, in the model's paleomagnetic frame; "
+            "the day given as accessed is the day this file was last written"
+        ),
         "stepMa": STEP_MA,
         "oldestMa": max(ages),
     }

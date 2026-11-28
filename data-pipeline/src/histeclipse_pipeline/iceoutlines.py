@@ -413,8 +413,15 @@ def outlines_file(outlines: dict[tuple[str, Hypothesis], list[list[Point]]]) -> 
 
     return {
         "schemaVersion": 2,
+        "sources": ["batchelor"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "No licence stated",
+        "accessed": "2026-11-15",
+        "changes": (
+            "Reprojected to longitude and latitude and simplified for this site; the day "
+            "given as accessed is the day this file was last written"
+        ),
         "scale": ROUNDING,
         "slices": [
             {

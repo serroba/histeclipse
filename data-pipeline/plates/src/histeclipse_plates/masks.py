@@ -224,8 +224,15 @@ def write_masks(
         )
     index: dict[str, Json] = {
         "schemaVersion": 1,
+        "sources": ["cao2024"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "CC BY 4.0",
+        "accessed": "2026-11-01",
+        "changes": (
+            "Continent outlines reconstructed with pyGPlates and drawn as 0.25° masks; the "
+            "day given as accessed is the day this file was last written"
+        ),
         "rows": rows,
         "columns": columns,
         "frames": frames,
