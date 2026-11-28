@@ -18,6 +18,10 @@ share of its genera lost three ways:
 - **Gap-filler** (Alroy 2014, Paleobiology 40, 374-397): as the three-timer, but a genus found
   again two stages on is counted as having survived, though missed in the next.
 
+For groups readers know (trilobites, ammonoids, rugose corals and others, each by its PBDB
+phylum, class or orders), each stage's genera last found in it, raw, and the last stage the
+group is found in at all.
+
 A stage's rate counts all its losses, the steady background of a stage millions of years long
 as well as its crisis; estimates that set the background apart (Stanley 2016) give less.
 
@@ -69,11 +73,75 @@ class Stage:
 
 @dataclass(frozen=True)
 class Occurrence:
-    """A find of a genus, and its age range, Ma."""
+    """A find of a genus, its age range, Ma, and its phylum, class and order."""
 
     genus: str
     oldest: float
     youngest: float
+    phylum: str = ""
+    klass: str = ""
+    order: str = ""
+
+
+@dataclass(frozen=True)
+class Group:
+    """A group of animals readers know, as the PBDB classifies it: any of its rank's names."""
+
+    name: str
+    rank: str
+    names: frozenset[str]
+
+    def holds(self, occurrence: Occurrence) -> bool:
+        """Say whether `occurrence` belongs to the group."""
+        taxon = {"phylum": occurrence.phylum, "class": occurrence.klass}.get(
+            self.rank, occurrence.order
+        )
+        return taxon in self.names
+
+
+def group(name: str, rank: str, *names: str) -> Group:
+    """Name a group by its PBDB phylum, class or orders."""
+    return Group(name, rank, frozenset(names))
+
+
+#: The groups whose losses each extinction's clock lists, the same for every extinction.
+GROUPS: tuple[Group, ...] = (
+    group("Trilobites", "class", "Trilobita"),
+    group("Brachiopods", "phylum", "Brachiopoda"),
+    group(
+        "Ammonoids",
+        "order",
+        "Agoniatitida",
+        "Ammonitida",
+        "Ceratitida",
+        "Clymeniida",
+        "Goniatitida",
+        "Phylloceratida",
+        "Prolecanitida",
+    ),
+    group("Nautiloids", "order", "Nautilida", "Orthocerida", "Oncocerida", "Actinocerida"),
+    group("Belemnites", "order", "Belemnitida"),
+    group("Rugose corals", "order", "Stauriida", "Cystiphyllida"),
+    group(
+        "Tabulate corals",
+        "order",
+        "Favositida",
+        "Auloporida",
+        "Heliolitida",
+        "Halysitida",
+        "Lichenariida",
+        "Sarcinulida",
+    ),
+    group("Stony corals", "order", "Scleractinia"),
+    group("Stromatoporoid sponges", "class", "Stromatoporoidea"),
+    group("Graptolites", "order", "Graptoloidea", "Dendroidea"),
+    group("Conodonts", "class", "Conodonta"),
+    group("Crinoids", "class", "Crinoidea"),
+    group("Sea urchins", "class", "Echinoidea"),
+    group("Bryozoans", "phylum", "Bryozoa"),
+    group("Bivalves", "class", "Bivalvia"),
+    group("Snails", "class", "Gastropoda"),
+)
 
 
 def read_records(text: str) -> list[dict[str, str]]:
@@ -96,7 +164,14 @@ def stages_of(records: Iterable[dict[str, str]]) -> list[Stage]:
 def occurrences_of(records: Iterable[dict[str, str]]) -> list[Occurrence]:
     """Read the occurrences named to a genus."""
     return [
-        Occurrence(r["genus"], float(r["max_ma"]), float(r["min_ma"]))
+        Occurrence(
+            r["genus"],
+            float(r["max_ma"]),
+            float(r["min_ma"]),
+            r.get("phylum", ""),
+            r.get("class", ""),
+            r.get("order", ""),
+        )
         for r in records
         if r["genus"]
     ]
@@ -215,6 +290,28 @@ def stage_rates(
     return rows
 
 
+def group_losses(
+    stages: Sequence[Stage], occurrences: Sequence[Occurrence]
+) -> list[dict[str, object]]:
+    """Each group's genera last found in each stage, of those whose range spans it.
+
+    With each group goes the last stage it is found in at all, so a stage can be said to
+    have seen the last of it.
+    """
+    rows: list[dict[str, object]] = []
+    for each in GROUPS:
+        seen = found([o for o in occurrences if each.holds(o)], stages)
+        finds = [index for index, genera in enumerate(seen) if genera]
+        rows.append(
+            {
+                "group": each.name,
+                "lastStage": stages[finds[-1]].name if finds else None,
+                "stages": [list(pair) for pair in last_found(seen)],
+            }
+        )
+    return rows
+
+
 def fetch_text(url: str) -> str:  # pragma: no cover - needs network access
     """Download `url` as text."""
     request = urllib.request.Request(url, headers={"User-Agent": "histeclipse-pipeline/1.0"})  # noqa: S310
@@ -245,6 +342,7 @@ def write_rates(out: Path, cache: Path) -> int:  # pragma: no cover - needs netw
         "accessed": accessed.date().isoformat(),
         "occurrences": len(occurrences),
         "stages": stage_rates(stages, occurrences),
+        "groups": group_losses(stages, occurrences),
     }
     out.parent.mkdir(parents=True, exist_ok=True)
     _ = out.write_text(json.dumps(document, ensure_ascii=False) + "\n", encoding="utf-8")

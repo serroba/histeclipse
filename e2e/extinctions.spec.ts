@@ -45,6 +45,10 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     const history = clock.locator('.loss-history');
     await expect(history).toContainText(/here \d+%, an ordinary stage \d+%/);
     await expect(history.locator('.loss-history-marked')).toHaveCount(1);
+    // And who it took, by group: on phones, behind More (#1269).
+    const groups = clock.locator('.loss-group');
+    await expect(groups).toHaveCount(6);
+    await expect(groups.filter({ hasText: 'Trilobites' })).toContainText('the last of them');
     // The sea's warming at Meishan, measured, above the slider (#1229).
     const record = clock.locator('.proxy-chart:visible');
     await expect(record).toContainText('Sea-surface temperature at Meishan');

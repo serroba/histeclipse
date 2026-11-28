@@ -86,6 +86,7 @@
     .strike-clock-hint,
     .strike-clock-drawn,
     .loss-gauge-says,
+    .loss-groups,
     .proxy-says
   ) {
   display: none;
@@ -357,6 +358,45 @@
   justify-content: space-between;
   color: var(--ink-muted);
   font-size: 10px;
+}
+
+/* Who an extinction took (#1269): a group a row, its share lost as a bar. */
+.loss-groups {
+  margin: 4px 0 0;
+}
+
+.loss-group-list {
+  display: grid;
+  gap: 2px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.loss-group {
+  display: grid;
+  grid-template-columns: 1fr 64px;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.loss-group-track {
+  height: 5px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.loss-group-bar {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.4);
+}
+
+.loss-group-last .loss-group-bar {
+  background: rgb(240 110 90);
 }
 
 /* A measured record above the slider (#1229): inset as the slider's marks are, so each reading

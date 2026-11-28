@@ -9,6 +9,7 @@
 
 import { element } from '../../ui/dom';
 import { setText } from '../../util/pageWrites';
+import { groupsView, type LossGroups } from './lossGroups';
 import { historyView, type LossHistory } from './lossHistory';
 
 /** A span of an extinction's clock its losses are drawn falling across, and its share of them. */
@@ -30,6 +31,8 @@ export interface LossGauge {
   readonly says: string;
   /** The extinction against every stage's losses, where counted (#1269). */
   readonly history?: LossHistory;
+  /** Who it took: groups readers know, and the share of each lost (#1269). */
+  readonly groups?: LossGroups;
 }
 
 /** How far through its losses the extinction is at `seconds`, 0–1. */
@@ -62,7 +65,8 @@ export function lossView(gauge: LossGauge): LossView {
   const maybe = element('span', { class: 'loss-gauge-maybe' });
   const bar = element('div', { class: 'loss-gauge-bar', 'aria-hidden': 'true' }, sure, maybe);
   const history = gauge.history === undefined ? [] : [historyView(gauge.history)];
-  const root = element('div', { class: 'loss-gauge' }, label, bar, ...history, says);
+  const groups = gauge.groups === undefined ? [] : [groupsView(gauge.groups)];
+  const root = element('div', { class: 'loss-gauge' }, label, bar, ...history, ...groups, says);
   return {
     root,
     at(seconds) {
