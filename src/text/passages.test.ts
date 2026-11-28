@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest';
 import data from '../../public/data/passages.json';
 import type { Craft } from '../data/spacecraft';
 import type { FamousEclipse } from '../data/famousEclipses';
-import { SOURCES, WHYS } from '../sources/registry';
+import { WHYS } from '../sources/content';
+import { SOURCES } from '../sources/registry';
 import type { LayerChoice } from '../state/layerCatalog';
 import { parseViewState } from '../state/url';
 import {
@@ -238,7 +239,7 @@ describe('the stories, as passages (#842)', () => {
   it('finds GW150914’s story first, by its name, LIGO, or what it is, and opens it at its start', async () => {
     const { storyPassages, whyPassages } = await import('./passages');
     const { indexPassages, searchWords } = await import('./wordSearch');
-    const { WHYS } = await import('../sources/registry');
+    const { WHYS } = await import('../sources/content');
     const index = indexPassages([...whyPassages(WHYS, []), ...storyPassages()]);
     for (const query of ['ligo', 'gravitational wave', 'GW150914']) {
       expect(searchWords(index, query)[0]?.passage.id).toBe('story:gw150914');
@@ -251,7 +252,7 @@ describe('the stories, as passages (#842)', () => {
   it('finds GW170817’s story first, by its name or by neutron stars, and opens it at its start (#990)', async () => {
     const { storyPassages, whyPassages } = await import('./passages');
     const { indexPassages, searchWords } = await import('./wordSearch');
-    const { WHYS } = await import('../sources/registry');
+    const { WHYS } = await import('../sources/content');
     const index = indexPassages([...whyPassages(WHYS, []), ...storyPassages()]);
     for (const query of ['GW170817', 'neutron star merger', 'kilonova']) {
       expect(searchWords(index, query)[0]?.passage.id).toBe('story:gw170817');

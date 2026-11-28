@@ -3,14 +3,11 @@
  * and how this site used it, with each source's kind, link and licence; and the marks (an open
  * book) that open it, beside the things they explain. The same panel lists what is on screen
  * now, and every source the site uses. DOM glue, covered by the Playwright suite; what it says
- * is in `sources/registry.ts`.
+ * is in `sources/content.ts`, loaded the first time the panel or its list needs it (#220).
  */
 
 import {
-  bibtexUrl,
-  citation,
   SOURCES,
-  WHYS,
   type Source,
   type SourceId,
   type SourceKind,
@@ -19,7 +16,8 @@ import {
 } from '../sources/registry';
 import type { HereFact } from '../sources/registry';
 import { element } from './dom';
-import { bookIcon, KIND_NAMES, kindIcon } from './icons';
+import { bookIcon, KIND_NAMES } from './icons';
+import { copyFrom, sourceItem, sourceLink, type Content } from './whySources';
 import './whySheet.css';
 
 export interface WhySheet {
@@ -33,101 +31,6 @@ export interface WhySheet {
   show(view: WhyView | null, version?: string): void;
   /** Fill `list` with the whys on screen, each with its mark and its sources' links. */
   renderOnScreen(list: HTMLElement, ids: readonly WhyId[]): void;
-}
-
-/** A source's link, opened beside the site. */
-function sourceLink(source: Source): HTMLAnchorElement {
-  return element(
-    'a',
-    { href: source.url, target: '_blank', rel: 'noopener noreferrer' },
-    source.name,
-  );
-}
-
-/** Put `text` on the clipboard; say on `button` whether it worked, for a moment. */
-function copyFrom(button: HTMLButtonElement, text: string): void {
-  const label = button.textContent;
-  const say = (words: string): void => {
-    button.textContent = words;
-    window.setTimeout(() => {
-      button.textContent = label;
-    }, 1600);
-  };
-  navigator.clipboard.writeText(text).then(
-    () => {
-      say('Copied');
-    },
-    () => {
-      say('Could not copy');
-    },
-  );
-}
-
-/** A source as the panel lists it: its kind, its full reference and link, its licence, and
- * ways to cite it. */
-function sourceItem(source: Source): HTMLElement {
-  const copy = element(
-    'button',
-    {
-      type: 'button',
-      class: 'why-cite-action',
-      'aria-label': `Copy the reference to ${source.name}`,
-    },
-    'Copy reference',
-  );
-  copy.addEventListener('click', () => {
-    copyFrom(copy, citation(source));
-  });
-  const bibtex = bibtexUrl(source);
-  const actions = element(
-    'span',
-    { class: 'why-cite-actions' },
-    copy,
-    ...(bibtex === null
-      ? []
-      : [
-          element(
-            'a',
-            {
-              class: 'why-cite-action',
-              href: bibtex,
-              target: '_blank',
-              rel: 'noopener noreferrer',
-              'aria-label': `BibTeX for ${source.name}, from Crossref`,
-            },
-            'BibTeX',
-          ),
-        ]),
-  );
-  const kind = element('span', { class: 'why-kind', title: KIND_NAMES[source.kind] });
-  kind.append(kindIcon(source.kind));
-  return element(
-    'li',
-    { class: 'why-source', 'data-kind': source.kind },
-    kind,
-    element(
-      'div',
-      { class: 'why-source-text' },
-      sourceLink(source),
-      element('span', { class: 'why-cite' }, source.cite),
-      ...(source.licence === undefined
-        ? []
-        : [
-            element(
-              'span',
-              {
-                class: `why-licence${'nonCommercial' in source ? ' is-nc' : ''}`,
-                title:
-                  'nonCommercial' in source
-                    ? 'Non-commercial terms: the site may use it only as it does, without charge'
-                    : 'Licence',
-              },
-              source.licence,
-            ),
-          ]),
-      actions,
-    ),
-  );
 }
 
 function section(title: string, ...content: (Node | string)[]): HTMLElement {
@@ -186,6 +89,25 @@ export function createWhySheet(
   }
   let shown: WhyView | null = null;
   let shownVersion = '';
+  // The whys and references, once loaded; asked for by the first view or list that needs them.
+  let content: Content | null = null;
+  let loading: Promise<Content> | null = null;
+  // The list asked for last, drawn once the whys have loaded.
+  let onScreen: { readonly list: HTMLElement; readonly ids: readonly WhyId[] } | null = null;
+  function load(): Promise<Content> {
+    loading ??= import('../sources/content').then(
+      (loaded) => {
+        content = loaded;
+        if (onScreen !== null) renderList(loaded, onScreen.list, onScreen.ids);
+        return loaded;
+      },
+      (error: unknown) => {
+        loading = null;
+        throw error;
+      },
+    );
+    return loading;
+  }
 
   /** A book mark that asks for the why of `id`; `label` names what it explains. */
   function markFor(id: WhyId | (() => WhyId), label: string): HTMLButtonElement {
@@ -257,10 +179,9 @@ export function createWhySheet(
     body.scrollTop = 0;
   }
 
-  function open(id: WhyId): void {
-    const why = WHYS[id];
+  function open(loaded: Content, id: WhyId): void {
+    const why = loaded.WHYS[id];
     heading.textContent = why.title;
-    const sources = why.sources.map((source) => SOURCES[source]);
     // For a reconstruction: the evidence it rests on, how sure each part is, and where to read
     // on, ahead of the full list of its sources.
     const evidence =
@@ -307,7 +228,7 @@ export function createWhySheet(
               element(
                 'ol',
                 { class: 'why-sources why-reading' },
-                ...why.reading.map((source) => sourceItem(SOURCES[source])),
+                ...why.reading.map((source) => sourceItem(loaded, source)),
               ),
             ),
           ]
@@ -339,7 +260,11 @@ export function createWhySheet(
       ...reading,
       section(
         'Where it comes from',
-        element('ul', { class: 'why-sources' }, ...sources.map(sourceItem)),
+        element(
+          'ul',
+          { class: 'why-sources' },
+          ...why.sources.map((source) => sourceItem(loaded, source)),
+        ),
       ),
       ...('how' in why ? [section('How this site used it', element('p', {}, why.how))] : []),
       element(
@@ -355,7 +280,7 @@ export function createWhySheet(
     reveal();
   }
 
-  function openAll(): void {
+  function openAll(loaded: Content): void {
     heading.textContent = 'All sources';
     const kinds: readonly SourceKind[] = [
       'paper',
@@ -376,7 +301,7 @@ export function createWhySheet(
             ...entries
               .filter(([, source]) => source.kind === kind)
               .sort(([, a], [, b]) => a.name.localeCompare(b.name))
-              .map(([, source]) => sourceItem(source)),
+              .map(([id]) => sourceItem(loaded, id)),
           ),
         ),
       ),
@@ -385,51 +310,82 @@ export function createWhySheet(
     reveal();
   }
 
+  function openFailed(): void {
+    heading.textContent = 'Sources';
+    const again = element('button', { type: 'button', class: 'why-all' }, 'Try again');
+    again.addEventListener('click', render);
+    body.replaceChildren(
+      element('p', { class: 'why-here-empty' }, 'Could not load the sources.'),
+      element('div', { class: 'why-actions' }, again),
+    );
+    reveal();
+  }
+
+  /** The view asked for last, once what it says has loaded. */
+  function render(): void {
+    const view = shown;
+    if (view === null) {
+      if (dialog.open) dialog.close();
+    } else if (view === 'here') openHere();
+    else if (content === null) {
+      load().then(() => {
+        if (shown === view) render();
+      }, openFailed);
+    } else if (view === 'all') openAll(content);
+    else open(content, view);
+  }
+
+  function renderList(loaded: Content, list: HTMLElement, ids: readonly WhyId[]): void {
+    // Each source linked once, where it first appears; named plainly after that.
+    const linked = new Set<SourceId>();
+    list.replaceChildren(
+      ...ids.map((id) => {
+        const why = loaded.WHYS[id];
+        const names = why.sources.flatMap((source, index) => {
+          const parts: (Node | string)[] = index === 0 ? [] : [', '];
+          if (linked.has(source)) parts.push(SOURCES[source].name);
+          else {
+            linked.add(source);
+            parts.push(sourceLink(SOURCES[source]));
+          }
+          return parts;
+        });
+        return element(
+          'li',
+          { class: 'why-row', 'data-why': id },
+          markFor(id, why.title),
+          element('span', { class: 'why-row-title' }, why.title),
+          element('span', { class: 'why-row-sources' }, ...names),
+        );
+      }),
+      element(
+        'li',
+        { class: 'why-row' },
+        element('button', { type: 'button', class: 'why-all' }, 'All sources the site uses'),
+      ),
+    );
+    list.querySelector('.why-all')?.addEventListener('click', () => {
+      onRequest('all');
+    });
+  }
+
   return {
     dialog,
     show(view, version = '') {
       if (view === shown && version === shownVersion) return;
       shown = view;
       shownVersion = version;
-      if (view === null) {
-        if (dialog.open) dialog.close();
-      } else if (view === 'all') openAll();
-      else if (view === 'here') openHere();
-      else open(view);
+      render();
     },
     mark: markFor,
     renderOnScreen(list, ids) {
-      // Each source linked once, where it first appears; named plainly after that.
-      const linked = new Set<SourceId>();
-      list.replaceChildren(
-        ...ids.map((id) => {
-          const why = WHYS[id];
-          const names = why.sources.flatMap((source, index) => {
-            const parts: (Node | string)[] = index === 0 ? [] : [', '];
-            if (linked.has(source)) parts.push(SOURCES[source].name);
-            else {
-              linked.add(source);
-              parts.push(sourceLink(SOURCES[source]));
-            }
-            return parts;
-          });
-          return element(
-            'li',
-            { class: 'why-row', 'data-why': id },
-            this.mark(id, why.title),
-            element('span', { class: 'why-row-title' }, why.title),
-            element('span', { class: 'why-row-sources' }, ...names),
-          );
-        }),
-        element(
-          'li',
-          { class: 'why-row' },
-          element('button', { type: 'button', class: 'why-all' }, 'All sources the site uses'),
-        ),
-      );
-      list.querySelector('.why-all')?.addEventListener('click', () => {
-        onRequest('all');
-      });
+      onScreen = { list, ids };
+      if (content !== null) {
+        renderList(content, list, ids);
+        return;
+      }
+      // Drawn once loaded; if it fails, it is tried again when the panel is next asked for.
+      load().catch(() => undefined);
     },
   };
 }
