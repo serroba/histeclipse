@@ -4,11 +4,12 @@
  * marked. The same chart the planetary boundaries' story opens on, here following the view's
  * time instead of playing on its own. It is a slider too, as in the story: dragged, or stepped
  * with the arrow keys, it takes the view to that moment, to the thousand years deep time keeps.
+ * The chart's code loads the first time the panel shows, not with the site (#220).
  */
 
 import type { HoloceneTemperature } from '../../data/holoceneTemperature';
 import type { LayerFactory } from '../../globe/layerHost';
-import { createHoloceneChart } from '../../story/holoceneChart';
+import type { createHoloceneChart } from '../../story/holoceneChart';
 import { element } from '../../ui/dom';
 import { joinGlobePanels } from '../../ui/globePanels';
 import './holocenePanel.css';
@@ -40,22 +41,49 @@ export function holocenePanel(moveTo: (year: number) => void): LayerFactory<Holo
     );
     joinGlobePanels(host.container, root, 2);
     let chart: ReturnType<typeof createHoloceneChart> | null = null;
+    let loading = false;
+    let disposed = false;
+    // The view asked for last: the chart, once loaded, starts there.
+    let wanted: HoloceneView | null = null;
     // While the view holds the chart, the year it reports back is only that hold's echo.
     let holding = false;
+    function draw(view: HoloceneView): void {
+      if (chart === null) return;
+      holding = true;
+      chart.holdAt(view.year);
+      holding = false;
+      if (view.drawOn === true) chart.setPlaying(true);
+    }
+    function load(data: HoloceneTemperature): void {
+      if (loading) return;
+      loading = true;
+      void import('../../story/holoceneChart').then(
+        ({ createHoloceneChart }) => {
+          if (disposed) return;
+          // Made held: drawn, it names its first year, which is not the reader's either.
+          holding = true;
+          chart = createHoloceneChart(stage, data, (year) => {
+            if (!holding) moveTo(year);
+          });
+          holding = false;
+          if (wanted !== null) draw(wanted);
+        },
+        () => {
+          // Asked for again by the next view shown.
+          loading = false;
+        },
+      );
+    }
     return {
       update(view) {
         root.hidden = view === null;
+        wanted = view;
         if (view === null) return;
-        // Made held: drawn, it names its first year, which is not the reader's either.
-        holding = true;
-        chart ??= createHoloceneChart(stage, view.data, (year) => {
-          if (!holding) moveTo(year);
-        });
-        chart.holdAt(view.year);
-        holding = false;
-        if (view.drawOn === true) chart.setPlaying(true);
+        if (chart === null) load(view.data);
+        else draw(view);
       },
       dispose() {
+        disposed = true;
         chart?.dispose();
       },
     };
