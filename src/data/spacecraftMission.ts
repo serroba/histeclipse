@@ -278,7 +278,7 @@ export function missionNamed(all: readonly Mission[], id: string): Mission | nul
 const EARTH_KM = 6371;
 const SUN_KM = 695_700;
 const AU_KM = 149_597_870.7;
-const FARTHEST_KM = 300_000 * EARTH_KM;
+const FARTHEST_KM = 10_000_000 * EARTH_KM;
 /** Above the ecliptic's north pole, as the Sun's camera names it: right ascension 270°,
  * declination 90° − 23.44°. */
 const ABOVE_THE_PLANETS = '66.5607,-90.0000';

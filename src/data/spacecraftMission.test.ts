@@ -101,8 +101,8 @@ describe('a mission as one journey (#712)', () => {
     expect(missionView(titled('Mars 2020'))).toMatch(
       /^focus=sun&cam=66\.5607,-90\.0000,457\.59&layers=spacecraft&mission=d01038&t=2020-07-30T20:49Z$/,
     );
-    // Beyond Saturn, as far as the view reaches.
-    expect(missionView(titled('Voyager 2'))).toMatch(/cam=66\.5607,-90\.0000,2747\.30&/);
+    // Neptune, 30.1 AU: the view reaches that far now (#1329), where it stopped at 12.8 AU.
+    expect(missionView(titled('Voyager 2'))).toMatch(/cam=66\.5607,-90\.0000,9061\.46&/);
   });
 });
 
