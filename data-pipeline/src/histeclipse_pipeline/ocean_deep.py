@@ -159,11 +159,16 @@ def deep_index(first: int, last: int, accessed: str) -> dict[str, Json]:
     """Build the deep maps' manifest."""
     return {
         "schemaVersion": 1,
+        "sources": ["iap2024"],
         "credit": CREDIT,
         "source": SOURCE,
         "paper": PAPER,
         "licence": LICENCE,
         "accessed": accessed,
+        "changes": (
+            "Yearly means at four deep levels against 1991-2020 computed for this site, "
+            "averaged onto a 1° grid and packed into 8-bit images"
+        ),
         "units": "°C",
         "baseline": f"{BASE[0]}\N{EN DASH}{BASE[1]}, the mean of its yearly means",
         "encoding": "R anomaly from -bound to +bound; G zero; B 255; A data",

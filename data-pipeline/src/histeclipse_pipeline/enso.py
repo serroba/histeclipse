@@ -237,10 +237,12 @@ def index_file(indices: Sequence[tuple[Described, Index]], accessed: str) -> dic
     """Build the manifest: credit, the rule for an episode, and each index side by side."""
     return {
         "schemaVersion": 1,
+        "sources": ["cpcRoni", "cpcOni"],
         "credit": CREDIT,
         "source": SOURCE,
         "licence": LICENCE,
         "accessed": accessed,
+        "changes": ("Seasons placed at their middle month and episodes found for this site"),
         "units": "°C",
         "placed": "each three-month season at its middle month",
         "threshold": THRESHOLD,
