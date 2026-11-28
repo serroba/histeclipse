@@ -3,10 +3,13 @@
 import math
 
 from histeclipse_pipeline.marine_diversity import (
+    GROUPS,
     Occurrence,
     Stage,
     extinction_rates,
     found,
+    group,
+    group_losses,
     last_found,
     lost,
     occurrences_of,
@@ -113,3 +116,42 @@ def test_writes_each_stage_with_its_losses() -> None:
     }
     assert rows[2]["genera"] == 0
     assert rows[2]["lastFound"] is None
+
+
+def test_a_group_holds_occurrences_by_its_phylum_class_or_order() -> None:
+    trilobites = group("Trilobites", "class", "Trilobita")
+    brachiopods = group("Brachiopods", "phylum", "Brachiopoda")
+    ammonoids = group("Ammonoids", "order", "Ceratitida", "Goniatitida")
+    trilobite = Occurrence("Phacops", 390.0, 385.0, "Arthropoda", "Trilobita", "Phacopida")
+    ammonoid = Occurrence("Ceratites", 240.0, 238.0, "Mollusca", "Cephalopoda", "Ceratitida")
+    assert trilobites.holds(trilobite)
+    assert not brachiopods.holds(trilobite)
+    assert ammonoids.holds(ammonoid)
+    assert not ammonoids.holds(trilobite)
+
+
+def test_reads_each_occurrence_s_phylum_class_and_order() -> None:
+    header = '"occurrence_no","genus","max_ma","min_ma","phylum","class","order"'
+    row = '"1","Phacops","390","385","Arthropoda","Trilobita","Phacopida"'
+    records = read_records(f"{header}\n{row}\n")
+    assert occurrences_of(records) == [
+        Occurrence("Phacops", 390.0, 385.0, "Arthropoda", "Trilobita", "Phacopida")
+    ]
+
+
+def test_counts_each_group_s_losses_and_the_last_stage_it_is_found_in() -> None:
+    stages = [Stage("One", 30.0, 20.0), Stage("Two", 20.0, 10.0)]
+    occurrences = [
+        Occurrence("Phacops", 30.0, 25.0, "Arthropoda", "Trilobita", "Phacopida"),
+        Occurrence("Lingula", 30.0, 25.0, "Brachiopoda", "Lingulata", "Lingulida"),
+        Occurrence("Lingula", 15.0, 12.0, "Brachiopoda", "Lingulata", "Lingulida"),
+    ]
+    rows = {row["group"]: row for row in group_losses(stages, occurrences)}
+    assert rows["Trilobites"] == {
+        "group": "Trilobites",
+        "lastStage": "One",
+        "stages": [[1, 1], [0, 0]],
+    }
+    assert rows["Brachiopods"]["lastStage"] == "Two"
+    assert rows["Ammonoids"]["lastStage"] is None
+    assert [g.name for g in GROUPS] == list(rows)
