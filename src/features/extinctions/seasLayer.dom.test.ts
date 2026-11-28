@@ -23,13 +23,13 @@ function layer() {
   return { made, group, ice, uniforms, container };
 }
 
-const anoxia = { latitude: 10, longitude: 0 };
+const patches = [{ place: { latitude: 10, longitude: 0 }, reach: 5 }];
 
 describe('the cold and the suffocating seas on the globe (#1202)', () => {
   it('shows the ice as far as it reaches, and the oxygen-poor water as strongly as it spreads', () => {
     const { made, group, ice, uniforms, container } = layer();
     const pole = { latitude: -80, longitude: 0 };
-    made.update({ ice: pole, anoxia, spread: 22, seas: { ice: 30, anoxia: 0.5 } });
+    made.update({ ice: pole, patches, seas: { ice: 30, anoxia: 0.5 } });
     expect(group.visible).toBe(true);
     expect(container.dataset['seas']).toBe('on');
     expect(ice.visible).toBe(true);
@@ -40,16 +40,19 @@ describe('the cold and the suffocating seas on the globe (#1202)', () => {
     const [first] = uniforms.anoxiaPatches.value;
     expect(first?.w).toBeCloseTo((5 * Math.PI) / 180);
     expect(Math.hypot(first?.x ?? 0, first?.y ?? 0, first?.z ?? 0)).toBeCloseTo(1);
+    // Patches it is not given draw nothing.
+    expect(uniforms.anoxiaPatches.value[1]?.w).toBe(0);
     // The same places again: nothing turned anew; the ice melted to nothing: hidden.
-    made.update({ ice: pole, anoxia, spread: 22, seas: { ice: 0, anoxia: 0 } });
+    made.update({ ice: pole, patches, seas: { ice: 0, anoxia: 0 } });
     expect(ice.visible).toBe(false);
     expect(uniforms.anoxiaStrength.value).toBe(0);
   });
 
   it('has no ice where the crisis had none, and goes when taken away', () => {
     const { made, group, ice, uniforms, container } = layer();
-    made.update({ ice: null, anoxia, spread: 22, seas: { ice: 0, anoxia: 1 } });
+    made.update({ ice: null, patches: [], seas: { ice: 0, anoxia: 1 } });
     expect(ice.visible).toBe(false);
+    expect(uniforms.anoxiaPatches.value.every((patch) => patch.w === 0)).toBe(true);
     made.update(null);
     expect(uniforms.anoxiaStrength.value).toBe(0);
     expect(group.visible).toBe(false);
