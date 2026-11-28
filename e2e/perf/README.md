@@ -115,3 +115,12 @@ node --experimental-strip-types e2e/perf/startup.ts 5 '/?t=2026-11-17T12:05Z&cam
 
 It serves `dist/` on `PORT` (default 4393) and prints JSON. A plain `/` is a first visit (the
 welcome shows); the link is a shared view. Run before and after a change, nothing else busy.
+
+### Split features stay split
+
+A feature split into a front and a body (its `index.ts` imports `./body` when first wanted)
+should load only its front with the site. `pnpm check:bodies` (run by CI after the build, and
+by `pnpm check`) reads the startup chunks' source maps and fails if any other file of a split
+feature has code in them, which a static import or a re-export from the front can cause without
+failing anything else. Files that load with the site on purpose are listed, each with its reason,
+in `WITH_THE_SITE` in `e2e/perf/lazyBodies.ts`.
