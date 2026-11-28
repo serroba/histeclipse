@@ -29,8 +29,8 @@ export interface ColdCrisis {
   readonly zero: number;
   /** What its drawing shows and assumes, said under its clock (#1226). */
   readonly drawn: string;
-  /** Its measured curves, where the papers give them (#1229). */
-  readonly proxies?: readonly ProxyChart[];
+  /** Its measured curves, from the papers' data (#1229). */
+  readonly proxies: readonly ProxyChart[];
   seas(seconds: number): Seas;
 }
 
@@ -92,7 +92,7 @@ export function coldEvent(
     ma: crisis.zero,
     drawn: extent === undefined ? crisis.drawn : `${crisis.drawn} ${extent.says}`,
     legend: seasLegend(ice !== null),
-    ...(crisis.proxies === undefined ? {} : { proxies: crisis.proxies }),
+    proxies: crisis.proxies,
     play(tools) {
       const seas = tools.layer(seasLayer);
       return {

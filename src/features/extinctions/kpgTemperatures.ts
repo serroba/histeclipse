@@ -16,7 +16,8 @@ import DATA from './kpgTemperatures.json' with { type: 'json' };
 const MYR = 1e6 * 365.25 * 86_400;
 
 /** Each reading: Myr after the K-Pg (Hull et al.'s 66.04 Ma), °C change, series. */
-const READINGS: readonly (readonly number[])[] = DATA.readings;
+type Reading = readonly [myr: number, change: number, series: number];
+const READINGS = DATA.readings as unknown as readonly Reading[];
 
 export const KPG_TEMPERATURES: ProxyChart = {
   name: 'Temperature',
@@ -24,7 +25,7 @@ export const KPG_TEMPERATURES: ProxyChart = {
   low: -6,
   high: 6,
   series: ['Deep sea', 'Sea surface', 'Land and shallow seas'],
-  readings: READINGS.map(([myr = 0, change = 0, series = 0]) => ({
+  readings: READINGS.map(([myr, change, series]) => ({
     seconds: myr * MYR,
     value: change,
     series,
