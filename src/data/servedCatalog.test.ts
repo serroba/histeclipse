@@ -128,6 +128,33 @@ describe('catalogueOf', () => {
     expect(entry([file('tiles/1.json')], {}).reuse).toBe('unstated');
   });
 
+  it('passes on the header of a file: its sources, the day fetched, the changes and each unit', () => {
+    const made = entry([file('eruptions.json')], {
+      'eruptions.json': {
+        schemaVersion: 1,
+        sources: ['holvol', 3],
+        credit: 'HolVol',
+        licence: 'CC BY 4.0',
+        accessed: '2026-11-07',
+        changes: 'kept the year',
+        units: { sulfur: 'Tg S', count: 4 },
+      },
+    });
+    expect(made.parts[0]).toEqual({
+      file: 'eruptions.json',
+      schemaVersion: 1,
+      sources: ['holvol'],
+      credit: 'HolVol',
+      licence: 'CC BY 4.0',
+      accessed: '2026-11-07',
+      changes: 'kept the year',
+      units: { sulfur: 'Tg S' },
+      reuse: 'open',
+    });
+    const bare = entry([file('bare.json')], { 'bare.json': { sources: [], units: {} } });
+    expect(bare.parts[0]).toEqual({ file: 'bare.json', reuse: 'unstated' });
+  });
+
   it('sorts datasets by name and says what each reuse means', () => {
     const made = catalogueOf([file('b.json'), file('a/index.json')], () => ({}));
     expect(made.datasets.map((dataset) => dataset.id)).toEqual(['a', 'b']);

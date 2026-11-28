@@ -8,12 +8,13 @@ import * as v from 'valibot';
 
 import { valueAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER, UNITS } from './header';
 
 const DipoleSchema = v.pipe(
   v.strictObject({
     schemaVersion: v.literal(1),
-    accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
-    credit: v.pipe(v.string(), v.minLength(1)),
+    ...HEADER,
+    units: UNITS,
     source: v.pipe(v.string(), v.url()),
     ka: v.pipe(v.array(v.pipe(v.number(), v.minValue(0))), v.minLength(2)),
     dipole: v.array(v.pipe(v.number(), v.minValue(0))),

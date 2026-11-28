@@ -9,7 +9,7 @@ import { join } from 'node:path';
 
 import type { Plugin } from 'vite';
 
-import { catalogueOf, type Catalogue, type ServedFile } from './src/data/servedCatalog';
+import { catalogueOf, type Catalogue, type ServedFile } from './src/data/servedCatalog.ts';
 
 const ADDRESS = 'data/catalog.json';
 

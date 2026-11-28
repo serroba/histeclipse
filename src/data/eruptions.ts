@@ -10,6 +10,7 @@ import * as v from 'valibot';
 
 import { valueAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER, UNITS } from './header';
 
 const REGIONS = ['iceland', 'located', 'north', 'south', 'tropics'] as const;
 type EruptionRegion = (typeof REGIONS)[number];
@@ -17,8 +18,8 @@ type EruptionRegion = (typeof REGIONS)[number];
 const EruptionsSchema = v.pipe(
   v.strictObject({
     schemaVersion: v.literal(1),
-    accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
-    credit: v.pipe(v.string(), v.minLength(1)),
+    ...HEADER,
+    units: UNITS,
     source: v.pipe(v.string(), v.url()),
     regions: v.array(v.picklist(REGIONS)),
     year: v.array(v.pipe(v.number(), v.integer())),
