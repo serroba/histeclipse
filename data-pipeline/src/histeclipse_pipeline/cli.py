@@ -54,6 +54,9 @@ from histeclipse_pipeline.impact_pictures import fetch_impact_pictures
 from histeclipse_pipeline.impacts import fetch_impacts
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.krapp import fetch_krapp
+from histeclipse_pipeline.life_doors import write_life_doors
+from histeclipse_pipeline.life_pictures import fetch_life_pictures, write_life_pictures
+from histeclipse_pipeline.life_stories import write_life_stories
 from histeclipse_pipeline.living_pins import check_living_pins, drifted, report
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
@@ -519,6 +522,31 @@ def time_tree(args: Arguments) -> int:  # pragma: no cover - needs network acces
     """Write each fossil group's genera through time and place (PBDB, CC BY 4.0)."""
     count = fetch_time_trees(args.out)
     return _say(f"wrote {count} genera's tracks to {args.out}")
+
+
+def life_stories(args: Arguments) -> int:  # pragma: no cover - needs the cached downloads
+    """Write each group's story: its genera's sites with their region and temperature."""
+    maps = Path("../public/data/paleotemp")
+    count = write_life_stories(Path(".cache/pbdb/life"), maps, args.out)
+    return _say(f"wrote {count} genera's stories to {args.out}")
+
+
+def life_pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the stories' silhouettes (PhyloPic) and their Wikipedia pages and pictures."""
+    stories = Path("../public/data/life-stories")
+    names_ts = Path("../src/features/life/names.ts")
+    cache = Path(".cache/life-pictures")
+    for which in ("phylopic", "wikipedia"):
+        _ = fetch_life_pictures(stories, names_ts, cache, which)
+    count = write_life_pictures(cache, args.out)
+    return _say(f"wrote {count} silhouettes to {args.out}")
+
+
+def life_doors(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write when land joined each pair of continents, read from the elevation maps."""
+    maps = Path("../public/data/paleodem")
+    count = write_life_doors(maps, Path(".cache/life-doors/seeds.json"), args.out)
+    return _say(f"wrote {count} doors between the continents to {args.out}")
 
 
 def pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -1088,6 +1116,21 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         time_tree,
         "write each fossil group's genera through time and place (PBDB, CC BY 4.0)",
         "output directory",
+    ),
+    "life-stories": (
+        life_stories,
+        "write each fossil group's story: its genera's sites with region and temperature (PBDB)",
+        "output directory",
+    ),
+    "life-pictures": (
+        life_pictures,
+        "write the stories' silhouettes (PhyloPic) and Wikipedia pages and pictures",
+        "output JSON file",
+    ),
+    "life-doors": (
+        life_doors,
+        "write when land joined each pair of continents, read from the PaleoDEM maps",
+        "output JSON file",
     ),
     "pictures": (
         pictures,

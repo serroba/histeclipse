@@ -1,6 +1,6 @@
 """Pictures for the animals' stories: a silhouette from PhyloPic, a picture and page from Wikipedia.
 
-A prototype. For the kinds and lineages a story is most often told of (see `wanted`), two
+For the kinds and lineages a story is most often told of (see `wanted`), two
 things are looked up, each kept with its author and licence and shown from where it lives:
 
 - PhyloPic (https://www.phylopic.org): a silhouette of the animal, by a named contributor under
@@ -17,6 +17,7 @@ from where it was.
 """
 
 import datetime as dt
+import itertools
 import json
 import re
 import threading
@@ -25,8 +26,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from typing import TYPE_CHECKING, TextIO, cast
+from typing import TYPE_CHECKING, TextIO, TypedDict, cast
 
+from histeclipse_pipeline.header import header
 from histeclipse_pipeline.pictures import USER_AGENT, Picture, picture, wikimedia_fetch
 
 if TYPE_CHECKING:
@@ -41,6 +43,8 @@ PHYLOPIC_PAGE = "https://www.phylopic.org/images/{uuid}"
 #: everyday word finds, and every lineage with `CLADE_KINDS` kinds or more.
 ENOUGH_FINDS = {"mammals": 10, "dinosaurs": 3}
 CLADE_KINDS = 8
+#: The files beside the groups' stories that are not a group's story.
+NOT_STORIES = frozenset({"pictures.json", "doors.json"})
 #: How many lookups run at once: few, as both services are shared.
 WORKERS = 4
 LICENCES = {
@@ -57,6 +61,15 @@ LICENCES = {
 type Fetch = Callable[[str], object]
 
 
+class _Story(TypedDict):
+    """What is read of a group's story file (`life_stories.story_file`)."""
+
+    id: str
+    names: list[str]
+    parent: list[int]
+    sites: list[list[float]]
+
+
 def wanted(
     stories: Path, everyday: set[str], *, every_kind: bool = False
 ) -> list[tuple[str, bool]]:
@@ -67,20 +80,20 @@ def wanted(
     """
     names: dict[str, tuple[bool, int]] = {}
     for path in sorted(stories.glob("*.json")):
-        if path.name == "pictures.json":
+        if path.name in NOT_STORIES:
             continue
-        file = json.loads(path.read_text())
+        file = cast("_Story", json.loads(path.read_text()))
         enough = 1 if every_kind else ENOUGH_FINDS.get(file["id"], 10)
         kinds = [0] * len(file["names"])
         for index in range(len(file["names"]) - 1, -1, -1):
-            sites: list[float] = file["sites"][index]
+            sites = file["sites"][index]
             finds = int(sum(sites[3::6]))
             if sites:
                 kinds[index] += 1
-            parent: int = file["parent"][index]
+            parent = file["parent"][index]
             if parent >= 0:
                 kinds[parent] += kinds[index]
-            name: str = file["names"][index]
+            name = file["names"][index]
             genus = bool(sites)
             keep = name in everyday or (finds >= enough if genus else kinds[index] >= CLADE_KINDS)
             if keep and name not in names:
@@ -112,12 +125,19 @@ def silhouette(name: str, fetch: Fetch, build: int) -> dict[str, Json] | None:
             str(node.get("title", ""))
             for node in cast("list[dict[str, object]]", links.get("nodes") or [])
         ]
-        of = next((title for title in titles if title == name or title.startswith(name + " ")), None)
+        of = next(
+            (title for title in titles if title == name or title.startswith(name + " ")), None
+        )
         thumbnails = cast("list[dict[str, str]]", links.get("thumbnailFiles") or [])
         thumbnail = next((each for each in thumbnails if each.get("sizes") == "128x128"), None)
         licence_url = cast("dict[str, str]", links.get("license") or {}).get("href", "")
         uuid = cast("dict[str, object]", image).get("uuid")
-        if of is None or thumbnail is None or licence_url not in LICENCES or not isinstance(uuid, str):
+        if (
+            of is None
+            or thumbnail is None
+            or licence_url not in LICENCES
+            or not isinstance(uuid, str)
+        ):
             continue
         contributor = cast("dict[str, str]", links.get("contributor") or {}).get("title")
         by = cast("dict[str, object]", image).get("attribution") or contributor
@@ -132,7 +152,7 @@ def silhouette(name: str, fetch: Fetch, build: int) -> dict[str, Json] | None:
     return None
 
 
-def wikipedia(name: str, genus: bool, fetch: Fetch) -> Picture | None:
+def wikipedia(name: str, fetch: Fetch, *, genus: bool) -> Picture | None:
     """Look a name up on Wikipedia: its page, and its lead picture where Commons has it free."""
     if not genus:
         try:
@@ -145,13 +165,25 @@ def wikipedia(name: str, genus: bool, fetch: Fetch) -> Picture | None:
 def pictures_file(found: dict[str, dict[str, Json]], build: int, made: str) -> dict[str, Json]:
     """Build the site's file: each name's silhouette and Wikipedia page, where it has either."""
     return {
-        "schemaVersion": 1,
-        "credit": (
-            "Silhouettes from PhyloPic (phylopic.org), each by its contributor under its "
-            "licence; pages and pictures from Wikipedia and Wikimedia Commons, each picture by "
-            "its author under its licence"
+        **header(
+            version=1,
+            sources=["phylopic", "wikimediaCommons"],
+            credit=(
+                "Silhouettes from PhyloPic (phylopic.org), each by its contributor under its "
+                "licence; pages and pictures from Wikipedia and Wikimedia Commons, each picture "
+                "by its author under its licence"
+            ),
+            licence=(
+                "Each picture under its own licence, stated with it; some silhouettes are for "
+                "non-commercial use (CC BY-NC, CC BY-NC-SA)"
+            ),
+            accessed=made,
+            changes=(
+                "Nothing is copied: each picture is shown from where it lives, by its address, "
+                "with its author, its licence and its page; a silhouette is kept only when it "
+                "is of the name itself or of a species in it"
+            ),
         ),
-        "made": made,
         "phylopicBuild": build,
         "names": {
             name: entry
@@ -203,14 +235,16 @@ def _fetch(url: str) -> object:  # pragma: no cover - needs network access
 def _kept(path: Path) -> dict[str, Json]:
     if not path.exists():
         return {}
-    return {
-        row["name"]: row["found"]
-        for row in (json.loads(line) for line in path.read_text().splitlines() if line.strip())
-    }
+    rows = (
+        cast("dict[str, Json]", json.loads(line))
+        for line in path.read_text().splitlines()
+        if line.strip()
+    )
+    return {str(row["name"]): row["found"] for row in rows}
 
 
 def _everyday(names_ts: Path) -> set[str]:
-    """The genera and lineages the app's everyday names find (`features/life/names.ts`)."""
+    """Read the genera and lineages the app's everyday names find (`features/life/names.ts`)."""
     return set(re.findall(r":\s*'([A-Z][a-z]+)'", names_ts.read_text()))
 
 
@@ -238,7 +272,7 @@ def fetch_life_pictures(  # pragma: no cover - needs network access
             found: Json = (
                 silhouette(name, _fetch, build)
                 if which == "phylopic"
-                else _wiki_entry(wikipedia(name, genus, wikimedia_fetch))
+                else _wiki_entry(wikipedia(name, wikimedia_fetch, genus=genus))
             )
         except (urllib.error.URLError, TimeoutError, ValueError, KeyError) as error:
             print(f"{which} {name}: {error}", flush=True)  # noqa: T201
@@ -255,7 +289,7 @@ def fetch_life_pictures(  # pragma: no cover - needs network access
         (each for each in names if each[0] not in kept), key=lambda each: each[0] not in known
     )
     with path.open("a") as out, ThreadPoolExecutor(WORKERS) as pool:
-        _ = list(pool.map(lambda each: look(each, out), todo))
+        _ = list(pool.map(look, todo, itertools.repeat(out)))
     return len(names)
 
 

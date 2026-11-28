@@ -32,6 +32,7 @@ import iceSurface from './whys/ice-surface.json' with { type: 'json' };
 import extinctions from './whys/extinctions.json' with { type: 'json' };
 import formation from './whys/formation.json' with { type: 'json' };
 import impacts from './whys/impacts.json' with { type: 'json' };
+import life from './whys/life.json' with { type: 'json' };
 import lineages from './whys/lineages.json' with { type: 'json' };
 import moons from './whys/moons.json' with { type: 'json' };
 import neutronStarMerger from './whys/neutronStarMerger.json' with { type: 'json' };
@@ -92,6 +93,7 @@ export const WHYS_CONTENT = {
   tree,
   fossils,
   lineages,
+  life,
   search,
   boundaries,
   ozone,

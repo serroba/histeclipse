@@ -1,39 +1,69 @@
 /**
- * Find an animal (a prototype): a box that takes the name a reader knows, and the animals in
- * the fossil groups it finds, each opening its story. The groups' files load when it first
- * opens.
+ * Find an animal: a box that takes the name a reader knows, and the animals in the fossil
+ * groups it finds, each opening its story. The groups' files load when it first opens.
  */
 
-import type { LifePictures } from '../../data/lifePictures';
 import type { LifeData } from '../../data/lifeStories';
 import { element } from '../../ui/dom';
-import { pictureOf, silhouetteImage } from './pictures';
+import type { LifePictures } from './lifePictures';
 import { findAnimals, SUGGESTED, type Found } from './names';
+import { pictureOf, silhouetteImage } from './pictures';
 
 export interface LifeFinder {
   readonly button: HTMLButtonElement;
   readonly dialog: HTMLDialogElement;
-  open(): void;
+  readonly open: () => void;
 }
 
-function described(found: Found, data: LifeData): string {
+const INTRO =
+  'Follow an animal’s line back through the fossil record: where its kind was found as the continents moved, and how warm the world was. Mammals and dinosaurs so far. Try:';
+const NONE =
+  'No such animal among the fossil mammals and dinosaurs. Birds, reptiles and fish are not in yet.';
+
+/** What a found animal is, under its name: a kind or a lineage, in what, living or not. */
+export function described(found: Found, data: LifeData): string {
   const { node } = found;
+  const genus = node.sites.length > 0;
+  const kind = genus ? 'a kind (genus)' : `a lineage (${node.rank})`;
   const parent = data.nodes[node.parent];
-  const kind = node.sites.length > 0 ? 'a kind (genus)' : `a lineage (${node.rank})`;
   return [
     found.known === '' ? kind : `${node.name}, ${kind}`,
     parent === undefined ? data.name : `in ${parent.name}`,
-    node.living ? 'living' : node.sites.length > 0 ? 'extinct' : null,
-  ]
-    .filter((part) => part !== null)
-    .join(' · ');
+    ...(node.living ? ['living'] : genus ? ['extinct'] : []),
+  ].join(' · ');
 }
 
-export function createLifeFinder(
-  load: () => Promise<readonly LifeData[]>,
-  onPick: (found: Found, data: LifeData) => void,
-  pictures: () => LifePictures | null,
-): LifeFinder {
+/** A found animal in the list: its silhouette, or its group's colour, and what it is. */
+function item(
+  found: Found,
+  data: LifeData,
+  pictures: LifePictures | null,
+  pick: () => void,
+): HTMLElement {
+  const silhouette = pictureOf(pictures, found.node.name)?.silhouette ?? null;
+  const row = element(
+    'button',
+    { type: 'button', class: 'famous-item' },
+    silhouette === null
+      ? element('span', { class: `fossil-key is-${found.group}` })
+      : silhouetteImage(silhouette, 28),
+    element(
+      'span',
+      { class: 'famous-text' },
+      element(
+        'span',
+        { class: 'famous-title' },
+        found.known === '' ? found.node.name : found.known,
+      ),
+      element('span', { class: 'famous-meta' }, described(found, data)),
+    ),
+  );
+  row.addEventListener('click', pick);
+  return element('li', {}, row);
+}
+
+/** The finder's elements, made once. */
+function frame() {
   const button = element(
     'button',
     {
@@ -73,83 +103,64 @@ export function createLifeFinder(
     status,
     list,
   );
+  return { button, input, status, list, close, dialog };
+}
 
+export function createLifeFinder(
+  load: () => Promise<readonly LifeData[]>,
+  onPick: (found: Found, data: LifeData) => void,
+  pictures: () => LifePictures | null,
+): LifeFinder {
+  const made = frame();
   let groups: readonly LifeData[] | null = null;
-  let loading = false;
-  let failed = false;
+  let state: 'idle' | 'loading' | 'failed' = 'idle';
 
-  function show(found: readonly Found[]): void {
-    list.replaceChildren(
-      ...found.flatMap((each) => {
-        const data = groups?.find((group) => group.id === each.group);
-        if (data === undefined) return [];
-        const item = element(
-          'button',
-          { type: 'button', class: 'famous-item' },
-          (() => {
-            const silhouette = pictureOf(pictures(), each.node.name)?.silhouette;
-            return silhouette == null
-              ? element('span', { class: `fossil-key is-${each.group}` })
-              : silhouetteImage(silhouette, 28);
-          })(),
-          element(
-            'span',
-            { class: 'famous-text' },
-            element(
-              'span',
-              { class: 'famous-title' },
-              each.known === '' ? each.node.name : each.known,
-            ),
-            element('span', { class: 'famous-meta' }, described(each, data)),
-          ),
-        );
-        item.addEventListener('click', () => {
-          dialog.close();
+  function show(found: readonly { readonly found: Found; readonly data: LifeData }[]): void {
+    made.list.replaceChildren(
+      ...found.map(({ found: each, data }) =>
+        item(each, data, pictures(), () => {
+          made.dialog.close();
           onPick(each, data);
-        });
-        return [element('li', {}, item)];
-      }),
+        }),
+      ),
     );
   }
 
   function render(): void {
     if (groups === null) {
-      status.textContent = failed ? 'Could not load the animals. Try again later.' : 'Loading…';
-      list.replaceChildren();
+      made.status.textContent =
+        state === 'failed' ? 'Could not load the animals. Try again later.' : 'Loading…';
+      made.list.replaceChildren();
       return;
     }
     const all = groups;
-    const query = input.value.trim();
-    if (query === '') {
-      status.textContent =
-        'Follow an animal’s line back through the fossil record: where its kind was found as the continents moved, and how warm the world was. Mammals and dinosaurs so far. Try:';
-      show(SUGGESTED.flatMap((name) => findAnimals(all, name, 1)));
-      return;
-    }
-    const found = findAnimals(all, query);
-    status.textContent =
-      found.length === 0
-        ? 'No such animal among the fossil mammals and dinosaurs. Birds, reptiles and fish are not in yet.'
-        : `${String(found.length)} found`;
+    const query = made.input.value.trim();
+    const found = (
+      query === ''
+        ? SUGGESTED.flatMap((name) => findAnimals(all, name, 1))
+        : findAnimals(all, query)
+    ).flatMap((each) =>
+      all.flatMap((data) => (data.id === each.group ? [{ found: each, data }] : [])),
+    );
+    made.status.textContent =
+      query === '' ? INTRO : found.length === 0 ? NONE : `${String(found.length)} found`;
     show(found);
   }
 
   function open(): void {
-    if (!dialog.open) dialog.showModal();
-    input.focus();
-    input.select();
-    if (groups === null && !loading) {
-      loading = true;
-      failed = false;
+    if (!made.dialog.open) made.dialog.showModal();
+    made.input.focus();
+    made.input.select();
+    if (groups === null && state !== 'loading') {
+      state = 'loading';
       load().then(
         (loaded) => {
           groups = loaded;
-          loading = false;
+          state = 'idle';
           render();
         },
         () => {
-          loading = false;
-          failed = true;
+          state = 'failed';
           render();
         },
       );
@@ -157,13 +168,13 @@ export function createLifeFinder(
     render();
   }
 
-  button.addEventListener('click', open);
-  input.addEventListener('input', render);
-  close.addEventListener('click', () => {
-    dialog.close();
+  made.button.addEventListener('click', open);
+  made.input.addEventListener('input', render);
+  made.close.addEventListener('click', () => {
+    made.dialog.close();
   });
-  dialog.addEventListener('click', (event) => {
-    if (event.target === dialog) dialog.close();
+  made.dialog.addEventListener('click', (event) => {
+    if (event.target === made.dialog) made.dialog.close();
   });
-  return { button, dialog, open };
+  return { button: made.button, dialog: made.dialog, open };
 }

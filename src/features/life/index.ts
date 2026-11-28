@@ -1,297 +1,246 @@
 /**
- * An animal's story (a prototype), as a part of the page (#443): find an animal by the name a
- * reader knows, and its lineage's finds are told as a story on the globe. Deep time opens at
- * its oldest finds with the globe coloured by temperature, and plays to today: dots where its
- * kinds were found as the continents moved, the kinds that began and ended named, and beside
- * the globe a chart of where, how warm and how many, with the moments worth stopping at.
+ * An animal's story, as a part of the page (#443): find an animal by the name a reader knows,
+ * and its lineage's finds are told as a story on the globe. Deep time opens at its oldest finds
+ * with the globe coloured by temperature, and plays to today: dots where its kinds were found
+ * as the continents moved, each kind's picture round the globe, and beside it a chart of where,
+ * how warm and how many, with the doors between the continents and the moments worth stopping
+ * at. A tap on a dot opens its site's card.
  */
 
-import { loadLifeDoors, type LifeDoors } from '../../data/lifeDoors';
-import { loadLifePictures, type LifePictures } from '../../data/lifePictures';
-import { loadLife, LIFE_GROUPS, type LifeData, type LifeGroup } from '../../data/lifeStories';
+import type { GeoPoint } from '../../core/geo';
 import type { Globe } from '../../globe/globe';
 import type { Watch } from '../../state/redraws';
-import { layerTurned, type ViewState } from '../../state/viewState';
-import { errorMessage } from '../../util/errors';
+import { layerTurned, type DeepScale, type LifeStory, type ViewState } from '../../state/viewState';
 import type { MountedPart, PartContext } from '../part';
-import { createLifeCard } from './card';
+import { createLifeCard, type LifeCard } from './card';
 import { withDoors } from './doors';
-import { createLifeFinder } from './finder';
-import { lifeMarksLayer } from './marksLayer';
+import { createLifeFiles, type LifeFiles } from './files';
+import { createLifeFinder, type LifeFinder } from './finder';
+import { marksAt, type Mark } from './marks';
+import { lifeMarksLayer, type LifeMarks } from './marksLayer';
 import { storyFor } from './names';
-import { createLifePanel } from './panel';
-import { marksAt, stepAt, storyOf, type Mark, type Story } from './story';
+import { createLifePanel, type LifePanel, type PanelActions } from './panel';
+import { stepAt, storyOf, type Story } from './story';
+import { createTelling, type Telling } from './telling';
 import './life.css';
 
 /** What the story asks of the rest of the page. */
 export interface LifeContext extends PartContext {
   readonly globe: Pick<Globe, 'addLayer' | 'flyTo'>;
+  /** Deep time, as its part offers it: go to a moment on a span, play from one, whether it plays. */
   readonly deepTime: {
-    /** Go to a moment on the whole span. */
-    enter(ma: number): void;
-    /** Play from a moment towards today, on the whole span. */
-    play(ma: number, maPerSecond: number): void;
-    playing(): boolean;
+    readonly enterDeepTime: (ma: number, deepScale?: DeepScale) => void;
+    readonly playFrom: (ma: number, deepScale: DeepScale, maPerSecond: number) => void;
+    readonly playing: () => boolean;
   };
 }
 
 export interface LifePart extends MountedPart {
   readonly button: HTMLElement;
-  readonly dialog: HTMLElement;
 }
-
-/** About how long a story takes to play, seconds. */
-const STORY_SECONDS = 45;
-/** How long a story stands at its oldest finds before it plays, ms. */
-const BEGIN_PAUSE_MS = 2500;
 
 const WATCHES: Watch = (state) => [state.life, state.ma];
 
-export function mountLife(context: LifeContext): LifePart {
-  const { base, fetchJson, store } = context;
-  const marks = context.globe.addLayer(lifeMarksLayer);
-  const files = new Map<LifeGroup, Promise<LifeData>>();
-  const loaded = new Map<LifeGroup, LifeData>();
-  const failed = new Set<LifeGroup>();
+/** What the part's views share: the page, the files, the telling, and the mark picked. */
+interface Hub {
+  readonly context: LifeContext;
+  readonly files: LifeFiles;
+  readonly telling: Telling;
+  /** The mark whose card is open. */
+  picked: Mark | null;
+  /** The story the view asks for now, once its group's file has loaded. */
+  readonly story: () => Story | null | 'loading' | 'failed';
+  /** Tell a lineage's story from its start. */
+  readonly tell: (life: LifeStory) => void;
+  /** Go to a moment, the globe turned to a place if one is given. */
+  readonly goTo: (ma: number, where: GeoPoint | null) => void;
+  /** Show what the view asks for again. */
+  readonly again: () => void;
+}
 
-  function load(group: LifeGroup): Promise<LifeData> {
-    let file = files.get(group);
-    if (file === undefined) {
-      file = loadLife(`${base}data/life-stories/${group}.json`, fetchJson);
-      files.set(group, file);
-      file.then(
-        (data) => {
-          loaded.set(group, data);
-          render(store.get());
-        },
-        (error: unknown) => {
-          files.delete(group);
-          failed.add(group);
-          context.notify(`Could not load the animals’ stories: ${errorMessage(error)}`);
-          render(store.get());
-        },
-      );
-    }
-    return file;
-  }
+function tellingOf({ store, globe, deepTime }: LifeContext): Telling {
+  return createTelling({
+    enter: (ma) => {
+      deepTime.enterDeepTime(ma, 'all');
+    },
+    play: (ma, maPerSecond) => {
+      deepTime.playFrom(ma, 'all', maPerSecond);
+    },
+    playing: () => deepTime.playing(),
+    flyTo: (where) => {
+      globe.flyTo(where);
+    },
+    warmth: () => {
+      store.set((state) => layerTurned(state, 'temperature', true));
+    },
+    now: () => ({ ma: store.get().ma, pbdb: store.get().life?.pbdb ?? null }),
+    after: (run, ms) => {
+      setTimeout(run, ms);
+    },
+  });
+}
 
-  let pictures: LifePictures | null = null;
-  let doors: LifeDoors | null = null;
-  let picturesAsked = false;
-  /** The animals' pictures, asked for once: a story is told without them until they come. */
-  function wantPictures(): void {
-    if (picturesAsked) return;
-    picturesAsked = true;
-    // The continents' doors with them: a story's moments say more once they come.
-    loadLifeDoors(`${base}data/life-stories/doors.json`, fetchJson).then(
-      (found) => {
-        doors = found;
-        panel.doors(found);
-        render(store.get());
-      },
-      (error: unknown) => {
-        context.notify(`Could not load the continents’ doors: ${errorMessage(error)}`);
-      },
-    );
-    loadLifePictures(`${base}data/life-stories/pictures.json`, fetchJson).then(
-      (loadedPictures) => {
-        pictures = loadedPictures;
-        panel.pictures(loadedPictures);
-        render(store.get());
-      },
-      (error: unknown) => {
-        context.notify(`Could not load the animals’ pictures: ${errorMessage(error)}`);
-      },
-    );
-  }
-
-  let told: { readonly key: string; readonly story: Story | null } | null = null;
-  /** The story the view asks for, once its group has loaded; kept until it asks for another. */
-  function storyFrom(state: ViewState): Story | null | 'loading' | 'failed' {
-    const { life } = state;
-    if (life === null) return null;
-    wantPictures();
-    const data = loaded.get(life.group);
-    if (data === undefined) {
-      if (failed.has(life.group)) return 'failed';
-      void load(life.group).catch(() => undefined);
-      return 'loading';
-    }
-    const key = `${life.group}:${String(life.pbdb)}:${String(life.focus)}:${String(doors !== null)}`;
-    if (told?.key !== key) {
+/** Keeps the story a view asks for until it asks for another, or its doors arrive. */
+function storyKeeper(files: LifeFiles): (life: LifeStory) => Story | null | 'loading' | 'failed' {
+  let kept: { readonly key: string; readonly story: Story | null } | null = null;
+  return (life) => {
+    const data = files.group(life.group);
+    if (typeof data === 'string') return data;
+    const doors = files.doors();
+    const key = [life.group, life.pbdb, life.focus, doors !== null].join(':');
+    if (kept?.key !== key) {
       const story = storyOf(data, life.pbdb, life.focus);
-      told = { key, story: story === null || doors === null ? story : withDoors(story, doors) };
+      kept = { key, story: story === null || doors === null ? story : withDoors(story, doors) };
     }
-    return told.story;
-  }
+    return kept.story;
+  };
+}
 
-  /** Play a story from a moment to its end, in about the same time whatever its length. */
-  function play(story: Story, from: number): void {
-    const [oldest] = story.steps;
-    const youngest = story.steps.at(-1);
-    if (oldest === undefined || youngest === undefined) return;
-    const span = Math.max(story.data.stepMa, oldest.ma - youngest.ma);
-    followed = null;
-    context.deepTime.play(from, Math.max(0.2, span / STORY_SECONDS));
-  }
-
-  let starting: ReturnType<typeof setTimeout> | null = null;
-  /**
-   * Open deep time at a story's oldest finds, the globe turned to them and coloured by warmth,
-   * and after a moment to take that in, play it.
-   */
-  function begin(story: Story): void {
-    const [origin] = story.chapters;
-    if (origin === undefined) return;
-    context.deepTime.enter(origin.ma);
-    store.set((state) => layerTurned(state, 'temperature', true));
-    if (origin.where !== null) context.globe.flyTo(origin.where);
-    if (starting !== null) clearTimeout(starting);
-    starting = setTimeout(() => {
-      starting = null;
-      const { life, ma } = store.get();
-      // Still this story, and still where it opened: the reader has not gone elsewhere.
-      if (life?.pbdb === story.clade.pbdb && ma === origin.ma) play(story, origin.ma);
-    }, BEGIN_PAUSE_MS);
-  }
-
-  let followed: number | null = null;
-  /** While it plays, turn the globe to each moment's place as its step comes. */
-  function follow(story: Story, step: number): void {
-    if (step === followed) return;
-    followed = step;
-    if (!context.deepTime.playing()) return;
-    const where = story.chapters.findLast(
-      (chapter) => chapter.ma === step && chapter.where !== null,
-    )?.where;
-    if (where !== null && where !== undefined) context.globe.flyTo(where);
-  }
-
-  function tell(group: LifeGroup, pbdb: number, focus: number | null): void {
-    store.set((state) => ({ ...state, life: { group, pbdb, focus } }));
-    void load(group).then((data) => {
-      const story = storyOf(data, pbdb, focus);
-      if (story === null) {
+function hubOf(context: LifeContext, again: () => void): Hub {
+  const { store, globe, deepTime } = context;
+  const files = createLifeFiles({ ...context, arrived: again });
+  const keeper = storyKeeper(files);
+  const telling = tellingOf(context);
+  const hub: Hub = {
+    context,
+    files,
+    telling,
+    picked: null,
+    again,
+    story() {
+      const { life } = store.get();
+      return life === null ? null : keeper(life);
+    },
+    tell(life) {
+      hub.picked = null;
+      store.set((state) => ({ ...state, life }));
+      void files.load(life.group).then((data) => {
+        const story = storyOf(data, life.pbdb, life.focus);
+        if (story !== null) {
+          telling.begin(story);
+          return;
+        }
         context.notify('That lineage has no placed finds to tell a story from.');
         store.set((state) => ({ ...state, life: null }));
-        return;
-      }
-      begin(story);
-    });
-  }
-
-  const panel = createLifePanel({
-    goTo(ma, where) {
-      context.deepTime.enter(ma);
-      if (where !== null) context.globe.flyTo(where);
+      });
     },
+    goTo(ma, where) {
+      hub.picked = null;
+      deepTime.enterDeepTime(ma, 'all');
+      if (where !== null) globe.flyTo(where);
+      again();
+    },
+  };
+  return hub;
+}
+
+function panelOf(hub: Hub, find: () => void): LifePanel {
+  const { store } = hub.context;
+  const actions: PanelActions = {
+    goTo: hub.goTo,
     open(pbdb, focus) {
       const { life } = store.get();
-      if (life !== null) tell(life.group, pbdb, focus);
+      if (life !== null) hub.tell({ group: life.group, pbdb, focus });
     },
     play() {
-      const story = storyFrom(store.get());
-      if (story === null || typeof story === 'string') return;
-      const [oldest] = story.steps;
-      const youngest = story.steps.at(-1);
-      if (oldest === undefined || youngest === undefined) return;
-      const current = store.get().ma;
-      // From where the reader is, if inside the story, not at its end and not playing already.
-      const inside = current !== null && current <= oldest.ma && current > youngest.ma;
-      play(story, inside && !context.deepTime.playing() ? current : oldest.ma);
+      const story = hub.story();
+      if (story !== null && typeof story !== 'string') hub.telling.play(story);
     },
-    find() {
-      finder.open();
-    },
+    find,
     close() {
       store.set((state) => ({ ...state, life: null }));
     },
-  });
+  };
+  return createLifePanel(actions, hub.context.why('life', 'An animal’s story'));
+}
 
-  let picked: Mark | null = null;
-  const card = createLifeCard({
+function cardOf(hub: Hub): LifeCard {
+  return createLifeCard({
     tell(node) {
-      const { life } = store.get();
-      const data = life === null ? undefined : loaded.get(life.group);
-      if (life === null || data === undefined) return;
-      picked = null;
-      const { pbdb, focus } = storyFor(data, node);
-      tell(life.group, pbdb, focus);
+      const { life } = hub.context.store.get();
+      const data = life === null ? 'loading' : hub.files.group(life.group);
+      if (life !== null && typeof data !== 'string') {
+        hub.tell({ group: life.group, ...storyFor(data, node) });
+      }
     },
-    goTo(ma, where) {
-      picked = null;
-      context.deepTime.enter(ma);
-      context.globe.flyTo(where);
-      render(store.get());
-    },
+    goTo: hub.goTo,
     close() {
-      picked = null;
-      render(store.get());
+      hub.picked = null;
+      hub.again();
     },
   });
+}
 
-  const finder = createLifeFinder(
-    () => {
-      wantPictures();
-      return Promise.all(LIFE_GROUPS.map((group) => load(group)));
-    },
+function finderOf(hub: Hub): LifeFinder {
+  return createLifeFinder(
+    hub.files.all,
     (found, data) => {
-      const { pbdb, focus } = storyFor(data, found.node);
-      tell(found.group, pbdb, focus);
+      hub.tell({ group: found.group, ...storyFor(data, found.node) });
     },
-    () => pictures,
+    hub.files.pictures,
   );
+}
+
+/** A story's marks at a moment, and which of them is picked: its card stays while it is shown. */
+function marksOf(hub: Hub, story: Story, ma: number): LifeMarks {
+  const step = stepAt(story, ma);
+  hub.telling.follow(story, step);
+  const shown = marksAt(story, ma);
+  const before = hub.picked;
+  hub.picked =
+    before === null
+      ? null
+      : (shown.find((mark) => mark.node === before.node && mark.site === before.site) ?? null);
+  const pictures = hub.files.pictures();
+  return {
+    key: [story.clade.pbdb, story.focus?.pbdb, step, pictures !== null, hub.picked?.title].join(
+      ':',
+    ),
+    marks: shown,
+    silhouette: (name) => pictures?.names[name]?.silhouette ?? null,
+    picked: hub.picked,
+    pick(mark) {
+      hub.picked = mark;
+      hub.again();
+    },
+  };
+}
+
+export function mountLife(context: LifeContext): LifePart {
+  const marks = context.globe.addLayer(lifeMarksLayer);
+  const hub = hubOf(context, () => {
+    render(context.store.get());
+  });
+  const finder = finderOf(hub);
+  const panel = panelOf(hub, finder.open);
+  const card = cardOf(hub);
 
   function render(state: ViewState): void {
-    const story = storyFrom(state);
-    if (story === null || typeof story === 'string' || state.ma === null) picked = null;
-    if (story === 'loading' || story === 'failed') {
-      card.show(null, null, null);
+    const story = hub.story();
+    const pictures = hub.files.pictures();
+    const doors = hub.files.doors();
+    if (pictures !== null) panel.pictures(pictures);
+    if (doors !== null) panel.doors(doors);
+    if (typeof story === 'string') {
       panel.say(story === 'loading' ? 'Loading the story…' : 'The story could not load.');
-      marks.update(null);
-      return;
+    } else {
+      panel.render(story, state.ma, context.deepTime.playing());
     }
-    panel.render(story, state.ma, context.deepTime.playing());
-    if (story === null || state.ma === null) {
-      marks.update(null);
+    if (story === null || typeof story === 'string' || state.ma === null) {
+      hub.picked = null;
       card.show(null, null, null);
+      marks.update(null);
       return;
     }
-    const step = stepAt(story, state.ma);
-    // A card is of a site in a step: it closes when time moves on to another.
-    if (picked !== null && picked.site.ma !== step && picked.kind !== 'ended') picked = null;
-    follow(story, step);
-    const shown = marksAt(story, state.ma);
-    if (picked !== null) {
-      const { node, site } = picked;
-      picked = shown.find((mark) => mark.node === node && mark.site === site) ?? null;
-    }
-    card.show(picked, story.data, pictures);
-    marks.update({
-      key: [
-        story.clade.pbdb,
-        story.focus?.pbdb ?? '',
-        step,
-        pictures !== null,
-        picked === null
-          ? ''
-          : `${String(picked.node.pbdb)}@${String(picked.site.latitude)},${String(picked.site.longitude)}`,
-      ].join(':'),
-      marks: shown,
-      silhouette: (name) => pictures?.names[name]?.silhouette ?? null,
-      picked,
-      pick(mark) {
-        picked = mark;
-        render(store.get());
-      },
-    });
+    const shown = marksOf(hub, story, state.ma);
+    card.show(shown.picked, story.data, pictures);
+    marks.update(shown);
   }
 
   return {
     watches: WATCHES,
-    elements: [panel.root, card.root],
+    elements: [panel.root, card.root, finder.dialog],
     render,
     button: finder.button,
-    dialog: finder.dialog,
   };
 }

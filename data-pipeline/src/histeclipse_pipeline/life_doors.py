@@ -1,6 +1,6 @@
 """The doors between the continents: when land joined them, read from the elevation maps.
 
-A prototype, for the animals' stories. A lineage found on one continent and then on another
+For the animals' stories. A lineage found on one continent and then on another
 either walked or crossed water; which, depends on whether land joined the two then. This reads
 that from the same maps the deep-time globe draws (PALEOMAP PaleoDEMs, Scotese & Wright 2018,
 as `paleodem` packs them), every 5 million years:
@@ -25,12 +25,13 @@ import datetime as dt
 import json
 from collections import deque
 from itertools import combinations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 from PIL import Image
 
 from histeclipse_pipeline.fossils import STEP_MA
+from histeclipse_pipeline.header import header
 from histeclipse_pipeline.impacts import reconstruct_points
 from histeclipse_pipeline.life_stories import REGIONS
 from histeclipse_pipeline.paleodem import SEA_LEVEL_BYTE
@@ -73,18 +74,25 @@ def cell_of(latitude: float, longitude: float, rows: int, columns: int) -> tuple
     return row, column
 
 
+def _shape(grid: npt.NDArray[np.bool_] | npt.NDArray[np.uint8]) -> tuple[int, int]:
+    rows, columns = map(int, grid.shape)
+    return rows, columns
+
+
 def touching(
     open_cells: npt.NDArray[np.bool_], starts: list[tuple[int, int]], owners: list[int]
 ) -> set[tuple[int, int]]:
-    """Find which owners' ground touches: each open cell goes to the owner whose start is
-    nearest over open cells, and two owners touch where their cells do.
+    """Find which owners' ground touches.
 
-    So a door is between two lands themselves: North America reaches Europe by way of Asia
-    only as two doors, not as one of its own. Cells touch along edges and corners, and the map
-    wraps east to west; its last column repeats its first, and is left out.
+    Each open cell goes to the owner whose start is nearest over open cells, and two owners
+    touch where their cells do. So a door is between two lands themselves: North America
+    reaches Europe by way of Asia only as two doors, not as one of its own. Cells touch along
+    edges and corners, and the map wraps east to west; its last column repeats its first, and
+    is left out.
     """
-    rows, columns = open_cells.shape[0], open_cells.shape[1] - 1
-    owner = np.full((rows, columns), -1, dtype=np.int16)
+    rows, columns = _shape(open_cells)
+    columns -= 1
+    owner: npt.NDArray[np.int16] = np.full((rows, columns), -1, dtype=np.int16)
     queue: deque[tuple[int, int]] = deque()
     for (row, column), who in zip(starts, owners, strict=True):
         if open_cells[row, column] and owner[row, column] < 0:
@@ -93,7 +101,7 @@ def touching(
     pairs: set[tuple[int, int]] = set()
     while queue:
         r, c = queue.popleft()
-        mine = int(owner[r, c])
+        mine = int(cast("np.int16", owner[r, c]))
         for dr in (-1, 0, 1):
             nr = r + dr
             if nr < 0 or nr >= rows:
@@ -102,7 +110,7 @@ def touching(
                 nc = (c + dc) % columns
                 if not open_cells[nr, nc]:
                     continue
-                theirs = int(owner[nr, nc])
+                theirs = int(cast("np.int16", owner[nr, nc]))
                 if theirs < 0:
                     owner[nr, nc] = mine
                     queue.append((nr, nc))
@@ -115,7 +123,8 @@ def nearest_open(
     open_cells: npt.NDArray[np.bool_], cell: tuple[int, int]
 ) -> tuple[int, int] | None:
     """Move a cell to the nearest open one within `NEAR_CELLS`; None if there is none."""
-    rows, columns = open_cells.shape[0], open_cells.shape[1] - 1
+    rows, columns = _shape(open_cells)
+    columns -= 1
     row, column = cell
     for reach in range(NEAR_CELLS + 1):
         for dr in range(-reach, reach + 1):
@@ -129,7 +138,7 @@ def nearest_open(
 def joined(heights: npt.NDArray[np.uint8], seeds: Seeds) -> dict[tuple[str, str], int]:
     """Say which lands touched on a map: over land, or over a shelf; the others stood apart."""
     out: dict[tuple[str, str], int] = {}
-    rows, columns = heights.shape
+    rows, columns = _shape(heights)
     for state, floor in ((SHELF, SHELF_BYTE), (LAND, SEA_LEVEL_BYTE)):
         open_cells = heights >= floor
         starts: list[tuple[int, int]] = []
@@ -152,13 +161,24 @@ def doors_file(by_step: dict[int, dict[tuple[str, str], int]], accessed: str) ->
         pair for pair in combinations(LANDS, 2) if any(pair in by_step[step] for step in steps)
     ]
     return {
-        "schemaVersion": 1,
-        "credit": (
-            "Read for this site from the PALEOMAP PaleoDEMs (Scotese & Wright 2018, CC BY 4.0), "
-            "with places carried back on the PALEOMAP model by the GPlates Web Service"
+        **header(
+            version=1,
+            sources=["paleodem", "gplates"],
+            credit=(
+                "Read for this site from the PALEOMAP PaleoDEMs (Scotese & Wright 2018, "
+                "CC BY 4.0), with places carried back on the PALEOMAP model by the GPlates "
+                "Web Service"
+            ),
+            licence="CC BY 4.0 for the maps; none stated for the GPlates Web Service",
+            accessed=accessed,
+            changes=(
+                "Derived, not copied: on each map, every cell above sea level given to the "
+                "land whose place is nearest over such cells, and two lands called joined "
+                "where their cells touch; a shallow sea between where they touch only with "
+                "cells up to about 130 m deep counted too"
+            ),
         ),
         "source": "https://zenodo.org/records/5460860",
-        "accessed": accessed,
         "stepMa": STEP_MA,
         "lands": [str(land) for land in LANDS],
         "steps": [int(step) for step in steps],
@@ -202,13 +222,15 @@ def seeds_then(cache: Path) -> dict[int, Seeds]:  # pragma: no cover - needs net
     }
 
 
-def write_life_doors(maps: Path, cache: Path, out: Path) -> int:  # pragma: no cover - network
+def write_life_doors(
+    maps: Path, cache: Path, out: Path
+) -> int:  # pragma: no cover - needs network access
     """Write the doors' file from the elevation maps; count the doors."""
     by_step: dict[int, dict[tuple[str, str], int]] = {}
     for ma, seeds in sorted(seeds_then(cache).items()):
         path = maps / f"{ma}.png"
         if path.exists():
-            by_step[ma] = joined(np.asarray(Image.open(path)), seeds)
+            by_step[ma] = joined(np.asarray(Image.open(path), dtype=np.uint8), seeds)
     accessed = dt.datetime.now(tz=dt.UTC).date().isoformat()
     built = doors_file(by_step, accessed)
     _ = out.write_text(json.dumps(built, separators=(",", ":")) + "\n")

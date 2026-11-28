@@ -1,5 +1,5 @@
 /**
- * Finding an animal by the name a reader knows (a prototype): the names in a group's file (its
+ * Finding an animal by the name a reader knows: the names in a group's file (its
  * genera and the lineages over them, with PBDB's common names), and the everyday names below for
  * the animals most asked after. The fossil record's unit is the genus, so "lion" finds
  * Panthera, the lion's genus, which it shares with the tiger, the leopard and the jaguar.
@@ -191,6 +191,51 @@ function folded(text: string): string {
   return text.trim().toLowerCase();
 }
 
+/** How well a name answers what was asked: 0 the same, 1 starts with it, 2 a word of it starts
+ * with it, 3 holds it (three letters or more); null if it does not. */
+function rate(name: string, asked: string): number | null {
+  const candidate = folded(name);
+  if (candidate === '') return null;
+  if (candidate === asked) return 0;
+  if (candidate.startsWith(asked)) return 1;
+  if (candidate.includes(` ${asked}`)) return 2;
+  return asked.length >= 3 && candidate.includes(asked) ? 3 : null;
+}
+
+interface Scored {
+  readonly found: Found;
+  readonly score: number;
+}
+
+/** The everyday names that answer, each with the genus or lineage it is found under. */
+function byEveryday(data: LifeData, asked: string): Scored[] {
+  const byName = new Map(data.nodes.map((node) => [node.name, node]));
+  return Object.entries(EVERYDAY[data.id]).flatMap(([known, name]) => {
+    const node = byName.get(name);
+    const score = rate(known, asked);
+    return node === undefined || score === null
+      ? []
+      : [{ found: { group: data.id, node, known }, score }];
+  });
+}
+
+/** The file's own names that answer, scientific or common: after the everyday ones on a tie. */
+function byOwnName(data: LifeData, asked: string): Scored[] {
+  return data.nodes.flatMap((node) => {
+    const own = rate(node.name, asked) ?? Infinity;
+    const common = rate(node.common, asked) ?? Infinity;
+    const best = Math.min(own, common);
+    return best === Infinity
+      ? []
+      : [
+          {
+            found: { group: data.id, node, known: common < own ? node.common : '' },
+            score: best + 0.5,
+          },
+        ];
+  });
+}
+
 /**
  * The animals a reader's words find, the best first: an everyday name, a common name or a
  * scientific one that is the query, then those that start with it, then those that hold it.
@@ -198,47 +243,15 @@ function folded(text: string): string {
 export function findAnimals(groups: readonly LifeData[], query: string, most = 12): Found[] {
   const asked = folded(query);
   if (asked === '') return [];
-  const scored: { found: Found; score: number }[] = [];
-  const rate = (name: string): number | null => {
-    const candidate = folded(name);
-    if (candidate === '') return null;
-    if (candidate === asked) return 0;
-    if (candidate.startsWith(asked)) return 1;
-    if (candidate.includes(` ${asked}`)) return 2;
-    return asked.length >= 3 && candidate.includes(asked) ? 3 : null;
-  };
-  for (const data of groups) {
-    const byName = new Map(data.nodes.map((node) => [node.name, node]));
-    for (const [known, name] of Object.entries(EVERYDAY[data.id])) {
-      const node = byName.get(name);
-      const score = rate(known);
-      if (node !== undefined && score !== null) {
-        scored.push({ found: { group: data.id, node, known }, score });
-      }
-    }
-    for (const node of data.nodes) {
-      const own = rate(node.name);
-      const common = rate(node.common);
-      if (own === null && common === null) continue;
-      const byCommon = common !== null && (own === null || common < own);
-      scored.push({
-        found: { group: data.id, node, known: byCommon ? node.common : '' },
-        // After the everyday names, where both match as well.
-        score: Math.min(own ?? 9, common ?? 9) + 0.5,
-      });
-    }
-  }
-  scored.sort((a, b) => a.score - b.score || a.found.node.name.length - b.found.node.name.length);
-  const seen = new Set<string>();
-  const out: Found[] = [];
+  const scored = groups
+    .flatMap((data) => [...byEveryday(data, asked), ...byOwnName(data, asked)])
+    .sort((a, b) => a.score - b.score || a.found.node.name.length - b.found.node.name.length);
+  const seen = new Map<string, Found>();
   for (const { found } of scored) {
     const key = `${found.group}:${String(found.node.pbdb)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(found);
-    if (out.length >= most) break;
+    if (!seen.has(key)) seen.set(key, found);
   }
-  return out;
+  return [...seen.values()].slice(0, most);
 }
 
 /**

@@ -2,14 +2,15 @@
  * A fossil group's genera through time, place and climate (`public/data/life-stories/`): the
  * Paleobiology Database's classification and finds (CC BY 4.0), each genus's sites every 5
  * million years with the part of today's world its finds are in and the temperature there then
- * on Scotese's (2022) maps. Written by the pipeline's `life_stories`. A prototype: an animal's
- * story is told from one of these files and nothing else.
+ * on Scotese's (2022) maps. Written by the pipeline's `life_stories`. An animal's story is
+ * told from one of these files, with its pictures and the continents' doors beside it.
  */
 
 import * as v from 'valibot';
 
 import { elementAt, valueAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER } from './header';
 
 export const LIFE_GROUPS = ['mammals', 'dinosaurs'] as const;
 export type LifeGroup = (typeof LIFE_GROUPS)[number];
@@ -22,9 +23,8 @@ const SITE = 6;
 const LifeSchema = v.pipe(
   v.strictObject({
     schemaVersion: v.literal(1),
-    credit: v.pipe(v.string(), v.minLength(1)),
+    ...HEADER,
     source: v.pipe(v.string(), v.url()),
-    accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
     id: v.picklist(LIFE_GROUPS),
     name: v.pipe(v.string(), v.minLength(1)),
     stepMa: v.pipe(v.number(), v.gtValue(0)),

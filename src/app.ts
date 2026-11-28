@@ -109,7 +109,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const viewSwitch = createViewSwitch((choice) => {
     input.choose(choice);
   });
-  // The orbits, offered where they mean something: far out, or on the Sun or a planet.
   // Why anything is on screen: the book marks beside things, and the panel they open.
   // The panel follows the view, so the link names the why open and opens it again.
   const whySheet = createWhySheet(
@@ -279,20 +278,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       co2Archive.load();
     },
   });
-  // An animal's story (a prototype): found by name, told on the globe through deep time.
-  const life = mountLife({
-    ...partContext,
-    globe,
-    deepTime: {
-      enter: (ma) => {
-        deepTime.enterDeepTime(ma, 'all');
-      },
-      play: (ma, maPerSecond) => {
-        deepTime.playFrom(ma, 'all', maPerSecond);
-      },
-      playing: () => deepTime.playing(),
-    },
-  });
+  const life = mountLife({ ...partContext, globe, deepTime });
   // A passage's or a destination's view laid over the reader's, as a step back can undo.
   const opener = viewOpener({ store, deepTime, sync: () => sync, globe });
   const openAnchor = opener.anchor;
@@ -356,7 +342,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       explore.button.click();
     },
   });
-  // The panels hide for a clear view, by this button or a tap on empty space; it brings them back.
   // The site's texts (#391, #392): search, and what is written about here.
   const texts = mountTexts({
     ...partContext,
@@ -367,6 +352,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     opener,
     search: texts.search,
     famous: famous.button,
+    animals: life.button,
     tree: treeOfLife,
   });
   // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
@@ -410,7 +396,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   const launches = mountTimeBars({ ...partContext, history: { ...years.track, stop: years.stop } });
 
-  // The borders of past states (#446), a century's file at a time, and what changed.
   // The eclipses (#447): the year's on the bar, picking one, and the moment shown of it.
   const days = createDayEvents(openAnchor);
   const eclipses = mountEclipses({
@@ -476,7 +461,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     over: [
       famous.dialog,
       texts.search.dialog,
-      life.dialog,
       records.dialog,
       layersPanel.dialog,
       ...explore.dialogs,

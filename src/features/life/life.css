@@ -1,13 +1,14 @@
-/* An animal's story (a prototype): its marks on the globe, its panel beside it, its finder. */
+/* An animal's story: its marks on the globe, its panel beside it, its finder. */
 
 /* On the globe: a dot at each site, larger with more finds; a name beside the ones to notice. */
 .empire-label.life-mark {
   display: flex;
   align-items: center;
-  gap: 4px;
-  pointer-events: none;
-  font-size: 11px;
-  font-style: italic;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .life-dot {
@@ -25,11 +26,6 @@
   box-shadow:
     0 0 0 2px rgb(255 197 61 / 0.45),
     0 0 8px rgb(0 0 0 / 0.8);
-}
-
-.life-mark.is-focus .life-name {
-  color: #ffe08a;
-  font-weight: 700;
 }
 
 /* A kind found for the first time: a bright dot that pulses once. */
@@ -55,11 +51,6 @@
   background:
     linear-gradient(45deg, transparent 44%, #fff 44% 56%, transparent 56%),
     linear-gradient(-45deg, transparent 44%, #fff 44% 56%, transparent 56%), rgb(0 0 0 / 0.35);
-}
-
-.life-mark.is-ended .life-name {
-  color: rgb(255 255 255 / 0.75);
-  text-decoration: line-through;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -99,7 +90,7 @@
 .life-header {
   display: flex;
   align-items: flex-start;
-  gap: 4px;
+  gap: 10px;
   padding: 12px 8px 8px 16px;
 }
 
@@ -220,7 +211,7 @@
 
 .life-strip {
   display: grid;
-  grid-template-columns: 70px 1fr;
+  grid-template-columns: 86px 1fr;
   gap: 3px 8px;
   align-items: center;
   cursor: pointer;
@@ -314,7 +305,7 @@
   top: -2px;
   bottom: 14px;
   /* Over the rows only: past the names' column and its gap. */
-  left: calc(78px + (100% - 78px) * var(--life-at, 0));
+  left: calc(94px + (100% - 94px) * var(--life-at, 0));
   width: 2px;
   margin-left: -1px;
   border-radius: 1px;
@@ -348,6 +339,10 @@
 .life-change {
   color: var(--ink-muted);
   font-size: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
 }
 
 .life-change.is-began strong {
@@ -441,17 +436,6 @@
   color: inherit;
 }
 
-/* A narrow screen: across the top, folded to its heading until asked for. */
-@media (max-width: 760px) {
-  .life-panel {
-    top: 8px;
-    right: 8px;
-    left: 8px;
-    width: auto;
-    max-height: 58vh;
-  }
-}
-
 .life-crumbs-lead {
   color: var(--ink-muted);
 }
@@ -477,10 +461,6 @@
 
 .life-emblem:empty {
   display: none;
-}
-
-.life-header {
-  gap: 10px;
 }
 
 .life-lead {
@@ -509,13 +489,6 @@
 .life-reference a,
 .life-credits a {
   color: inherit;
-}
-
-.life-change {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-  align-items: center;
 }
 
 .life-kind {
@@ -578,14 +551,6 @@
   white-space: nowrap;
 }
 
-.life-strip {
-  grid-template-columns: 86px 1fr;
-}
-
-.life-playhead {
-  left: calc(94px + (100% - 94px) * var(--life-at, 0));
-}
-
 .life-row.is-door {
   height: 7px;
 }
@@ -604,13 +569,6 @@
 }
 
 /* Each dot is a button: a tap opens its card. */
-.empire-label.life-mark {
-  padding: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  pointer-events: auto;
-}
 
 .empire-label.life-mark::before {
   /* Room for a finger round a small dot. */
@@ -759,16 +717,79 @@
   margin: 0;
 }
 
-@media (max-width: 760px) {
-  .life-card {
-    top: auto;
-    bottom: 8px;
-    max-height: 50vh;
-  }
-}
-
 /* A kind with no silhouette: its name alone, in a smaller box at the same place. */
 .life-callout.is-plain {
   height: 24px;
   margin-top: 17px;
+}
+
+.life-why {
+  margin: 8px 0 0;
+}
+
+/* Folded, the panel is its heading alone, with a way to play. */
+.life-play-folded {
+  display: none;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: #ffc53d;
+  color: #1a1305;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.life-panel.is-folded .life-play-folded {
+  display: block;
+}
+
+.life-panel.is-folded .life-subtitle {
+  display: none;
+}
+
+.life-panel.is-folded .life-header {
+  align-items: center;
+  padding-bottom: 12px;
+}
+
+/* A phone: the panel and the card lie over the globe's own room, between the header and the
+   time bar, the panel folded until asked for; buttons are a finger wide. */
+@media (max-width: 600px) {
+  .life-panel,
+  .life-card {
+    top: calc(var(--free-top, 120px) + 4px);
+    right: 8px;
+    left: 8px;
+    width: auto;
+    max-height: calc(100vh - var(--free-top, 120px) - var(--free-bottom, 200px) - 8px);
+  }
+
+  .life-fold,
+  .life-close,
+  .life-play-folded {
+    width: 44px;
+    height: 44px;
+  }
+
+  .life-title {
+    font-size: 17px;
+  }
+
+  .life-play,
+  .life-other {
+    min-height: 44px;
+  }
+
+  .life-callout {
+    opacity: 0.92;
+  }
+}
+
+/* On a phone the header has no room for one more tool: Explore offers the finder there. */
+@media (max-width: 600px) {
+  .life-open {
+    display: none;
+  }
 }

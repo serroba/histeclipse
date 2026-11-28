@@ -1,5 +1,5 @@
 /**
- * The doors in an animal's story (a prototype): when its lineage is first found on a new
+ * The doors in an animal's story: when its lineage is first found on a new
  * continent, whether land joined that continent to one it was already found on, by which way,
  * as the elevation maps have it. And the doors worth a row in its chart: those between the
  * lands it was ever found on.
@@ -8,16 +8,10 @@
  * a crossing of water, a join too narrow for the maps, or finds still to be made.
  */
 
-import {
-  APART,
-  doorAt,
-  LAND,
-  SHELF,
-  type Door,
-  type DoorState,
-  type LifeDoors,
-} from '../../data/lifeDoors';
-import { listed, type Chapter, type Story } from './story';
+import { APART, doorAt, LAND, SHELF, type Door, type DoorState, type LifeDoors } from './lifeDoors';
+import type { Chapter } from './chapters';
+import type { Story } from './story';
+import { listed } from './words';
 
 /** The way from lands already reached to a new one. */
 export interface Way {
@@ -31,29 +25,45 @@ export interface Way {
  * one, else letting shallow seas count; apart if neither.
  */
 export function wayTo(doors: LifeDoors, ma: number, from: ReadonlySet<number>, to: number): Way {
-  for (const least of [LAND, SHELF] as const) {
-    const before = new Map<number, number | null>([...from].map((land) => [land, null]));
-    const queue = [...from];
-    for (let at = 0; at < queue.length; at++) {
-      const land = queue[at] ?? 0;
-      if (land === to) {
-        const through: string[] = [];
-        for (let back: number | null = land; back !== null; back = before.get(back) ?? null) {
-          through.unshift(doors.lands[back] ?? '');
-        }
-        return { state: least, through };
+  return walk(doors, ma, from, to, LAND) ?? walk(doors, ma, from, to, SHELF) ?? APART_WAY;
+}
+
+const APART_WAY: Way = { state: APART, through: [] };
+
+/** The lands a door open at least `least` wide leads to from `land`. */
+function neighbours(doors: LifeDoors, ma: number, land: number, least: DoorState): number[] {
+  return doors.doors.flatMap((door) => {
+    if (doorAt(doors, door, ma) < least) return [];
+    if (door.a === land) return [door.b];
+    return door.b === land ? [door.a] : [];
+  });
+}
+
+/** The shortest way over doors open at least `least` wide, breadth first; null if none. */
+function walk(
+  doors: LifeDoors,
+  ma: number,
+  from: ReadonlySet<number>,
+  to: number,
+  least: typeof LAND | typeof SHELF,
+): Way | null {
+  const before = new Map<number, number | null>([...from].map((land) => [land, null]));
+  const queue = [...from];
+  for (const land of queue) {
+    if (land === to) {
+      const through: string[] = [];
+      for (let back: number | null = land; back !== null; back = before.get(back) ?? null) {
+        through.unshift(doors.lands[back] ?? '');
       }
-      for (const door of doors.doors) {
-        if (doorAt(doors, door, ma) < least) continue;
-        const next = door.a === land ? door.b : door.b === land ? door.a : null;
-        if (next !== null && !before.has(next)) {
-          before.set(next, land);
-          queue.push(next);
-        }
-      }
+      return { state: least, through };
+    }
+    for (const next of neighbours(doors, ma, land, least)) {
+      if (before.has(next)) continue;
+      before.set(next, land);
+      queue.push(next);
     }
   }
-  return { state: APART, through: [] };
+  return null;
 }
 
 function said(doors: LifeDoors, way: Way, when: string): string {

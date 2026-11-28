@@ -13,6 +13,7 @@ describe('Explore on the page', () => {
       opener: { anchor: openAnchor, query },
       search: { open },
       famous: document.createElement('button'),
+      animals: document.createElement('button'),
       tree: { openTreeAt: vi.fn() },
     });
     document.body.append(part.button, part.dialog);
@@ -35,6 +36,7 @@ describe('Explore on the page', () => {
       opener: { anchor: vi.fn(), query },
       search: { open: vi.fn() },
       famous: document.createElement('button'),
+      animals: document.createElement('button'),
       tree: { openTreeAt: vi.fn() },
     });
     document.body.replaceChildren(part.context);
@@ -57,6 +59,7 @@ describe('Explore on the page', () => {
       opener: { anchor: vi.fn(), query: vi.fn() },
       search: { open: vi.fn() },
       famous,
+      animals: document.createElement('button'),
       tree: { openTreeAt: vi.fn() },
     });
     document.body.replaceChildren(part.button, ...part.dialogs);
@@ -72,6 +75,7 @@ describe('Explore on the page', () => {
       opener: { anchor: vi.fn(), query },
       search: { open: vi.fn() },
       famous: document.createElement('button'),
+      animals: document.createElement('button'),
       tree: { openTreeAt: vi.fn() },
     });
     document.body.replaceChildren(part.button, ...part.dialogs);
@@ -82,12 +86,31 @@ describe('Explore on the page', () => {
     expect(change('t=2006-10-01T12:00Z')).toContain('layers=ozone');
   });
 
+  it('Given Life, Then An animal’s story is listed, and picking it opens the animals’ finder', () => {
+    const animals = document.createElement('button');
+    const found = vi.fn();
+    animals.addEventListener('click', found);
+    const part = mountExplore({
+      opener: { anchor: vi.fn(), query: vi.fn() },
+      search: { open: vi.fn() },
+      famous: document.createElement('button'),
+      animals,
+      tree: { openTreeAt: vi.fn() },
+    });
+    document.body.replaceChildren(part.button, ...part.dialogs);
+    part.button.click();
+    document.querySelector<HTMLButtonElement>('#explore-tab-life')?.click();
+    document.querySelector<HTMLButtonElement>('[data-destination="animal-story"]')?.click();
+    expect(found).toHaveBeenCalledOnce();
+  });
+
   it('Given Life, Then the tree of life is listed, and picking it opens the whole tree', () => {
     const openTreeAt = vi.fn();
     const part = mountExplore({
       opener: { anchor: vi.fn(), query: vi.fn() },
       search: { open: vi.fn() },
       famous: document.createElement('button'),
+      animals: document.createElement('button'),
       tree: { openTreeAt },
     });
     document.body.replaceChildren(part.button, ...part.dialogs);

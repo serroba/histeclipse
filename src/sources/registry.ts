@@ -95,6 +95,7 @@ export const WHY_IDS = [
   'tree',
   'fossils',
   'lineages',
+  'life',
   'search',
   'boundaries',
   'ozone',

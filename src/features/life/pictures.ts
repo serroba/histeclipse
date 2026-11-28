@@ -1,5 +1,5 @@
 /**
- * The animals' pictures as the story shows them (a prototype): a kind's silhouette from
+ * The animals' pictures as the story shows them : a kind's silhouette from
  * PhyloPic beside its name, the name a link to its Wikipedia page where it has one; Wikipedia's
  * lead picture for the animal the story is of; and the credits of every silhouette shown.
  */
@@ -10,7 +10,7 @@ import {
   type LifePicture,
   type LifePictures,
   type Silhouette,
-} from '../../data/lifePictures';
+} from './lifePictures';
 import { element } from '../../ui/dom';
 
 export function pictureOf(pictures: LifePictures | null, name: string): LifePicture | null {
@@ -44,17 +44,19 @@ export function kindChip(
 ): HTMLElement {
   const picture = pictureOf(pictures, node.name);
   const parts: (Node | string)[] = [];
-  if (picture?.silhouette != null) {
-    parts.push(silhouetteImage(picture.silhouette, 22));
-    shown.push(picture.silhouette);
+  const silhouette = picture?.silhouette ?? null;
+  if (silhouette !== null) {
+    parts.push(silhouetteImage(silhouette, 22));
+    shown.push(silhouette);
   }
   parts.push(element('span', {}, node.name));
-  if (picture?.wikipedia == null) return element('span', { class: 'life-kind' }, ...parts);
+  const page = picture?.wikipedia ?? null;
+  if (page === null) return element('span', { class: 'life-kind' }, ...parts);
   const link = element(
     'a',
     {
       class: 'life-kind is-linked',
-      href: picture.wikipedia.page,
+      href: page.page,
       target: '_blank',
       rel: 'noopener',
     },
@@ -73,8 +75,8 @@ function shortened(artist: string): string {
 
 /** Wikipedia's lead picture for a name, with its credit and the page; null if it has none. */
 export function leadPicture(pictures: LifePictures | null, name: string): HTMLElement | null {
-  const page = pictureOf(pictures, name)?.wikipedia;
-  if (page == null) return null;
+  const page = pictureOf(pictures, name)?.wikipedia ?? null;
+  if (page === null) return null;
   const read = element(
     'a',
     { href: page.page, target: '_blank', rel: 'noopener' },
@@ -111,7 +113,7 @@ export function leadPicture(pictures: LifePictures | null, name: string): HTMLEl
 }
 
 /** The credits of the silhouettes shown, each once, folded away until asked for. */
-export function silhouetteCredits(shown: readonly Silhouette[]): HTMLElement | null {
+export function silhouetteCredits(shown: readonly Silhouette[]): HTMLDetailsElement | null {
   const once = [...new Map(shown.map((each) => [each.page, each])).values()];
   if (once.length === 0) return null;
   return element(

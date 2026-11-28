@@ -1,20 +1,20 @@
 /**
  * Pictures for the animals' stories (`public/data/life-stories/pictures.json`), by the
- * pipeline's `life_pictures` (a prototype): for a kind or a lineage by name, a silhouette from
+ * pipeline's `life_pictures`: for a kind or a lineage by name, a silhouette from
  * PhyloPic, and its Wikipedia page with the page's lead picture where Wikimedia Commons has it
  * under a free licence. Each is shown from where it lives, with its author and licence.
  */
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER } from '../../data/header';
+import { getJson, type Fetch } from '../../util/fetchJson';
 
 const https = v.pipe(v.string(), v.url(), v.startsWith('https://'));
 
 const PicturesSchema = v.strictObject({
   schemaVersion: v.literal(1),
-  credit: v.pipe(v.string(), v.minLength(1)),
-  made: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
+  ...HEADER,
   phylopicBuild: v.pipe(v.number(), v.integer(), v.minValue(0)),
   names: v.record(
     v.string(),

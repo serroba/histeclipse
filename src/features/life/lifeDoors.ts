@@ -1,13 +1,14 @@
 /**
  * The doors between the continents (`public/data/life-stories/doors.json`), by the pipeline's
- * `life_doors` (a prototype): for each pair of today's lands that ever touched, whether land
+ * `life_doors`: for each pair of today's lands that ever touched, whether land
  * joined them, a shallow sea lay between, or they stood apart, every 5 million years, as read
  * from the PALEOMAP elevation maps the deep-time globe draws (Scotese & Wright 2018).
  */
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER } from '../../data/header';
+import { getJson, type Fetch } from '../../util/fetchJson';
 
 /** How a door stands: sea between, a shallow sea between, or joined by land. */
 export const APART = 0;
@@ -20,9 +21,8 @@ const Index = v.pipe(v.number(), v.integer(), v.minValue(0));
 const DoorsSchema = v.pipe(
   v.strictObject({
     schemaVersion: v.literal(1),
-    credit: v.pipe(v.string(), v.minLength(1)),
+    ...HEADER,
     source: v.pipe(v.string(), v.url()),
-    accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
     stepMa: v.pipe(v.number(), v.gtValue(0)),
     /** The lands a door joins: the stories' regions in their order, then India on its own. */
     lands: v.pipe(v.array(v.string()), v.minLength(2)),

@@ -1,6 +1,6 @@
 """An animal's story through time, place and climate: PBDB finds crossed with Scotese's maps.
 
-A prototype. For each fossil group this writes one file a browser can tell a lineage's story
+For each fossil group this writes one file a browser can tell a lineage's story
 from without any other: the Paleobiology Database's classification (CC BY 4.0) as the lines
 through time keep it (`time_tree`), each name's common name where PBDB has one, and each genus's
 sites every 5 million years, as `time_tree` groups them, with two things more for each site:
@@ -29,12 +29,13 @@ import json
 import math
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 from PIL import Image
 
 from histeclipse_pipeline.fossils import STEP_MA, WIDEST_SPAN_MA
+from histeclipse_pipeline.header import header
 from histeclipse_pipeline.paleotemp import COLDEST, NOTES, WARMEST
 from histeclipse_pipeline.time_tree import (
     CREDIT,
@@ -50,6 +51,8 @@ from histeclipse_pipeline.time_tree import (
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    import numpy.typing as npt
 
     from histeclipse_pipeline.sky import Json
 
@@ -80,23 +83,26 @@ class Placed:
     today: tuple[float, float]
 
 
-def region_of(latitude: float, longitude: float) -> int:  # noqa: PLR0911
-    """Name the part of today's world a place (today's latitude and longitude) is in."""
-    if latitude < -60:
+def region_of(latitude: float, longitude: float) -> int:
+    """Name the part of today's world a place (today's latitude and longitude) is in.
+
+    The boxes' edges are degrees on today's map, written where each box is drawn.
+    """
+    if latitude < -60:  # noqa: PLR2004
         return ANTARCTICA
-    if longitude < -30:
+    if longitude < -30:  # noqa: PLR2004
         # Panama's narrowest land is the join: east of it and south of the Caribbean, the south.
-        return SOUTH_AMERICA if latitude < 12.5 and longitude > -82 else NORTH_AMERICA
-    if longitude > 110 and latitude < -10 or longitude > 130 and latitude < 0:
+        return SOUTH_AMERICA if latitude < 12.5 and longitude > -82 else NORTH_AMERICA  # noqa: PLR2004
+    if (longitude > 110 and latitude < -10) or (longitude > 130 and latitude < 0):  # noqa: PLR2004
         return OCEANIA
-    arabia = longitude >= 35 and latitude >= 12.5
-    aegean = latitude > 34 and longitude > 20
-    in_africa = -20 <= longitude <= 52 and (
-        latitude < 35.5 or (latitude < 37.5 and -1 <= longitude <= 11.5)
+    arabia = longitude >= 35 and latitude >= 12.5  # noqa: PLR2004
+    aegean = latitude > 34 and longitude > 20  # noqa: PLR2004
+    in_africa = -20 <= longitude <= 52 and (  # noqa: PLR2004
+        latitude < 35.5 or (latitude < 37.5 and -1 <= longitude <= 11.5)  # noqa: PLR2004
     )
     if in_africa and not arabia and not aegean:
         return AFRICA
-    if latitude >= 34 and (longitude < 26 or (longitude < 60 and latitude > 42)):
+    if latitude >= 34 and (longitude < 26 or (longitude < 60 and latitude > 42)):  # noqa: PLR2004
         return EUROPE
     return ASIA
 
@@ -161,12 +167,15 @@ class Temperatures:
     """Scotese's maps as the site packs them (`public/data/paleotemp`), read at a place."""
 
     def __init__(self, folder: Path) -> None:
-        self._folder = folder
-        index = json.loads((folder / "index.json").read_text())
+        """Read the maps' index: the globe's mean at each age; a map is read when first asked."""
+        self._folder: Path = folder
+        index = cast(
+            "dict[str, list[dict[str, float]]]", json.loads((folder / "index.json").read_text())
+        )
         self.means: dict[int, float] = {
             int(frame["ma"]): float(frame["mean"]) for frame in index["frames"]
         }
-        self._maps: dict[int, np.ndarray | None] = {}
+        self._maps: dict[int, npt.NDArray[np.uint8] | None] = {}
 
     def at(self, ma: int, latitude: float, longitude: float) -> float | None:
         """Read the temperature (°C) at a place on the map of `ma`; None where there is no map."""
@@ -174,13 +183,15 @@ class Temperatures:
             return None
         if ma not in self._maps:
             path = self._folder / f"{ma}.png"
-            self._maps[ma] = np.asarray(Image.open(path)) if path.exists() else None
+            self._maps[ma] = np.asarray(Image.open(path), dtype=np.uint8) if path.exists() else None
         grid = self._maps[ma]
         if grid is None:
             return None
         row = min(180, max(0, round(90 - latitude)))
         column = min(360, max(0, round(longitude + 180)))
-        return round(COLDEST + float(grid[row, column]) / 255 * (WARMEST - COLDEST), 1)
+        return round(
+            COLDEST + float(cast("np.uint8", grid[row, column])) / 255 * (WARMEST - COLDEST), 1
+        )
 
 
 type Site = tuple[int, float, float, int, int, float | None]
@@ -220,7 +231,7 @@ def sites(placed: list[Placed], temperatures: Temperatures) -> dict[int, list[Si
     return out
 
 
-def story_file(
+def story_file(  # noqa: PLR0913, PLR0917 - a group, and each thing its file is built from
     group: tuple[str, str, str],
     taxa: dict[int, Taxon],
     common: dict[int, str],
@@ -244,13 +255,23 @@ def story_file(
         raise TypeError(msg)
     numbers = [int(number) for number in order if isinstance(number, int)]
     return {
-        "schemaVersion": 1,
-        "credit": (
-            f"{CREDIT}; temperatures from Scotese (2022), Global Mean Surface Temperatures "
-            "for 100 Phanerozoic Time Intervals, CC BY 4.0"
+        **header(
+            version=1,
+            sources=["pbdb", "scotese2022", "paleodem"],
+            credit=(
+                f"{CREDIT}; temperatures from Scotese (2022), Global Mean Surface Temperatures "
+                "for 100 Phanerozoic Time Intervals, CC BY 4.0"
+            ),
+            licence="CC BY 4.0",
+            accessed=accessed,
+            changes=(
+                "Each genus's finds grouped into sites every 5 million years (finds within "
+                "500 km as one, at their middle); each site given the part of today's world "
+                "its finds are in and the temperature there on the map of its age; trace and "
+                "form names left out"
+            ),
         ),
         "source": SOURCE,
-        "accessed": accessed,
         "id": group_id,
         "name": name,
         "stepMa": STEP_MA,
@@ -269,9 +290,7 @@ def story_file(
             [value for site in found.get(number, []) for value in site] for number in numbers
         ],
         # The globe's mean temperature at each map's age, as the maps' index gives it.
-        "globe": [
-            [ma, mean] for ma, mean in sorted(temperatures.means.items()) if ma not in NOTES
-        ],
+        "globe": [[ma, mean] for ma, mean in sorted(temperatures.means.items()) if ma not in NOTES],
     }
 
 
@@ -284,17 +303,11 @@ def write_life_stories(cache: Path, maps: Path, out: Path) -> int:
     for group in GROUPS:
         text = (cache / f"taxa-{group[0]}.csv").read_text()
         taxa = parse_taxa(text)
-        found = sites(parse_placed((cache / f"occs-{group[0]}.csv").read_text(), taxa), temperatures)
+        finds = parse_placed((cache / f"occs-{group[0]}.csv").read_text(), taxa)
+        found = sites(finds, temperatures)
         living = parse_living(text) if group[0] != "dinosaurs" else set[int]()
         built = story_file(group, taxa, parse_common(text), living, found, temperatures, accessed)
         kept = built["sites"]
         total += sum(1 for each in kept if each) if isinstance(kept, list) else 0
         _ = (out / f"{group[0]}.json").write_text(json.dumps(built, separators=(",", ":")) + "\n")
     return total
-
-
-if __name__ == "__main__":  # pragma: no cover - a prototype's own entry
-    import sys
-    from pathlib import Path as _Path
-
-    print(write_life_stories(_Path(sys.argv[1]), _Path(sys.argv[2]), _Path(sys.argv[3])))  # noqa: T201
