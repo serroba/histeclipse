@@ -89,6 +89,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm coverage
       - run: pnpm build
+      # The split features' bodies stay out of the startup chunks (#220).
+      - run: pnpm check:bodies
 
   # Acceptance journeys and device-specific checks only; the full suite runs nightly.
   # Four shards keep the required checks near their 300 s target (#883): two left each one at
