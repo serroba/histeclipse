@@ -26,6 +26,7 @@ import {
 } from './fumesModel';
 import { END_GUADALUPIAN } from './guadalupianPhases';
 import { CAMP_CARBON_DIOXIDE } from './campCarbonDioxide';
+import { TRIASSIC_CARBON_ISOTOPES } from './triassicCarbonIsotopes';
 import { factsAt, KEY_FACTS, type KeyFact } from './keyFacts';
 import { ANOXIC_EXTENTS } from './anoxicExtent';
 import { PROVINCE_LEGEND } from './legends';
@@ -147,7 +148,7 @@ const PROVINCES: readonly Province[] = [
       plusMinus: [0, 40 * KYR],
       says: 'The extinction as Blackburn et al. (2013) date it: 100,000 ± 40,000 years from 201.564 million years ago. On land, cyclostratigraphy gives it 20,000 to 40,000 years (Deenen et al. 2010); in the sea, ash beds date it between 201.51 ± 0.15 and 201.36 ± 0.17 million years ago (as Lindström et al. 2021 review).',
     },
-    proxies: [CAMP_CARBON_DIOXIDE],
+    proxies: [CAMP_CARBON_DIOXIDE, ...TRIASSIC_CARBON_ISOTOPES],
     keys: ['eruptions', 'carbon', 'pulses', 'jurassic'],
     // To the sea's record in Europe as its carbon builds, then out to the world as it pulses.
     tour: [
