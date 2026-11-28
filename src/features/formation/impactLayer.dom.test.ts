@@ -23,7 +23,13 @@ function layer(options: { lessMotion?: boolean; phone?: boolean } = {}) {
   const camera = new PerspectiveCamera();
   camera.position.set(0, 0, 22);
   const requestRender = vi.fn();
-  const made = impactLayer({ spinAxis, container, camera, requestRender } as unknown as LayerHost);
+  const made = impactLayer({
+    spinAxis,
+    container,
+    camera,
+    requestRender,
+    afterRender: vi.fn(),
+  } as unknown as LayerHost);
   const group = spinAxis.children[0] as Group;
   const [theia, moon, moonGlow, flash, debris] = group.children as [
     Mesh<BufferGeometry, ShaderMaterial>,

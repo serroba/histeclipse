@@ -6,11 +6,10 @@ import {
   IMMEDIATE_ORBIT,
   LATER_HITS,
   strikeAngle,
-  glowColour,
+  innerDiscAt,
   MOON_ORBIT,
   MOON_RADIUS,
   moonAt,
-  moonColour,
   moonOrbit,
   onDisc,
   pieceAt,
@@ -22,6 +21,7 @@ import {
   turned,
   type Triple,
 } from './impactModel';
+import { glowColour, moonColour } from './heatColour';
 
 const HOUR = 3600;
 const DAY = 86_400;
@@ -92,6 +92,40 @@ describe('the canonical giant impact, drawn (#180)', () => {
     expect(shown(DAY)).toBe(40);
     expect(shown(2 * YEAR)).toBe(20);
     expect(shown(101 * YEAR)).toBe(0);
+  });
+
+  it('thins the inner disc piece by piece, none piling up at the Roche limit (#1311)', () => {
+    const inner = pieces(200).filter((piece) => piece.fate !== 'moon');
+    for (const seconds of [10 * YEAR, 19 * YEAR, 40 * YEAR]) {
+      const seen = inner.map((piece) => ({ piece, at: pieceAt(piece, seconds, 0) }));
+      const near = seen.filter(({ at }) => {
+        if (at === null) return false;
+        const [x, , z] = at.place;
+        return Math.abs(Math.hypot(x, z) - ROCHE) < 0.05;
+      });
+      // A few cross the limit at any moment; most are still where they were, or gone.
+      expect(near.length).toBeLessThan(0.15 * inner.length);
+      for (const { piece, at } of seen) {
+        if (at === null || piece.fate !== 'spreads') continue;
+        const [x, , z] = at.place;
+        // Past the limit, it fades as it is swept into the Moon.
+        if (Math.hypot(x, z) > ROCHE) expect(at.opacity).toBeLessThan(1);
+        expect(Math.hypot(x, z)).toBeLessThan(MOON_ORBIT);
+      }
+    }
+  });
+
+  it('draws the inner disc as a sheet once settled, thinning over its century, none for a synestia', () => {
+    expect(innerDiscAt(-1)).toBeNull();
+    expect(innerDiscAt(HOUR)).toBeNull();
+    const settled = innerDiscAt(DAY);
+    expect(settled?.opacity).toBe(1);
+    const later = innerDiscAt(19 * YEAR);
+    expect(later?.opacity).toBeGreaterThan(0);
+    expect(later?.opacity).toBeLessThan(0.5);
+    expect(later?.heat).toBeLessThan(settled?.heat ?? 0);
+    expect(innerDiscAt(101 * YEAR)).toBeNull();
+    expect(innerDiscAt(DAY, THEIA_CHOICES.synestia.hit)).toBeNull();
   });
 
   it('grows the Moon just outside the Roche limit, molten, cooling over ten million years', () => {
