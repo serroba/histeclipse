@@ -32,9 +32,7 @@ import { glowTexture } from '../../globe/glowTexture';
 import type { LayerFactory } from '../../globe/layerHost';
 import {
   flashAt,
-  glowColour,
   moonAt,
-  moonColour,
   pieceAt,
   pieces,
   strikeAngle,
@@ -42,7 +40,9 @@ import {
   theiaAt,
   type Piece,
 } from './impactModel';
+import { glowColour, moonColour } from './heatColour';
 import type { Hit } from '../../deepTime/theia';
+import { innerDisc } from './innerDisc';
 
 /** Pieces of debris drawn: fewer on a phone. */
 const PIECES = 800;
@@ -192,6 +192,8 @@ export const impactLayer: LayerFactory<ImpactMoment | null> = (host) => {
   const drawing = makeDrawing(made.length);
   const { group, theia, moon, moonGlow, flash, debris } = drawing;
   const shade = drawing.moonColour;
+  const sheet = innerDisc(host);
+  group.add(sheet.group);
   host.spinAxis.add(group);
   let played = 0;
   let last: number | null = null;
@@ -210,6 +212,7 @@ export const impactLayer: LayerFactory<ImpactMoment | null> = (host) => {
       host.container.dataset['formationImpact'] = moment === null ? 'off' : stage(moment.seconds);
       if (moment === null) {
         group.visible = false;
+        sheet.update(null);
         last = null;
         host.requestRender();
         return;
@@ -244,6 +247,7 @@ export const impactLayer: LayerFactory<ImpactMoment | null> = (host) => {
       debris.visible = shown > 0;
 
       const gathered = moonAt(seconds, played, hit);
+      sheet.update(moment, gathered?.place ?? null);
       moon.visible = gathered !== null;
       moonGlow.visible = gathered !== null && gathered.heat > 0;
       if (gathered !== null) {
@@ -257,6 +261,9 @@ export const impactLayer: LayerFactory<ImpactMoment | null> = (host) => {
       }
       host.requestRender();
     },
-    dispose: drawing.dispose,
+    dispose() {
+      sheet.dispose();
+      drawing.dispose();
+    },
   };
 };

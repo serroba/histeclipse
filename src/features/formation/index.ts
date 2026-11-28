@@ -58,7 +58,7 @@ export function formationEvent(
     scale: formationScale(impactMa),
     offer: 'Watch Earth and the Moon form',
     drawn:
-      'Illustration: Earth grows as the model on the rail has it, thinning the swarm round it, whose pieces are drawn far larger than they were; the impact goes as the scenario on the rail has it, its sizes, speed and distances from the papers, the paths, glow and turning invented. White is hottest; the Moon greys as it crusts.',
+      'Illustration: Earth grows as the model on the rail has it, thinning the swarm round it, whose pieces are drawn far larger than they were; the impact goes as the scenario on the rail has it, its sizes, speed and distances from the papers, the paths, glow and turning invented. The faint circle is the Roche limit, inside which Earth’s tides kept the leftover disc from gathering into a moon. White is hottest; the Moon greys as it crusts.',
     // Its zero, the impact: the header counts from it, not from where play started.
     ma: impactMa,
     deep: {
