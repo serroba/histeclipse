@@ -103,8 +103,12 @@ def test_writes_files_and_an_index(tmp_path: Path) -> None:
     index = json.loads((tmp_path / "index.json").read_text())  # pyright: ignore[reportAny]
     assert index == {
         "schemaVersion": 1,
+        "sources": ["ohm"],
         "credit": "© OpenHistoricalMap contributors, CC0; borders simplified and split by century",
         "source": "OpenHistoricalMap vector tiles, zoom 2, fetched 2026-11-01",
+        "licence": "CC0",
+        "accessed": "2026-11-01",
+        "changes": "Borders simplified and split by century",
         "centuries": [0],
     }
     assert (tmp_path / "0.json").exists()

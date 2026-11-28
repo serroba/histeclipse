@@ -11,11 +11,13 @@ import { astronomicalYear, toHistoricalYear } from '../time/year';
 import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
 import { peopleFacts, type Person, type PersonAt } from './genomePeople';
+import { HEADER_ADDED } from './header';
 
 const index = v.pipe(v.number(), v.integer(), v.minValue(0));
 
 const GenomesSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   credit: v.pipe(v.string(), v.minLength(1)),
   source: v.pipe(v.string(), v.url()),
   version: v.pipe(v.string(), v.minLength(1)),

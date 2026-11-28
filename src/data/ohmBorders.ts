@@ -9,11 +9,13 @@ import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 const year = v.pipe(v.number(), v.integer());
 
 const IndexSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   credit: v.pipe(v.string(), v.minLength(1)),
   source: v.pipe(v.string(), v.minLength(1)),
   centuries: v.array(year),
