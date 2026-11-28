@@ -41,6 +41,11 @@
     "url": "https://doi.org/10.1103/PhysRevX.9.031040",
     "licence": "CC BY 4.0"
   },
+  "alegret2021": {
+    "name": "Alegret et al. 2021",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.gloplacha.2020.103372"
+  },
   "alexander2012": {
     "name": "Alexander et al. 2012",
     "kind": "paper",
