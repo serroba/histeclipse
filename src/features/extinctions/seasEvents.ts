@@ -7,9 +7,10 @@
 
 import { LONG_CRISIS_SCALE } from '../../deepTime/crisisClock';
 import type { GeoPoint } from '../../core/geo';
-import type { EventPhase, OwnTimeEvent } from '../ownTime';
+import type { EventPhase, OwnTimeEvent, ProxyChart } from '../ownTime';
 import { ANOXIC_EXTENTS, patchesAt, scaleFor, type AnoxicExtent } from './anoxicExtent';
 import { END_ORDOVICIAN, LATE_DEVONIAN } from './coldPhases';
+import { DEVONIAN_OXYGEN_ISOTOPES } from './devonianOxygenIsotopes';
 import { seasLegend } from './legends';
 import { seasLayer, type SeasMoment } from './seasLayer';
 import { devonianSeas, ordovicianSeas, type Seas } from './seasModel';
@@ -27,6 +28,8 @@ export interface ColdCrisis {
   readonly zero: number;
   /** What its drawing shows and assumes, said under its clock (#1226). */
   readonly drawn: string;
+  /** Its measured curves, where the papers give them (#1229). */
+  readonly proxies?: readonly ProxyChart[];
   seas(seconds: number): Seas;
 }
 
@@ -54,6 +57,7 @@ export const COLD: readonly ColdCrisis[] = [
     zero: 372.8,
     drawn:
       'Drawn to illustrate: murky olive, oxygen-poor water over the sea, darkest on the shelves; each Kellwasser pulse drawn 150,000 years long, an assumption.',
+    proxies: [DEVONIAN_OXYGEN_ISOTOPES],
     seas: devonianSeas,
   },
 ];
@@ -86,6 +90,7 @@ export function coldEvent(
     ma: crisis.zero,
     drawn: extent === undefined ? crisis.drawn : `${crisis.drawn} ${extent.says}`,
     legend: seasLegend(ice !== null),
+    ...(crisis.proxies === undefined ? {} : { proxies: crisis.proxies }),
     play(tools) {
       const seas = tools.layer(seasLayer);
       return {
