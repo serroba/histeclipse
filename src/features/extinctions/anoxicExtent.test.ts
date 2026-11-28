@@ -48,4 +48,18 @@ describe('how much of the seafloor lost its oxygen (#1230)', () => {
     expect(share(1700)).toBeCloseTo(0.078);
     expect(share(2000)).toBeCloseTo(0);
   });
+
+  it('draws the end-Triassic’s rising to 13% after the extinction, easing, and gone past its study', () => {
+    const triassic = ANOXIC_EXTENTS['end-triassic-extinction'];
+    const share = (kyr: number) => triassic?.share(kyr * KYR) ?? -1;
+    expect(triassic?.site).toBe('kuhjoch');
+    expect(share(-10)).toBe(0);
+    expect(share(50)).toBeCloseTo(0.02);
+    expect(share(225)).toBeCloseTo(0.13);
+    expect(share(1000)).toBeGreaterThan(0.01);
+    expect(share(1000)).toBeLessThan(0.06);
+    expect(share(2100)).toBe(0);
+    expect(triassic?.says).toMatch(/Somlyay et al\. \(2023\)/);
+    expect(triassic?.says).toMatch(/Bond et al\. \(2023\)/);
+  });
 });
