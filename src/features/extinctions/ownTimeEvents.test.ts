@@ -110,13 +110,16 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
   it('key each clock’s marks and colours: no ice where there was none (#1268)', () => {
     const swatches = (id: string, ma: number) =>
       ownTimeOf(DATA, id, ma)?.legend?.map(([swatch]) => swatch);
+    // The end-Permian's oxygen-poor seas keyed too (#1230); the end-Triassic draws none.
     expect(swatches('end-permian-extinction', 251.9)).toEqual([
       'cause',
       'record',
       'smoke',
       'lava',
       'basalt',
+      'anoxia',
     ]);
+    expect(swatches('end-triassic-extinction', 201.5)).not.toContain('anoxia');
     expect(swatches('end-ordovician-extinction', 444)).toEqual([
       'cause',
       'record',
@@ -124,6 +127,34 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
       'anoxia',
     ]);
     expect(swatches('late-devonian-extinction', 372)).toEqual(['cause', 'record', 'anoxia']);
+  });
+
+  it('draw the end-Permian’s oxygen-poor seas with its fumes, as they spread and ebb (#1230)', () => {
+    const event = ownTimeOf(DATA, 'end-permian-extinction', 251.9);
+    expect(event?.drawn).toMatch(/Pimentel-Galvan et al\. \(2022\).*Zhang et al\. \(2018\)/);
+    const updates: unknown[] = [];
+    const played = event?.play({
+      strikes: { flyTo: vi.fn(), zoomTo: vi.fn() },
+      layer: () => ({ update: (moment: unknown) => updates.push(moment) }),
+    } as unknown as Parameters<NonNullable<typeof event>['play']>[0]);
+    const seasAt = (seconds: number) => {
+      updates.length = 0;
+      played?.at(seconds);
+      return updates.find(
+        (moment): moment is { patches: readonly { reach: number }[] } =>
+          typeof moment === 'object' && moment !== null && 'patches' in moment,
+      );
+    };
+    const KYR = 1000 * 365.25 * 86_400;
+    expect(seasAt(-100 * KYR)?.patches).toEqual([]);
+    const height = seasAt(100 * KYR)?.patches[0]?.reach ?? 0;
+    const aftermath = seasAt(1500 * KYR)?.patches[0]?.reach ?? 0;
+    expect(height).toBeGreaterThan(aftermath);
+    expect(aftermath).toBeGreaterThan(0);
+    expect(seasAt(3000 * KYR)?.patches).toEqual([]);
+    updates.length = 0;
+    played?.end();
+    expect(updates).toContain(null);
   });
 
   it('draw a crisis of the seas with the clock, and take it away when closed', () => {
@@ -134,7 +165,8 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
       layer: () => ({ update }),
     } as unknown as Parameters<NonNullable<typeof event>['play']>[0]);
     played?.at(0);
-    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ spread: 22 }));
+    const drawn = update.mock.lastCall?.[0] as { patches: readonly unknown[] } | undefined;
+    expect(drawn?.patches).toHaveLength(9);
     played?.end();
     expect(update).toHaveBeenLastCalledWith(null);
   });

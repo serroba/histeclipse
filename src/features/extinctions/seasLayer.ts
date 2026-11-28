@@ -22,16 +22,14 @@ import {
 import type { GeoPoint } from '../../core/geo';
 import { geoToVector } from '../../globe/geo';
 import type { LayerFactory } from '../../globe/layerHost';
-import { ANOXIA_PATCHES, ANOXIC_SEAS_PART } from './anoxicSeasPart';
-import { ventsAround } from './fumesModel';
+import type { Patch } from './anoxicExtent';
+import { ANOXIC_SEAS_PART } from './anoxicSeasPart';
 import type { Seas } from './seasModel';
 
-/** The seas at a moment: where the ice is centred, where the anoxia spreads, and how much. */
+/** The seas at a moment: where the ice is centred, the oxygen-poor water's patches, and how much. */
 export interface SeasMoment {
   readonly ice: GeoPoint | null;
-  readonly anoxia: GeoPoint;
-  /** Degrees from `anoxia` its patches spread over. */
-  readonly spread: number;
+  readonly patches: readonly Patch[];
   readonly seas: Seas;
 }
 
@@ -108,15 +106,18 @@ export const seasLayer: LayerFactory<SeasMoment | null> = (host) => {
       group.visible = moment !== null;
       if (moment === null) anoxia.anoxiaStrength.value = 0;
       if (moment !== null) {
-        const key = JSON.stringify([moment.ice, moment.anoxia, moment.spread]);
+        const key = JSON.stringify([moment.ice, moment.patches]);
         if (key !== placed) {
           placed = key;
           if (moment.ice !== null) point(ice, moment.ice);
-          ventsAround(moment.anoxia, ANOXIA_PATCHES, moment.spread).forEach((place, index) => {
-            // Each patch a little wider than the last, so they do not look stamped.
-            const reach = ((5 + (index % 3) * 2) * Math.PI) / 180;
-            const centre = new Vector3(...geoToVector(place, 1)).normalize();
-            anoxia.anoxiaPatches.value[index]?.set(centre.x, centre.y, centre.z, reach);
+          anoxia.anoxiaPatches.value.forEach((patch, index) => {
+            const drawn = moment.patches[index];
+            if (drawn === undefined) {
+              patch.set(0, 1, 0, 0);
+              return;
+            }
+            const centre = new Vector3(...geoToVector(drawn.place, 1)).normalize();
+            patch.set(centre.x, centre.y, centre.z, (drawn.reach * Math.PI) / 180);
           });
         }
         const { seas } = moment;

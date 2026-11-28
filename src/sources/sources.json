@@ -157,6 +157,12 @@
     "kind": "paper",
     "url": "https://doi.org/10.1073/pnas.1708980114"
   },
+  "bartlett2018": {
+    "name": "Bartlett et al. 2018",
+    "kind": "paper",
+    "url": "https://doi.org/10.1073/pnas.1802438115",
+    "licence": "CC BY-NC-ND 4.0"
+  },
   "batchelor": {
     "name": "Batchelor et al. 2019",
     "kind": "paper",
@@ -1876,6 +1882,12 @@
     "kind": "paper",
     "url": "https://doi.org/10.1051/0004-6361/201014759"
   },
+  "pimentelGalvan2022": {
+    "name": "Pimentel-Galvan et al. 2022",
+    "kind": "paper",
+    "url": "https://doi.org/10.1029/2021GC010130",
+    "licence": "CC BY-NC 4.0"
+  },
   "planetaryHealthCheck2026": {
     "name": "Planetary Health Check 2026",
     "kind": "paper",
@@ -2354,6 +2366,11 @@
     "url": "https://doi.org/10.1594/PANGAEA.917717",
     "licence": "CC BY 4.0"
   },
+  "white2018": {
+    "name": "White et al. 2018",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.epsl.2018.09.020"
+  },
   "wignall2009": {
     "name": "Wignall et al. 2009",
     "kind": "paper",
@@ -2403,6 +2420,12 @@
     "name": "Zhang et al. 2012",
     "kind": "paper",
     "url": "https://doi.org/10.1038/ngeo1429"
+  },
+  "zhang2018": {
+    "name": "Zhang et al. 2018",
+    "kind": "paper",
+    "url": "https://doi.org/10.1126/sciadv.1602921",
+    "licence": "CC BY-NC 4.0"
   },
   "zhao2002": {
     "name": "Zhao et al. 2002",

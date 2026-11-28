@@ -6,7 +6,7 @@
  * the plates had its place at the moment shown.
  */
 
-import { CRISIS_SCALE, LONG_CRISIS_SCALE } from '../../deepTime/crisisClock';
+import { CRISIS_SCALE } from '../../deepTime/crisisClock';
 import { siteThen, type ExtinctionSites } from '../../data/extinctions';
 import type { GeoPoint } from '../../core/geo';
 import { impactPlay, strikeEvent, strikePhasesOf } from '../impacts';
@@ -24,11 +24,11 @@ import {
   siberianFuming,
   type Fuming,
 } from './fumesModel';
-import { END_ORDOVICIAN, LATE_DEVONIAN } from './coldPhases';
 import { END_GUADALUPIAN } from './guadalupianPhases';
 import { CAMP_CARBON_DIOXIDE } from './campCarbonDioxide';
 import { factsAt, KEY_FACTS, type KeyFact } from './keyFacts';
-import { PROVINCE_LEGEND, seasLegend } from './legends';
+import { ANOXIC_EXTENTS } from './anoxicExtent';
+import { PROVINCE_LEGEND } from './legends';
 import { LOSSES } from './losses';
 import { MEISHAN_TEMPERATURES } from './meishanTemperatures';
 import { EXTENTS } from './provinceExtents';
@@ -36,9 +36,11 @@ import { PERMIAN_CARBON_DIOXIDE } from './permianCarbonDioxide';
 import { PERMIAN_CARBON_ISOTOPES } from './permianCarbonIsotopes';
 import { END_PERMIAN } from './permianPhases';
 import { seasLayer } from './seasLayer';
-import { devonianSeas, ordovicianSeas, type Seas } from './seasModel';
+import { COLD, coldEvent, seasAt } from './seasEvents';
 import { END_TRIASSIC } from './triassicPhases';
 
+/** The key to a province's oxygen-poor seas, where it draws them. */
+const ANOXIA_KEY = ['anoxia', 'Oxygen-poor water'] as const;
 /** Chicxulub's final crater, km, as the Impact Earth Database gives it. */
 const CHICXULUB_KM = 180;
 /** How far out the crises of the seas are watched from: the ice sheet or the seas whole. */
@@ -173,7 +175,10 @@ function provinceEvent(
   province: Province,
   center: GeoPoint,
   facts: readonly (KeyFact & { readonly point: GeoPoint })[],
+  anoxia: GeoPoint | null,
 ): OwnTimeEvent {
+  // Its oxygen-poor seas, where the studies give their extent (#1230): the end-Permian's.
+  const extent = anoxia === null ? undefined : ANOXIC_EXTENTS[province.key];
   return {
     key: province.key,
     title: `${capitalised(province.name)}, in its own time`,
@@ -185,14 +190,18 @@ function provinceEvent(
     lingers: province.phases
       .filter((phase) => province.keys?.includes(phase.id) === true)
       .map((phase) => phase.from),
-    drawn: province.drawn,
-    legend: PROVINCE_LEGEND,
+    drawn: extent === undefined ? province.drawn : `${province.drawn} ${extent.says}`,
+    legend: extent === undefined ? PROVINCE_LEGEND : [...PROVINCE_LEGEND, ANOXIA_KEY],
     ma: province.zero,
     play(tools) {
       const fumes = tools.layer(fumesLayer);
       const pinned = tools.layer(factsLayer);
+      const seas = extent === undefined || anoxia === null ? null : tools.layer(seasLayer);
       return {
         at(seconds) {
+          if (extent !== undefined && anoxia !== null) {
+            seas?.update(seasAt(extent, anoxia, null, { ice: 0, anoxia: 1 }, seconds));
+          }
           fumes.update({
             center,
             spread: province.spread,
@@ -204,6 +213,7 @@ function provinceEvent(
         end() {
           fumes.update(null);
           pinned.update(null);
+          seas?.update(null);
         },
       };
     },
@@ -219,78 +229,6 @@ function pinnedOf(
     point: fact.point,
     text: fact.text,
     source: fact.whose,
-  };
-}
-
-/** A crisis of the seas watched in its own time: where its ice and its anoxia were, its timeline. */
-interface ColdCrisis {
-  readonly key: string;
-  readonly name: string;
-  readonly phases: readonly EventPhase[];
-  /** The site its ice sheet is centred on, if it had one. */
-  readonly ice: string | null;
-  /** The site its oxygen-poor water spreads round. */
-  readonly anoxia: string;
-  /** Its first pulse, Ma: its clock's zero, lent deep time's header (#1222). */
-  readonly zero: number;
-  /** What its drawing shows and assumes, said under its clock (#1226). */
-  readonly drawn: string;
-  seas(seconds: number): Seas;
-}
-
-/** The crises of the seas, by the extinction each is watched for (#1202). */
-const COLD: readonly ColdCrisis[] = [
-  {
-    key: 'end-ordovician-extinction',
-    name: 'the end-Ordovician',
-    phases: END_ORDOVICIAN,
-    ice: 'hirnantian-ice',
-    anoxia: 'dobs-linn',
-    // The first pulse, at the Hirnantian's base (ICS chart); the Silurian begins 1.4 Myr on.
-    zero: 445.2,
-    drawn:
-      'Drawn to illustrate, not measured: white, the ice sheet’s reach; murky olive, oxygen-poor water round the record’s place, over the sea. Their timing follows the studies; their sizes are drawn to be seen.',
-    seas: ordovicianSeas,
-  },
-  {
-    key: 'late-devonian-extinction',
-    name: 'the Late Devonian',
-    phases: LATE_DEVONIAN,
-    ice: null,
-    anoxia: 'coumiac',
-    // The lower Kellwasser, 600,000 years before the upper at the Frasnian–Famennian, 372.2.
-    zero: 372.8,
-    drawn:
-      'Drawn to illustrate, not measured: murky olive, oxygen-poor water round the record’s place, over the sea, darkest on the shelves; each Kellwasser pulse drawn 150,000 years long, an assumption.',
-    seas: devonianSeas,
-  },
-];
-
-/** Degrees round its record the oxygen-poor water's patches spread over. */
-const ANOXIA_SPREAD = 22;
-
-/** A crisis of the seas on the long crisis clock: its ice at `ice`, its anoxia round `anoxia`. */
-function coldEvent(crisis: ColdCrisis, ice: GeoPoint | null, anoxia: GeoPoint): OwnTimeEvent {
-  return {
-    key: crisis.key,
-    title: `${capitalised(crisis.name)}, in its own time`,
-    phases: crisis.phases,
-    scale: LONG_CRISIS_SCALE,
-    offer: `Watch ${crisis.name} in its own time`,
-    ma: crisis.zero,
-    drawn: crisis.drawn,
-    legend: seasLegend(ice !== null),
-    play(tools) {
-      const seas = tools.layer(seasLayer);
-      return {
-        at(seconds) {
-          seas.update({ ice, anoxia, spread: ANOXIA_SPREAD, seas: crisis.seas(seconds) });
-        },
-        end() {
-          seas.update(null);
-        },
-      };
-    },
   };
 }
 
@@ -345,7 +283,9 @@ function drawnOf(data: ExtinctionSites, id: string, ma: number): OwnTimeEvent | 
       const point = placeOf(data, each.site, ma);
       return point === null ? [] : [{ ...each, point }];
     });
-    return guided(provinceEvent(province, center, facts), [first, ...tour]);
+    const site = ANOXIC_EXTENTS[id]?.site;
+    const anoxia = site === undefined ? null : placeOf(data, site, ma);
+    return guided(provinceEvent(province, center, facts, anoxia), [first, ...tour]);
   }
   const phases = strikePhasesOf('Chicxulub');
   if (id !== 'k-pg-extinction' || phases === null) return null;

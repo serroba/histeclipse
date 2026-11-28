@@ -200,7 +200,9 @@ describe('the extinctions as a feature', () => {
     ordovician.shown.pick?.('dobs-linn');
     ordovician.cards.at(-1)?.action?.run();
     expect(clockTitle()).toBe('The end-Ordovician, in its own time');
-    expect(ordovician.drawn.at(-1)).toMatchObject({ spread: 22, seas: { ice: 14, anoxia: 0 } });
+    expect(ordovician.drawn.at(-1)).toMatchObject({ seas: { ice: 14, anoxia: 0 } });
+    // Its oxygen-poor water over 15% of the seafloor, in nine patches (#1230).
+    expect(ordovician.drawn.at(-1)).toHaveProperty('patches.length', 9);
     document.body.replaceChildren();
     const devonian = await loaded({ ...on, ma: 372.2 });
     devonian.shown.pick?.('viluy-traps');
