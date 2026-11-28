@@ -4,13 +4,14 @@ import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 
 import { PERIOD_EVIDENCE } from './periodEvidence';
-import { bibtexUrl, citation, doiOf, SOURCES, WHYS, type SourceId } from './registry';
+import { CITATIONS, citation, WHYS } from './content';
+import { bibtexUrl, doiOf, SOURCES, WHY_IDS, type SourceId } from './registry';
+import { WHYS_CONTENT } from './whys';
 
 /** A source's shape, as `Source` declares it: sources.json is content, checked here (#383). */
 const SourceSchema = v.strictObject({
   name: v.pipe(v.string(), v.minLength(1)),
   kind: v.picklist(['paper', 'dataset', 'model', 'imagery', 'catalogue', 'reference']),
-  cite: v.pipe(v.string(), v.minLength(1)),
   url: v.pipe(v.string(), v.url()),
   licence: v.optional(v.pipe(v.string(), v.minLength(1))),
   nonCommercial: v.optional(v.literal(true)),
@@ -37,6 +38,17 @@ describe('the registry’s content', () => {
 
   it.each(Object.entries(WHYS))('why %s has the shape of a Why', (_id, why) => {
     expect(v.safeParse(WhySchema, why).issues).toBeUndefined();
+  });
+});
+
+describe('what loads with the why panel (#220)', () => {
+  it('names every why in WHY_IDS, in the order whys.ts keeps them', () => {
+    expect(WHY_IDS).toEqual(Object.keys(WHYS_CONTENT));
+  });
+
+  it('gives every source, and only those, a full reference', () => {
+    expect(Object.keys(CITATIONS).sort()).toEqual(Object.keys(SOURCES).sort());
+    for (const cite of Object.values(CITATIONS)) expect(cite.length).toBeGreaterThan(0);
   });
 });
 
@@ -83,10 +95,10 @@ describe('where everything comes from', () => {
 
 describe('citing a source', () => {
   it('copies the full reference, where to find it, and its licence', () => {
-    expect(citation(SOURCES.archaeoglobe)).toBe(
+    expect(citation('archaeoglobe')).toBe(
       'ArchaeoGLOBE Project (2019), Archaeological assessment reveals Earth’s early transformation through land use, Science 365, 897; Harvard Dataverse. https://doi.org/10.1126/science.aax1192 Licence: CC0 1.0.',
     );
-    expect(citation(SOURCES.impactEarth)).not.toContain('Licence');
+    expect(citation('impactEarth')).not.toContain('Licence');
   });
 
   it('finds a DOI in a link, and Crossref’s BibTeX for it', () => {
