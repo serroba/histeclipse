@@ -6,7 +6,7 @@ import { defaultViewState, withLayer, type ViewState } from '../../state/viewSta
 import type { MarkerCardContent } from '../../ui/markerCard';
 import type { Capability, FeatureContext } from '../feature';
 import { createOwnTime } from '../ownTime';
-import { extinctionsFeature } from '.';
+import { mountExtinctions } from './body';
 
 const off = defaultViewState(new Date('2026-01-01T00:00:00Z'));
 const on: ViewState = { ...off, layers: withLayer(off.layers, 'extinctions', true), ma: 66 };
@@ -64,7 +64,7 @@ function fakeContext(
 
 async function loaded(state: ViewState, options: Parameters<typeof fakeContext>[0] = {}) {
   const fake = fakeContext(options);
-  const shown = extinctionsFeature.mount(fake.context, fake.context);
+  const shown = mountExtinctions(fake.context);
   shown.show?.(state, JD);
   await vi.waitFor(() => {
     expect(fake.refresh).toHaveBeenCalled();
@@ -80,15 +80,10 @@ function fumed(drawn: readonly unknown[]): unknown {
   return drawn.findLast((each) => typeof each === 'object' && each !== null && 'spread' in each);
 }
 
-describe('the extinctions as a feature', () => {
-  it('asks for the cards, the timeline and the shared clock, and is shown again as deep time changes', () => {
-    expect(extinctionsFeature.needs).toEqual(['cards', 'timeline', 'ownTime', 'strikes']);
-    expect(extinctionsFeature.watches(on)).toEqual([on.layers, on.mode, on.ma, on.deepScale]);
-  });
-
+describe('the extinctions, the feature’s body', () => {
   it('draws nothing, says nothing and eases nothing while its layer is off', () => {
     const { context, drawn } = fakeContext();
-    const shown = extinctionsFeature.mount(context, context);
+    const shown = mountExtinctions(context);
     shown.show?.(off, JD);
     expect(drawn).toEqual([null]);
     expect(shown.said?.()).toBeNull();
@@ -98,7 +93,7 @@ describe('the extinctions as a feature', () => {
 
   it('says it is loading, then marks Chicxulub, the Deccan Traps and El Kef', async () => {
     const fake = fakeContext();
-    const shown = extinctionsFeature.mount(fake.context, fake.context);
+    const shown = mountExtinctions(fake.context);
     shown.show?.(on, JD);
     expect(shown.said?.()).toBe('Loading the extinctions’ places…');
     // Named before they are in: nothing to open yet.
@@ -122,7 +117,7 @@ describe('the extinctions as a feature', () => {
 
   it('opens a place a passage named once its mark is drawn, and forgets it if another is tapped or the layer goes (#1233)', async () => {
     const fake = fakeContext();
-    const shown = extinctionsFeature.mount(fake.context, fake.context);
+    const shown = mountExtinctions(fake.context);
     shown.show?.(on, JD);
     shown.pick?.('el-kef');
     await vi.waitFor(() => {
@@ -244,7 +239,7 @@ describe('the extinctions as a feature', () => {
 
   it('says so when the places cannot be loaded', async () => {
     const { context } = fakeContext({ failing: true });
-    const shown = extinctionsFeature.mount(context, context);
+    const shown = mountExtinctions(context);
     shown.show?.(on, JD);
     await vi.waitFor(() => {
       shown.show?.(on, JD);

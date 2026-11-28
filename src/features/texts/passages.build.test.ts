@@ -12,7 +12,8 @@ import { telescopePassages } from '../../text/telescopePassages';
 
 import extinctionSites from '../../../public/data/extinctions.json';
 import { loadExtinctionSites } from '../../data/extinctions';
-import { extinctionPassages } from '../extinctions';
+// From its own module: re-exported from the feature's front, it would load with the site (#220).
+import { extinctionPassages } from '../extinctions/passages';
 
 import eclipses from '../../../public/data/famous-eclipses.json';
 import spacecraft from '../../../public/data/spacecraft.json';
