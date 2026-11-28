@@ -28,6 +28,10 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
 
   it('carry what each took, for the gauge on its clock (#1223)', () => {
     expect(ownTimeOf(DATA, 'k-pg-extinction', 66)?.loss?.lost).toEqual([0.38, 0.4]);
+    // No oxygen-poor seas drawn, and why (#1230).
+    expect(ownTimeOf(DATA, 'k-pg-extinction', 66)?.drawn).toMatch(
+      /No oxygen-poor seas.*Alegret et al\. 2021/,
+    );
     // With the temperature after it, measured (#1229).
     expect(ownTimeOf(DATA, 'k-pg-extinction', 66)?.proxies?.map((each) => each.name)).toEqual([
       'Temperature',
@@ -203,6 +207,12 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     updates.length = 0;
     played?.end();
     expect(updates.filter((moment) => moment === null)).toHaveLength(2);
+    // The camera over the traps first, the dated sea at the first pulse, then both (#1266).
+    expect(event?.views?.map((view) => view.from)).toEqual([
+      -Infinity,
+      0,
+      700 * 1000 * 365.25 * 86_400,
+    ]);
     // Without the Viluy Traps in the data, the seas alone.
     const bare = { ...DATA, sites: DATA.sites.filter((site) => site.id !== 'viluy-traps') };
     expect(ownTimeOf(bare, 'late-devonian-extinction', 372)?.legend?.length).toBe(3);

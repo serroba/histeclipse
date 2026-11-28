@@ -236,11 +236,16 @@ def index_file(
     levels: list[float] = depths.tolist()  # pyright: ignore[reportAny]
     return {
         "schemaVersion": 1,
+        "sources": ["iap2024"],
         "credit": CREDIT,
         "source": SOURCE,
         "paper": PAPER,
         "licence": LICENCE,
         "accessed": accessed,
+        "changes": (
+            "Anomalies against 1991-2020 computed for this site, averaged onto a 1° grid and "
+            "packed into 8-bit images"
+        ),
         "units": "°C",
         "baseline": f"{BASE[0]}\N{EN DASH}{BASE[1]}, each calendar month against its own mean",
         "encoding": "R anomaly from -bound to +bound; G zero; B 255; A data",
