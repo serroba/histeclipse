@@ -248,9 +248,18 @@ def extinctions_file(
     """Build the site's file: each place, its places then and on the second model, x 100."""
     return {
         "schemaVersion": 1,
+        "sources": ["gplates", "merdith2021", "paleodem"],
         "credit": CREDIT,
         "source": SOURCE,
         "accessed": accessed,
+        "licence": (
+            "none stated (GPlates Web Service); none stated (Merdith et al. 2021); CC BY 4.0 "
+            "(PALEOMAP)"
+        ),
+        "changes": (
+            "Places compiled for this site from the studies each extinction's card cites; "
+            "where each was when it formed worked out by the GPlates Web Service"
+        ),
         "stepMa": STEP_MA,
         "scale": 100,
         "compared": {"model": COMPARED_MODEL, "name": COMPARED_NAME},

@@ -308,9 +308,16 @@ def index_file(
     first, last = BASELINE
     return {
         "schemaVersion": 1,
+        "sources": ["berkeleyEarth"],
         "credit": CREDIT,
         "source": SOURCE,
         "licence": "CC BY-NC 4.0",
+        "accessed": "2026-11-13",
+        "changes": (
+            "5-year means against 1850-1900, averaged onto a 1° grid and packed into 8-bit "
+            "images for this site; the day given as accessed is the day this file was last "
+            "written"
+        ),
         "baseline": f"{first}\u2013{last}",
         "estimated": estimated,
         "years": STEP_YEARS,

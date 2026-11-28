@@ -340,8 +340,18 @@ def write_holocene_stacks(series: list[Series], path: Path) -> int:
     body = json.dumps(
         {
             "schemaVersion": 1,
+            "sources": ["kaufman2020", "osman2021", "bova2021"],
             "credit": CREDIT,
             "source": SOURCE,
+            "licence": (
+                "CC0 1.0 (Kaufman et al. 2020); none stated (Osman et al. 2021); none stated "
+                "(Bova et al. 2021)"
+            ),
+            "accessed": ACCESSED,
+            "changes": (
+                "Each reconstruction's median and range as points, oldest first; years turned "
+                "from before present to astronomical CE"
+            ),
             "years": "astronomical CE (1 BCE is 0); year = 1950 - years BP",
             "point": "[year, median, low, high], oldest first",
             "units": "°C",

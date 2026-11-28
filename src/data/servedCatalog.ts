@@ -79,12 +79,22 @@ const PUBLIC = /US Government|public domain/i;
 const OPEN =
   /\bCC0\b|\bCC BY(?:-SA)?\b(?!-)|\bODbL\b|Open Government Licence|\bGPL\b|\bMIT\b|\bBSD\b|free and open|open access|no restrictions/i;
 
-/** What a licence, in its maker's words, lets a reader do with the copy served here. */
+function reuseOfOne(terms: string): Reuse {
+  if (RESTRICTED.test(terms)) return 'source';
+  if (PUBLIC.test(terms)) return 'open';
+  if (NONE_STATED.test(terms)) return 'source';
+  return OPEN.test(terms) ? 'open' : 'unstated';
+}
+
+/**
+ * What a licence, in its maker's words, lets a reader do with the copy served here. A file drawn
+ * from several sources states each one's terms, apart by `;`: the strictest of them stands, and
+ * a part that names no terms decides nothing.
+ */
 export function reuseOf(licence: string): Reuse {
-  if (RESTRICTED.test(licence)) return 'source';
-  if (PUBLIC.test(licence)) return 'open';
-  if (NONE_STATED.test(licence)) return 'source';
-  return OPEN.test(licence) ? 'open' : 'unstated';
+  const each = licence.split(';').map(reuseOfOne);
+  if (each.includes('source')) return 'source';
+  return each.includes('open') ? 'open' : 'unstated';
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

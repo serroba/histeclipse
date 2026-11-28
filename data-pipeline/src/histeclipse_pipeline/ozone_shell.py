@@ -318,9 +318,16 @@ def index_file(seasons: list[dict[str, Json]]) -> dict[str, Json]:
     levels: list[Json] = list(LEVELS)
     return {
         "schemaVersion": 1,
+        "sources": ["camsEac4"],
         "credit": CREDIT,
         "source": SOURCE,
         "licence": LICENCE,
+        "accessed": "2026-11-16",
+        "changes": (
+            "The surface where ozone's partial pressure is 12 mPa and the total ozone, each "
+            "day at 12:00 UTC every three degrees, worked out for this site; the day given as "
+            "accessed is the day this file was last written"
+        ),
         "surfaceMPa": SURFACE_MPA,
         "holeDU": HOLE_DU,
         "levelsHPa": levels,

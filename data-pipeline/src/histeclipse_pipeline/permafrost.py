@@ -356,8 +356,18 @@ def index_file(holes: list[Borehole], extents: list[Extent]) -> dict[str, Json]:
     ordered = sorted(extents, key=lambda each: each.year)
     return {
         "schemaVersion": 1,
+        "sources": ["biskaborn2019", "permafrostCci"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": (
+            "CC BY 3.0 (GTN-P boreholes); ESA CCI data policy, free and open for any use with "
+            "credit (Permafrost_cci)"
+        ),
+        "accessed": "2026-11-12",
+        "changes": (
+            "Borehole trends, areas and the 0.5° map computed for this site; the day given as "
+            "accessed is the day this file was last written"
+        ),
         "boreholes": {
             "label": "GTN-P boreholes (Biskaborn et al. 2019)",
             "source": "Biskaborn et al. 2019, Nature Communications 10, 264; GTN-P 2018, PANGAEA",

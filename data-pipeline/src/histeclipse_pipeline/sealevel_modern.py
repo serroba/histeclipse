@@ -266,8 +266,19 @@ def write_modern(series: list[Series], trends: Trends, folder: Path) -> int:
     first, last = BASELINE
     index: dict[str, Json] = {
         "schemaVersion": 1,
+        "sources": ["ar6SeaLevel", "noaaLsa"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": (
+            "CC BY 4.0 (IPCC AR6 data); public domain, US government work (NOAA Laboratory "
+            "for Satellite Altimetry)"
+        ),
+        "accessed": "2026-11-12",
+        "changes": (
+            "Measured against the 1995-2014 mean; the trend map averaged onto a 1° grid and "
+            "packed into an 8-bit image for this site; the day given as accessed is the day "
+            "this file was last written"
+        ),
         "units": "mm",
         "baseline": f"{first}\u2013{last}",
         "series": [series_json(each) for each in series],

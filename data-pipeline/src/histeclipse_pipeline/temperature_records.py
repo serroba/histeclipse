@@ -436,11 +436,22 @@ def write_temperature_records(series: list[Series], folder: Path) -> int:
     body = json.dumps(
         {
             "schemaVersion": 1,
+            "sources": ["hadcrut5", "berkeleyEarth", "noaaGlobalTemp", "gistemp4", "era5", "jra3q"],
             "units": "°C",
             "baseline": "1850\u20131900",
             "lastYear": LAST_YEAR,
             "credit": "; ".join(each.record.credit for each in series),
             "source": [each.record.source for each in series],
+            "licence": (
+                "Open Government Licence v3 (HadCRUT5); CC BY-NC 4.0 (Berkeley Earth); no "
+                "licence stated (NOAAGlobalTemp); no licence stated (GISTEMP); CC BY 4.0 "
+                "(ERA5); reproduced with acknowledgement (JRA-3Q)"
+            ),
+            "accessed": ACCESSED,
+            "changes": (
+                "Each record's annual means put on the 1850-1900 baseline, with the source's "
+                "95% range where it gives one, rounded to 0.01 °C"
+            ),
             "range": "95% range where the source gives one; null where it does not",
             "series": [series_json(each) for each in series],
             "spread": spread(series),

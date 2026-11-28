@@ -9,6 +9,7 @@
 import * as v from 'valibot';
 
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 const year = v.pipe(v.number(), v.integer());
 const text = v.pipe(v.string(), v.minLength(1));
@@ -16,6 +17,7 @@ const value = v.nullable(v.number());
 
 const RecordsSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   units: v.literal('°C'),
   baseline: text,
   lastYear: year,
