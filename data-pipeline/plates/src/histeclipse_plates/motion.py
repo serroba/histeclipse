@@ -91,8 +91,15 @@ def motion_file(carry: Carry) -> dict[str, Json]:
         plates.append({"name": name, "latitude": latitude, "longitude": longitude, "moved": moved})
     return {
         "schemaVersion": 1,
+        "sources": ["cao2024"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "CC BY 4.0",
+        "accessed": "2026-11-03",
+        "changes": (
+            "Points carried back with pyGPlates, in the model's paleomagnetic frame; the day "
+            "given as accessed is the day this file was last written"
+        ),
         "frame": "paleomagnetic",
         "stepMa": STEP_MA,
         "plates": plates,

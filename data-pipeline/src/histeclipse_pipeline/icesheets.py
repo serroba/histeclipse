@@ -219,8 +219,16 @@ def write_icesheets(frames: Iterator[Frame], folder: Path, today: Mask | None = 
         )
     index: dict[str, Json] = {
         "schemaVersion": 1,
+        "sources": ["paleomist", "naturalEarth"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "CC BY 4.0 (PaleoMIST); public domain (Natural Earth)",
+        "accessed": "2026-11-12",
+        "changes": (
+            "Ice thickness from the 0.25° global grid packed into 8-bit images; today's ice "
+            "to the coast from Natural Earth's 1:10m glaciated areas and Antarctic ice "
+            "shelves; the day given as accessed is the day this file was last written"
+        ),
         "rows": shape[0],
         "columns": shape[1],
         "metresPerStep": METRES_PER_STEP,

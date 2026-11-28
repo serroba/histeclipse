@@ -10,9 +10,11 @@ import * as v from 'valibot';
 import { getJson, type Fetch } from '../util/fetchJson';
 import { peopleFacts, PersonSchema, type Person } from './genomePeople';
 import { kaRange, type HumanSite } from './humanClaims';
+import { HEADER_ADDED } from './header';
 
 const IceAgeSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   credit: v.pipe(v.string(), v.minLength(1)),
   source: v.pipe(v.string(), v.url(), v.startsWith('https://')),
   people: v.array(

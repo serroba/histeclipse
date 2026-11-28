@@ -8,11 +8,13 @@
 import * as v from 'valibot';
 
 import chartJson from '../../public/data/ics-chart.json' with { type: 'json' };
+import { HEADER_ADDED } from '../data/header';
 
 const Ma = v.pipe(v.number(), v.minValue(0));
 
 const ChartSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   credit: v.pipe(v.string(), v.minLength(1)),
   source: v.pipe(v.string(), v.url()),
   version: v.pipe(v.string(), v.minLength(1)),

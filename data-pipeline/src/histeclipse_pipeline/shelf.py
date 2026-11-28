@@ -117,8 +117,16 @@ def write_shelf(heights: Heights, folder: Path) -> int:
     _ = (folder / "today.png").write_bytes(image)
     index: dict[str, Json] = {
         "schemaVersion": 1,
+        "sources": ["etopo1"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "NOAA, public domain",
+        "accessed": "2026-11-01",
+        "changes": (
+            "Every sixth node (0.1°) kept; packed into an 8-bit image from 200 m below to 55 "
+            "m above today's sea level; the day given as accessed is the day this file was "
+            "last written"
+        ),
         "file": "today.png",
         "columns": COLUMNS,
         "rows": ROWS,

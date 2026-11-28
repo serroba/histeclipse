@@ -10,6 +10,7 @@ import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 /** Rings as flat [lon, lat, lon, lat, …] × scale. */
 const Rings = v.array(
@@ -22,6 +23,7 @@ const Rings = v.array(
 const OutlinesSchema = v.strictObject({
   // 2 (#221): each ring delta-encoded, its first point then each step from the one before.
   schemaVersion: v.literal(2),
+  ...HEADER_ADDED,
   credit: v.pipe(v.string(), v.minLength(1)),
   source: v.pipe(v.string(), v.url()),
   scale: v.pipe(v.number(), v.gtValue(0)),
