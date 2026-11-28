@@ -86,6 +86,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1126/science.208.4448.1095"
   },
+  "alvarez2019": {
+    "name": "Alvarez et al. 2019",
+    "kind": "paper",
+    "url": "https://doi.org/10.1038/s41586-019-1590-8"
+  },
   "ar6AnnexIII": {
     "name": "IPCC AR6 WG1 Annex III extended data",
     "kind": "dataset",
@@ -120,6 +125,11 @@
     "name": "Archinal et al. 2018",
     "kind": "model",
     "url": "https://doi.org/10.1007/s10569-017-9805-5"
+  },
+  "atkinsonWignall2019": {
+    "name": "Atkinson & Wignall 2019",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.palaeo.2019.05.011"
   },
   "atwood2009Lat": {
     "name": "Atwood et al. (2009), The Large Area Telescope on the Fermi Gamma-ray Space Telescope mission",
@@ -280,6 +290,11 @@
     "name": "Bowring & Williams 1999",
     "kind": "paper",
     "url": "https://doi.org/10.1007/s004100050465"
+  },
+  "brayard2009": {
+    "name": "Brayard et al. 2009",
+    "kind": "paper",
+    "url": "https://doi.org/10.1126/science.1174638"
   },
   "brehm2022": {
     "name": "Brehm et al. 2022",
@@ -530,6 +545,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1126/science.1225542"
   },
+  "dai2023": {
+    "name": "Dai et al. 2023",
+    "kind": "paper",
+    "url": "https://doi.org/10.1126/science.adf1622"
+  },
   "dauphas2011": {
     "name": "Dauphas & Pourmand 2011",
     "kind": "paper",
@@ -571,6 +591,11 @@
     "name": "Morrison et al. 2021",
     "kind": "paper",
     "url": "https://doi.org/10.1098/rspa.2020.0776"
+  },
+  "donovan2016": {
+    "name": "Donovan et al. 2016",
+    "kind": "paper",
+    "url": "https://doi.org/10.1038/s41559-016-0012"
   },
   "dowsett2016": {
     "name": "PRISM4, Dowsett et al. 2016",
@@ -919,6 +944,11 @@
     "name": "Hartogh et al. 2011",
     "kind": "paper",
     "url": "https://doi.org/10.1038/nature10519"
+  },
+  "hautmann2008": {
+    "name": "Hautmann et al. 2008",
+    "kind": "paper",
+    "url": "https://doi.org/10.2110/palo.2008.p08-005r"
   },
   "haywood2020": {
     "name": "PlioMIP2, Haywood et al. 2020",
@@ -1288,6 +1318,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1029/2001JE001532"
   },
+  "krug2004": {
+    "name": "Krug & Patzkowsky 2004",
+    "kind": "paper",
+    "url": "https://doi.org/10.1073/pnas.0405199102"
+  },
   "kruijer2017": {
     "name": "Kruijer et al. 2017",
     "kind": "paper",
@@ -1318,6 +1353,11 @@
     "name": "Laskar et al. 2004",
     "kind": "model",
     "url": "https://doi.org/10.1051/0004-6361:20041335"
+  },
+  "lathuiliereMarchal2009": {
+    "name": "Lathuilière & Marchal 2009",
+    "kind": "paper",
+    "url": "https://doi.org/10.1111/j.1365-3121.2008.00856.x"
   },
   "lavigne2013": {
     "name": "Lavigne et al. 2013",
@@ -1971,6 +2011,12 @@
     "url": "https://doi.org/10.5285/48d0bf43-0598-ceb2-e063-7086abc062f1",
     "licence": "Open Government Licence v3.0"
   },
+  "rasmussen2019": {
+    "name": "Rasmussen et al. 2019",
+    "kind": "paper",
+    "url": "https://doi.org/10.1073/pnas.1821123116",
+    "licence": "CC BY-NC-ND 4.0"
+  },
   "raupSepkoski1982": {
     "name": "Raup & Sepkoski 1982",
     "kind": "paper",
@@ -2061,6 +2107,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1126/science.287.5452.455"
   },
+  "sahneyBenton2008": {
+    "name": "Sahney & Benton 2008",
+    "kind": "paper",
+    "url": "https://doi.org/10.1098/rspb.2007.1370"
+  },
   "salmon2012": {
     "name": "Salmon & Canup 2012",
     "kind": "paper",
@@ -2129,6 +2180,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1038/s41561-023-01290-4"
   },
+  "sepulveda2009": {
+    "name": "Sepúlveda et al. 2009",
+    "kind": "paper",
+    "url": "https://doi.org/10.1126/science.1176233"
+  },
   "seton2020": {
     "name": "Seton et al. 2020",
     "kind": "dataset",
@@ -2177,6 +2233,11 @@
     "url": "https://rhodesmill.org/skyfield/",
     "licence": "MIT"
   },
+  "smith2014": {
+    "name": "Smith et al. 2014",
+    "kind": "paper",
+    "url": "https://doi.org/10.1111/let.12058"
+  },
   "somlyay2023": {
     "name": "Somlyay et al. 2023",
     "kind": "paper",
@@ -2187,6 +2248,12 @@
     "name": "Song et al. 2012",
     "kind": "paper",
     "url": "https://doi.org/10.1007/s11430-012-4416-1"
+  },
+  "song2018": {
+    "name": "Song et al. 2018",
+    "kind": "paper",
+    "url": "https://doi.org/10.1126/sciadv.aat5091",
+    "licence": "CC BY-NC 4.0"
   },
   "speibase": {
     "name": "SPEIbase",

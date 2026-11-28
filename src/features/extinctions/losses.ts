@@ -10,6 +10,7 @@
  */
 
 import type { LossGauge } from '../ownTime';
+import { RECOVERIES } from './recoveries';
 import { withHistory } from './stageLosses';
 
 const DAY = 86_400;
@@ -78,7 +79,11 @@ const STATED: Readonly<Record<string, LossGauge>> = {
 
 /** Each estimate, with its extinction drawn against every stage's losses (#1269). */
 export const LOSSES: Readonly<Record<string, LossGauge>> = Object.fromEntries(
-  Object.entries(STATED).map(([id, gauge]) => [id, withHistory(id, gauge)]),
+  Object.entries(STATED).map(([id, gauge]) => {
+    const recovery = RECOVERIES[id];
+    const counted = withHistory(id, gauge);
+    return [id, recovery === undefined ? counted : { ...counted, recovery }];
+  }),
 );
 
 /** `text` with a capital first letter. */
