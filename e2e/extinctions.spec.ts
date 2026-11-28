@@ -41,6 +41,10 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await clock.getByRole('button', { name: 'Pause' }).click();
     // Nothing lost yet (#1223).
     await expect(clock.locator('.loss-gauge-label')).toHaveText('Marine genera left: 100%');
+    // Against every stage since the Cambrian, its own marked (#1269).
+    const history = clock.locator('.loss-history');
+    await expect(history).toContainText(/here \d+%, an ordinary stage \d+%/);
+    await expect(history.locator('.loss-history-marked')).toHaveCount(1);
     // The sea's warming at Meishan, measured, above the slider (#1229).
     const record = clock.locator('.proxy-chart:visible');
     await expect(record).toContainText('Sea-surface temperature at Meishan');

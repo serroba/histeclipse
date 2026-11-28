@@ -9,6 +9,7 @@
 
 import { element } from '../../ui/dom';
 import { setText } from '../../util/pageWrites';
+import { historyView, type LossHistory } from './lossHistory';
 
 /** A span of an extinction's clock its losses are drawn falling across, and its share of them. */
 export interface LossPulse {
@@ -27,6 +28,8 @@ export interface LossGauge {
   readonly pulses: readonly LossPulse[];
   /** Whose estimate, how it compares with others, and what is drawn, not measured. */
   readonly says: string;
+  /** The extinction against every stage's losses, where counted (#1269). */
+  readonly history?: LossHistory;
 }
 
 /** How far through its losses the extinction is at `seconds`, 0–1. */
@@ -58,7 +61,8 @@ export function lossView(gauge: LossGauge): LossView {
   const sure = element('span', { class: 'loss-gauge-sure' });
   const maybe = element('span', { class: 'loss-gauge-maybe' });
   const bar = element('div', { class: 'loss-gauge-bar', 'aria-hidden': 'true' }, sure, maybe);
-  const root = element('div', { class: 'loss-gauge' }, label, bar, says);
+  const history = gauge.history === undefined ? [] : [historyView(gauge.history)];
+  const root = element('div', { class: 'loss-gauge' }, label, bar, ...history, says);
   return {
     root,
     at(seconds) {
