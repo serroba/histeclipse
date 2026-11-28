@@ -142,7 +142,14 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
       'ice',
       'anoxia',
     ]);
-    expect(swatches('late-devonian-extinction', 372)).toEqual(['cause', 'record', 'anoxia']);
+    // The Late Devonian's with the Viluy Traps' lava too (#1230).
+    expect(swatches('late-devonian-extinction', 372)).toEqual([
+      'cause',
+      'record',
+      'anoxia',
+      'lava',
+      'basalt',
+    ]);
   });
 
   it('say the end-Triassic’s oxygen-poor seas with both sides (#1230)', () => {
@@ -176,6 +183,29 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     updates.length = 0;
     played?.end();
     expect(updates).toContain(null);
+  });
+
+  it('draw the Viluy Traps’ lava beside the Late Devonian’s seas, at Kravchinsky’s area (#1230)', () => {
+    const event = ownTimeOf(DATA, 'late-devonian-extinction', 372);
+    expect(event?.drawn).toMatch(/Kravchinsky \(2012\)/);
+    const updates: unknown[] = [];
+    const played = event?.play({
+      strikes: { flyTo: vi.fn(), zoomTo: vi.fn() },
+      layer: () => ({ update: (moment: unknown) => updates.push(moment) }),
+    } as unknown as Parameters<NonNullable<typeof event>['play']>[0]);
+    played?.at(0);
+    const fumes = updates.find(
+      (moment): moment is { spread: number; cover: number } =>
+        typeof moment === 'object' && moment !== null && 'spread' in moment,
+    );
+    expect(fumes?.spread).toBe(3.8);
+    expect(fumes?.cover).toBe(1);
+    updates.length = 0;
+    played?.end();
+    expect(updates.filter((moment) => moment === null)).toHaveLength(2);
+    // Without the Viluy Traps in the data, the seas alone.
+    const bare = { ...DATA, sites: DATA.sites.filter((site) => site.id !== 'viluy-traps') };
+    expect(ownTimeOf(bare, 'late-devonian-extinction', 372)?.legend?.length).toBe(3);
   });
 
   it('draw a crisis of the seas with the clock, and take it away when closed', () => {
