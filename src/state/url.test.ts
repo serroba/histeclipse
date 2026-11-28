@@ -104,6 +104,7 @@ describe('parseViewState', () => {
       snowball: 'hard',
       water: 'delivered',
       finds: null,
+      life: null,
       why: null,
       tree: null,
       craters: null,
@@ -695,6 +696,13 @@ describe('serializeViewState', () => {
       fc.record({
         group: fc.constantFrom(...LINEAGE_GROUPS),
         pbdb: fc.integer({ min: 0, max: 9_999_999 }),
+      }),
+    ),
+    life: fc.option(
+      fc.record({
+        group: fc.constantFrom('mammals' as const, 'dinosaurs' as const),
+        pbdb: fc.integer({ min: 0, max: 9_999_999 }),
+        focus: fc.option(fc.integer({ min: 0, max: 9_999_999 })),
       }),
     ),
     why: fc.constantFrom(null, ...WHY_VIEWS),

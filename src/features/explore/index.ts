@@ -23,6 +23,8 @@ export interface ExploreContext {
   readonly search: { open(): void };
   /** The famous eclipses' button: Explore lists them under Space (#724). */
   readonly famous: HTMLElement;
+  /** The animals' finder's button: Explore lists an animal's story under Life. */
+  readonly animals: HTMLElement;
   /** The tree of life, opened whole: Explore lists it under Life (#750). */
   readonly tree: { openTreeAt(pick: () => undefined): void };
 }
@@ -64,6 +66,17 @@ export function mountExplore(context: ExploreContext): ExplorePart {
         questions: ['Which eclipse stopped a battle?'],
         open: () => {
           context.famous.click();
+        },
+      },
+      {
+        id: 'animal-story',
+        topic: 'life',
+        label: 'An animal’s story',
+        description:
+          'Find an animal, and follow its line through the fossil record on the globe: where its kind was found as the continents moved, how warm it was there, and which kinds ended.',
+        questions: ['Where did the lion’s family come from?', 'When did elephants leave Africa?'],
+        open: () => {
+          context.animals.click();
         },
       },
       {

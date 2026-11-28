@@ -1,0 +1,795 @@
+/* An animal's story: its marks on the globe, its panel beside it, its finder. */
+
+/* On the globe: a dot at each site, larger with more finds; a name beside the ones to notice. */
+.empire-label.life-mark {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.life-dot {
+  flex: none;
+  border: 1.5px solid rgb(255 255 255 / 0.9);
+  border-radius: 50%;
+  background: rgb(16 24 40 / 0.72);
+  box-shadow: 0 0 5px rgb(0 0 0 / 0.7);
+}
+
+/* The kind picked out: gold. */
+.life-mark.is-focus .life-dot {
+  border-color: #fff;
+  background: #ffc53d;
+  box-shadow:
+    0 0 0 2px rgb(255 197 61 / 0.45),
+    0 0 8px rgb(0 0 0 / 0.8);
+}
+
+/* A kind found for the first time: a bright dot that pulses once. */
+.life-mark.is-began .life-dot {
+  background: #fff;
+  animation: life-began 1.6s ease-out;
+}
+
+@keyframes life-began {
+  from {
+    box-shadow: 0 0 0 0 rgb(255 255 255 / 0.9);
+  }
+
+  to {
+    box-shadow: 0 0 0 14px rgb(255 255 255 / 0);
+  }
+}
+
+/* Where a kind was last seen: a hollow cross, its name struck through. */
+.life-mark.is-ended .life-dot {
+  border-style: dashed;
+  border-color: rgb(255 255 255 / 0.75);
+  background:
+    linear-gradient(45deg, transparent 44%, #fff 44% 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, #fff 44% 56%, transparent 56%), rgb(0 0 0 / 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .life-mark.is-began .life-dot {
+    animation: none;
+  }
+}
+
+/* The header's way in. */
+.life-open-mark {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* The panel: beside the globe on the right, clear of the rail. */
+.life-panel {
+  position: fixed;
+  z-index: 6;
+  top: 12px;
+  right: 64px;
+  display: flex;
+  flex-direction: column;
+  width: min(360px, calc(100vw - 80px));
+  max-height: calc(100vh - 24px);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  background: rgb(10 16 32 / 0.9);
+  color: var(--ink);
+  font-size: 13px;
+  backdrop-filter: blur(8px);
+}
+
+.life-panel[hidden] {
+  display: none;
+}
+
+.life-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 8px 8px 16px;
+}
+
+.life-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.life-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.life-subtitle {
+  margin: 4px 0 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.life-fold,
+.life-close {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.life-fold:hover,
+.life-close:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.life-body {
+  overflow-y: auto;
+  padding: 0 16px 14px;
+  overscroll-behavior: contain;
+}
+
+.life-body[hidden],
+.life-panel.is-folded .life-body {
+  display: none;
+}
+
+.life-body h3 {
+  margin: 14px 0 6px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.life-crumbs {
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.life-crumb {
+  padding: 1px 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.life-crumb:hover {
+  border-color: var(--panel-border);
+}
+
+.life-crumb.is-here {
+  border-color: rgb(255 197 61 / 0.6);
+  color: #ffe08a;
+}
+
+.life-actions {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.life-play,
+.life-other {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.life-play {
+  border-color: transparent;
+  background: #ffc53d;
+  color: #1a1305;
+  font-weight: 700;
+}
+
+.life-play:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* The chart: a name and a row of steps for each line, the playhead over them all. */
+.life-chart {
+  position: relative;
+}
+
+.life-strip {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 3px 8px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.life-row-name {
+  display: flex;
+  flex-direction: column;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.life-row {
+  display: flex;
+  gap: 1px;
+  height: 12px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.05);
+}
+
+.life-cell {
+  flex: 1;
+  min-width: 0;
+}
+
+.life-cell.is-on {
+  border-radius: 2px;
+  background: #5fd0a5;
+}
+
+.life-row.is-temperature {
+  height: 46px;
+  background: rgb(255 255 255 / 0.03);
+}
+
+.life-temperature {
+  width: 100%;
+  height: 100%;
+}
+
+.life-line {
+  fill: none;
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+
+.life-line.is-globe {
+  stroke: rgb(255 255 255 / 0.45);
+  stroke-dasharray: 3 3;
+}
+
+.life-line.is-found {
+  stroke: #ff8a4c;
+}
+
+.life-point {
+  fill: #ff8a4c;
+}
+
+.life-key.is-found {
+  color: #ff8a4c;
+}
+
+.life-key.is-globe {
+  color: rgb(255 255 255 / 0.6);
+}
+
+.life-row.is-kinds {
+  align-items: flex-end;
+  height: 30px;
+}
+
+.life-bar {
+  flex: 1;
+  min-width: 0;
+  border-radius: 2px 2px 0 0;
+  background: rgb(160 180 255 / 0.75);
+}
+
+.life-axis {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-muted);
+  font-size: 10px;
+}
+
+.life-playhead {
+  position: absolute;
+  top: -2px;
+  bottom: 14px;
+  /* Over the rows only: past the names' column and its gap. */
+  left: calc(94px + (100% - 94px) * var(--life-at, 0));
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: #ffc53d;
+  box-shadow: 0 0 6px rgb(255 197 61 / 0.8);
+  pointer-events: none;
+}
+
+.life-playhead[hidden] {
+  display: none;
+}
+
+.life-now {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.05);
+  min-height: 84px;
+}
+
+.life-now p {
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.life-when {
+  color: #ffe08a;
+  font-weight: 700;
+}
+
+.life-change {
+  color: var(--ink-muted);
+  font-size: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.life-change.is-began strong {
+  color: #fff;
+}
+
+.life-change.is-ended {
+  font-style: italic;
+}
+
+.life-chapters {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.life-chapter {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-left: 2px solid rgb(255 255 255 / 0.15);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.life-chapter:hover {
+  background: rgb(255 255 255 / 0.05);
+}
+
+.life-chapter-title {
+  font-weight: 600;
+}
+
+.life-chapter-text {
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.life-chapters .is-past .life-chapter {
+  border-left-color: rgb(255 197 61 / 0.5);
+}
+
+.life-chapters .is-now .life-chapter {
+  border-left-color: #ffc53d;
+  background: rgb(255 197 61 / 0.1);
+}
+
+.life-branches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.life-branch {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 4px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.life-branch:hover {
+  background: rgb(255 255 255 / 0.06);
+}
+
+.life-count {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.life-note {
+  margin: 14px 0 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.life-note a {
+  color: inherit;
+}
+
+.life-crumbs-lead {
+  color: var(--ink-muted);
+}
+
+/* A mark with no room, or on the far side: laid out hidden, whatever its display. */
+.empire-label.life-mark[hidden] {
+  display: none;
+}
+
+/* Pictures: PhyloPic's silhouettes are black on clear, so they are drawn light here. */
+.life-silhouette {
+  flex: none;
+  object-fit: contain;
+  filter: invert(1);
+  opacity: 0.92;
+}
+
+.life-emblem {
+  flex: none;
+  display: flex;
+  align-items: center;
+}
+
+.life-emblem:empty {
+  display: none;
+}
+
+.life-lead {
+  margin: 0 0 10px;
+}
+
+.life-lead img {
+  display: block;
+  width: 100%;
+  height: 150px;
+  border-radius: 12px;
+  object-fit: cover;
+  object-position: center 30%;
+  background: rgb(255 255 255 / 0.05);
+}
+
+.life-lead figcaption,
+.life-reference {
+  margin: 5px 0 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.life-lead a,
+.life-reference a,
+.life-credits a {
+  color: inherit;
+}
+
+.life-kind {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--ink);
+  font-style: italic;
+  text-decoration: none;
+}
+
+.life-kind.is-linked {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.life-change.is-ended .life-kind {
+  opacity: 0.75;
+}
+
+.life-branch .life-silhouette {
+  align-self: center;
+}
+
+.life-found .life-silhouette {
+  margin: 0 -8px;
+}
+
+.life-credits {
+  margin-top: 8px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.life-credits summary {
+  cursor: pointer;
+}
+
+.life-credits ul {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  line-height: 1.5;
+}
+
+/* The doors between the lands: a thin row each, gold where land joined them. */
+.life-row-name.is-heading {
+  margin-top: 4px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.life-row-key {
+  margin-top: 4px;
+  color: var(--ink-muted);
+  font-size: 10px;
+}
+
+.life-row-name.is-door {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.life-row.is-door {
+  height: 7px;
+}
+
+.life-cell.is-land {
+  background: #ffc53d;
+}
+
+.life-cell.is-shelf {
+  background: rgb(255 197 61 / 0.3);
+}
+
+.life-doors-now {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+/* Each dot is a button: a tap opens its card. */
+
+.empire-label.life-mark::before {
+  /* Room for a finger round a small dot. */
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+.life-mark:hover .life-dot,
+.life-mark:focus-visible .life-dot {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 0.35);
+}
+
+.life-mark.is-picked .life-dot {
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 6px rgb(255 197 61 / 0.7);
+}
+
+/* Round the globe: each kind's picture, and its line to where it was found most. */
+.life-lines,
+.life-callouts {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.life-line-to {
+  stroke: rgb(255 255 255 / 0.55);
+  stroke-width: 1;
+}
+
+.life-line-to.is-focus {
+  stroke: #ffc53d;
+  stroke-width: 1.5;
+}
+
+.life-line-to.is-began {
+  stroke: #fff;
+}
+
+.life-line-to.is-ended {
+  stroke-dasharray: 3 3;
+}
+
+.life-callout {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 58px;
+  padding: 2px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 10px;
+  background: rgb(10 16 32 / 0.78);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.life-callout[hidden] {
+  display: none;
+}
+
+.life-callout:hover,
+.life-callout:focus-visible {
+  border-color: #fff;
+}
+
+.life-callout.is-focus {
+  border-color: #ffc53d;
+}
+
+.life-callout.is-began {
+  border-color: rgb(255 255 255 / 0.7);
+}
+
+.life-callout.is-ended {
+  border-style: dashed;
+  opacity: 0.8;
+}
+
+.life-callout-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 10px;
+  font-style: italic;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.life-callout.is-ended .life-callout-name {
+  text-decoration: line-through;
+}
+
+/* A site's card: on the left, under the header. */
+.life-card {
+  position: fixed;
+  z-index: 6;
+  top: 184px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  width: min(330px, calc(100vw - 24px));
+  max-height: calc(100vh - 200px);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  background: rgb(10 16 32 / 0.92);
+  color: var(--ink);
+  font-size: 13px;
+  backdrop-filter: blur(8px);
+}
+
+.life-card[hidden] {
+  display: none;
+}
+
+.life-facts {
+  margin: 0;
+}
+
+.life-fact {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 8px;
+  padding: 3px 0;
+  line-height: 1.4;
+}
+
+.life-fact dt {
+  color: var(--ink-muted);
+}
+
+.life-fact dd {
+  margin: 0;
+}
+
+/* A kind with no silhouette: its name alone, in a smaller box at the same place. */
+.life-callout.is-plain {
+  height: 24px;
+  margin-top: 17px;
+}
+
+.life-why {
+  margin: 8px 0 0;
+}
+
+/* Folded, the panel is its heading alone, with a way to play. */
+.life-play-folded {
+  display: none;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: #ffc53d;
+  color: #1a1305;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.life-panel.is-folded .life-play-folded {
+  display: block;
+}
+
+.life-panel.is-folded .life-subtitle {
+  display: none;
+}
+
+.life-panel.is-folded .life-header {
+  align-items: center;
+  padding-bottom: 12px;
+}
+
+/* A phone: the panel and the card lie over the globe's own room, between the header and the
+   time bar, the panel folded until asked for; buttons are a finger wide. */
+@media (max-width: 600px) {
+  .life-panel,
+  .life-card {
+    top: calc(var(--free-top, 120px) + 4px);
+    right: 8px;
+    left: 8px;
+    width: auto;
+    max-height: calc(100vh - var(--free-top, 120px) - var(--free-bottom, 200px) - 8px);
+  }
+
+  .life-fold,
+  .life-close,
+  .life-play-folded {
+    width: 44px;
+    height: 44px;
+  }
+
+  .life-title {
+    font-size: 17px;
+  }
+
+  .life-play,
+  .life-other {
+    min-height: 44px;
+  }
+
+  .life-callout {
+    opacity: 0.92;
+  }
+}
+
+/* On a phone the header has no room for one more tool: Explore offers the finder there. */
+@media (max-width: 600px) {
+  .life-open {
+    display: none;
+  }
+}

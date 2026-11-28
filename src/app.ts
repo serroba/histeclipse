@@ -46,6 +46,7 @@ import { lazyImpactPaths } from './ui/impactPathsLazy';
 import { lateDeltaT, lateEphemerides, lateTimeline, type PartContext } from './features/part';
 import { mountBoundaries } from './features/boundaries';
 import { mountTreeOfLife } from './features/treeOfLife';
+import { mountLife } from './features/life';
 import { mountSky } from './features/sky';
 import { mountBodies } from './features/bodies';
 import { mountRecords } from './features/records';
@@ -108,7 +109,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const viewSwitch = createViewSwitch((choice) => {
     input.choose(choice);
   });
-  // The orbits, offered where they mean something: far out, or on the Sun or a planet.
   // Why anything is on screen: the book marks beside things, and the panel they open.
   // The panel follows the view, so the link names the why open and opens it again.
   const whySheet = createWhySheet(
@@ -278,6 +278,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       co2Archive.load();
     },
   });
+  const life = mountLife({ ...partContext, globe, deepTime });
   // A passage's or a destination's view laid over the reader's, as a step back can undo.
   const opener = viewOpener({ store, deepTime, sync: () => sync, globe });
   const openAnchor = opener.anchor;
@@ -341,7 +342,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       explore.button.click();
     },
   });
-  // The panels hide for a clear view, by this button or a tap on empty space; it brings them back.
   // The site's texts (#391, #392): search, and what is written about here.
   const texts = mountTexts({
     ...partContext,
@@ -352,6 +352,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     opener,
     search: texts.search,
     famous: famous.button,
+    animals: life.button,
     tree: treeOfLife,
   });
   // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
@@ -395,7 +396,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   const launches = mountTimeBars({ ...partContext, history: { ...years.track, stop: years.stop } });
 
-  // The borders of past states (#446), a century's file at a time, and what changed.
   // The eclipses (#447): the year's on the bar, picking one, and the moment shown of it.
   const days = createDayEvents(openAnchor);
   const eclipses = mountEclipses({
@@ -412,13 +412,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
   eclipses.timeline.append(days.root);
 
   // The page's frame (#442): each part's elements, where they go.
-  const headerTools = [boundaries.button, texts.search.button, panels.fullView];
+  const headerTools = [life.button, boundaries.button, texts.search.button, panels.fullView];
   const { hud, hudActions, bottom } = layOutPage(root, {
     under: [
       globeContainer,
       sky.container,
       zoomRail.root,
       ...treeOfLife.elements,
+      ...life.elements,
       impactPathsSheet.element,
       ...boundaries.elements,
       whySheet.dialog,
@@ -476,7 +477,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     notify(warning);
   });
 
-  // Drawn on the globe as layers of their own (#379).
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureCore: FeatureCore = {
     base,
@@ -656,6 +656,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { name: 'wave', when: on(wave.watches), draw: wave.render },
     { name: 'telescopes', when: on(telescopeList.watches), draw: telescopeList.render },
     { name: 'tree', when: on(treeOfLife.watches), draw: treeOfLife.render },
+    { name: 'life', when: on(life.watches), draw: life.render },
     { name: 'sheets', draw: showSheets },
     // The time changed elsewhere (the year typed, the slider) ends the cycle's play.
     { name: 'cycle', draw: cycle.render },

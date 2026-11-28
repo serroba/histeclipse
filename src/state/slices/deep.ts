@@ -22,6 +22,9 @@
  *   before the reconstructions reach: when the Moon-forming impact struck, where the oceans'
  *   water came from (#1142), how much of the surface was land, and how far a snowball's ice
  *   reached. Absent means the first of each.
+ * - `life` is an animal's story (a prototype): a fossil group, `:` and the PBDB number of the
+ *   lineage it is told of, then optionally `:` and the kind picked out in it
+ *   (`mammals:41045:41066`, the cats with Panthera picked out). Absent means none.
  * - `finds` is a fossil group, `:` and a PBDB number (`dinosaurs:38613`): the genus, or group of
  *   genera, whose finds Fossils marks on the globe (#309). Absent means none.
  */
@@ -55,6 +58,7 @@ import {
 } from '../../deepTime/temperatureModels';
 import { HUMAN_SPECIES, type HumanSpecies } from '../../data/humanClaims';
 import { LINEAGE_GROUPS, type LineageGroup } from '../../data/lineages';
+import { LIFE_GROUPS, type LifeGroup } from '../../data/lifeStories';
 import { choice, type Params } from '../slice';
 
 /** Timmermann & Friedrich's dispersal model: off, or the early or the late exit from Africa. */
@@ -77,6 +81,13 @@ const MA_RANGE = { min: 0, max: EARTH_AGE_MA } as const;
 export interface FossilFinds {
   readonly group: LineageGroup;
   readonly pbdb: number;
+}
+
+/** An animal's story: its group, the lineage it is told of, and the kind picked out in it. */
+export interface LifeStory {
+  readonly group: LifeGroup;
+  readonly pbdb: number;
+  readonly focus: number | null;
 }
 
 export interface DeepState {
@@ -108,6 +119,8 @@ export interface DeepState {
   readonly theia: TheiaModel;
   /** Whose finds Fossils marks on the globe (#309); null for none. */
   readonly finds: FossilFinds | null;
+  /** The animal's story told on the globe; null for none. */
+  readonly life: LifeStory | null;
   readonly land: LandModel;
   readonly snowball: SnowballModel;
   readonly water: WaterModel;
@@ -128,6 +141,7 @@ export const DEEP_DEFAULTS: DeepState = {
   growth: DEFAULT_GROWTH_MODEL,
   theia: DEFAULT_THEIA_MODEL,
   finds: null,
+  life: null,
   land: DEFAULT_LAND_MODEL,
   snowball: DEFAULT_SNOWBALL_MODEL,
   water: DEFAULT_WATER_MODEL,
@@ -175,6 +189,14 @@ export const DEEP_PARAMS: Params<DeepState> = {
     parse: parseFinds,
     format: (finds) => (finds === null ? null : `${finds.group}:${String(finds.pbdb)}`),
   },
+  life: {
+    key: 'life',
+    parse: parseLife,
+    format: (life) =>
+      life === null
+        ? null
+        : `${life.group}:${String(life.pbdb)}${life.focus === null ? '' : `:${String(life.focus)}`}`,
+  },
   land: choice('land', LAND_MODELS, DEEP_DEFAULTS.land),
   snowball: choice('snowball', SNOWBALL_MODELS, DEEP_DEFAULTS.snowball),
   water: choice('water', WATER_MODELS, DEEP_DEFAULTS.water),
@@ -201,4 +223,20 @@ function parseFinds(raw: string): FossilFinds {
     );
   }
   return { group, pbdb: Number(match[2]) };
+}
+
+/** `life=` a fossil group, `:` a lineage's PBDB number, and optionally `:` a kind's. */
+function parseLife(raw: string): LifeStory {
+  const match = /^([a-z]+):(\d{1,7})(?::(\d{1,7}))?$/.exec(raw);
+  const group = LIFE_GROUPS.find((each) => each === match?.[1]);
+  if (match === null || group === undefined) {
+    throw new Error(
+      `expected ${LIFE_GROUPS.join(' or ')}, : and a PBDB number, such as mammals:41045`,
+    );
+  }
+  return {
+    group,
+    pbdb: Number(match[2]),
+    focus: match[3] === undefined ? null : Number(match[3]),
+  };
 }

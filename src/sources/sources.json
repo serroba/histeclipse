@@ -2004,6 +2004,13 @@
     "url": "https://doi.org/10.5285/d235665772ec4b558e9a89ac85595e71",
     "licence": "ESA CCI data policy: free and open for any use, crediting the ESA Climate Change Initiative, the Permafrost_cci project and the dataset"
   },
+  "phylopic": {
+    "name": "PhyloPic",
+    "kind": "imagery",
+    "url": "https://www.phylopic.org",
+    "licence": "Each silhouette under its own, stated with it: CC0, Public Domain Mark, CC BY, CC BY-SA, CC BY-NC or CC BY-NC-SA",
+    "nonCommercial": true
+  },
   "piani2020": {
     "name": "Piani et al. 2020",
     "kind": "paper",
@@ -2561,6 +2568,12 @@
     "name": "Wignall et al. 2009",
     "kind": "paper",
     "url": "https://doi.org/10.1126/science.1171956"
+  },
+  "wikimediaCommons": {
+    "name": "Wikimedia Commons",
+    "kind": "imagery",
+    "url": "https://commons.wikimedia.org",
+    "licence": "Each picture under its own free licence, stated with it: public domain, CC0, CC BY or CC BY-SA"
   },
   "wilde2001": {
     "name": "Wilde et al. 2001",
