@@ -190,8 +190,15 @@ def index_file(frames: list[tuple[int, float]]) -> dict[str, Json]:
     """Build the manifest the web app reads: credit, encoding, grid shape and time steps."""
     return {
         "schemaVersion": 1,
+        "sources": ["paleodem"],
         "credit": CREDIT,
         "source": ZENODO_RECORD,
+        "licence": "CC BY 4.0",
+        "accessed": "2026-11-01",
+        "changes": (
+            "0.1° grids smoothed to 0.2°, spikes and seams repaired, packed into 8-bit images "
+            "for this site; the day given as accessed is the day this file was last written"
+        ),
         "columns": COLUMNS,
         "rows": ROWS,
         "seaDepth": SEA_DEPTH,
