@@ -8,7 +8,10 @@ import { CITATIONS, citation, WHYS } from './content';
 import { bibtexUrl, doiOf, SOURCES, WHY_IDS, type SourceId } from './registry';
 import { WHYS_CONTENT } from './whys';
 
-/** A source's shape, as `Source` declares it: sources.json is content, checked here (#383). */
+/**
+ * A source's shape, as `Source` declares it: sources.json is content, checked here (#383). Its full
+ * reference is not a field: it goes in citations.json, under the same key (#220).
+ */
 const SourceSchema = v.strictObject({
   name: v.pipe(v.string(), v.minLength(1)),
   kind: v.picklist(['paper', 'dataset', 'model', 'imagery', 'catalogue', 'reference']),
@@ -47,7 +50,10 @@ describe('what loads with the why panel (#220)', () => {
   });
 
   it('gives every source, and only those, a full reference', () => {
-    expect(Object.keys(CITATIONS).sort()).toEqual(Object.keys(SOURCES).sort());
+    // A new source: its name, kind, link and licence in sources.json, its reference here.
+    expect(Object.keys(CITATIONS).sort(), 'every source in citations.json too').toEqual(
+      Object.keys(SOURCES).sort(),
+    );
     for (const cite of Object.values(CITATIONS)) expect(cite.length).toBeGreaterThan(0);
   });
 });
