@@ -21,6 +21,8 @@ describe('reuseOf', () => {
     ['ODbL 1.0', 'open'],
     ['Open Government Licence v3.0', 'open'],
     ['BSD-3-Clause', 'open'],
+    ['CC BY 4.0 (the data); public domain, US government work (NOAA)', 'open'],
+    ['None stated (IAP); public domain, US government work (NOAA NCEI)', 'source'],
     ['none stated (US Government work)', 'open'],
     ['Public domain (a work of the US Government)', 'open'],
     ['CC BY-NC 4.0', 'source'],

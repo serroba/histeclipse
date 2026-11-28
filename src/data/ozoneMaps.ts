@@ -10,11 +10,13 @@
 import * as v from 'valibot';
 
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 const text = v.pipe(v.string(), v.minLength(1));
 
 const MapsSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   credit: text,
   source: v.pipe(v.string(), v.url()),
   licence: text,

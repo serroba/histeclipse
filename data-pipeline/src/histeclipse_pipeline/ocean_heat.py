@@ -351,8 +351,18 @@ def index_file(analyses: list[Analysis], parts: list[Series]) -> dict[str, Json]
     first, last = BASELINE
     return {
         "schemaVersion": 1,
+        "sources": ["iap2024", "nceiOceanHeat", "igcc2025"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": (
+            "None stated (IAP); public domain, US government work (NOAA NCEI); CC BY 4.0 "
+            "(Indicators of Global Climate Change 2025)"
+        ),
+        "accessed": "2026-11-12",
+        "changes": (
+            "Ocean heat content put in ZJ and measured from each series' 2006-2015 mean for "
+            "this site; the day given as accessed is the day this file was last written"
+        ),
         "units": "ZJ",
         "oceanHeat": {
             "baseline": f"{first}\u2013{last}",

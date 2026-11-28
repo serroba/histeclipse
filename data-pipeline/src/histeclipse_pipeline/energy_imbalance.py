@@ -180,12 +180,18 @@ def imbalance_file(months: list[Month]) -> dict[str, Json]:
     first, last = months[0], months[-1]
     return {
         "schemaVersion": 1,
+        "sources": ["ceresEbaf"],
         "credit": CREDIT,
         "source": SOURCE,
         "units": "W/m²",
         "label": "CERES EBAF Ed4.2.1, top-of-atmosphere net flux",
         "url": "https://doi.org/10.5067/TERRA-AQUA-NOAA20/CERES/EBAF-TOA_L3B004.2.1",
         "licence": "CC BY 4.0",
+        "accessed": "2026-11-12",
+        "changes": (
+            "Global and yearly means computed for this site; the day given as accessed is the "
+            "day this file was last written"
+        ),
         "note": (
             "Positive: the Earth gains heat. The changes are measured; the level is set so "
             "that July 2005 to June 2015 matches the heat taken up by the ocean, land, ice "

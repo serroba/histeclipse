@@ -9,9 +9,11 @@
 import * as v from 'valibot';
 
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 const WarmingSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   credit: v.string(),
   source: v.string(),
   licence: v.string(),
