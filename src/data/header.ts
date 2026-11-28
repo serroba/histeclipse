@@ -37,5 +37,4 @@ export const HEADER_ADDED = {
 export const HeaderSchema = v.looseObject({
   schemaVersion: v.pipe(v.number(), v.integer(), v.minValue(1)),
   ...HEADER,
-  units: v.optional(UNITS),
 });

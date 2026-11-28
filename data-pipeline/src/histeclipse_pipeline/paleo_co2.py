@@ -166,9 +166,16 @@ def archive_file(estimates: list[Estimate], accessed: str) -> dict[str, Json]:
     index = {study: at for at, study in enumerate(studies)}
     return {
         "schemaVersion": 1,
+        "sources": ["co2pip"],
         "credit": CREDIT,
         "source": SOURCE,
         "accessed": accessed,
+        "licence": "CC BY 4.0",
+        "changes": (
+            "Each study's proxy, age and CO2 with its uncertainty read from the template's "
+            "Basic Info columns; proxies put under one of the methods here; rows without an "
+            "age or a CO2, or with a CO2 of zero or below, left out"
+        ),
         "methods": list[Json](methods),
         "studies": [
             {"author": study.author, "year": study.year, "doi": _doi(study.doi)}

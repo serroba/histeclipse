@@ -173,8 +173,12 @@ def write_ohm(
         _ = (folder / f"{start}.json").write_text(body + "\n")
     index: dict[str, Json] = {
         "schemaVersion": 1,
+        "sources": ["ohm"],
         "credit": CREDIT,
         "source": f"OpenHistoricalMap vector tiles, zoom {ZOOM}, fetched {fetched}",
+        "licence": "CC0",
+        "accessed": fetched,
+        "changes": "Borders simplified and split by century",
         "centuries": list[Json](sorted(centuries)),
     }
     _ = (folder / "index.json").write_text(json.dumps(index, separators=(",", ":")) + "\n")

@@ -9,6 +9,7 @@ import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 export const WAYS = ['foraging', 'pastoralism', 'extensive', 'intensive', 'urban'] as const;
 type Way = (typeof WAYS)[number];
@@ -17,6 +18,7 @@ const Level = v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(3));
 
 const WaysSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   credit: v.pipe(v.string(), v.minLength(1)),
   source: v.pipe(v.string(), v.url()),
   scale: v.pipe(v.number(), v.gtValue(0)),
