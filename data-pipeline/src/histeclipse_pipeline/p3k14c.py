@@ -170,9 +170,12 @@ def heat_file(dated: Iterable[tuple[RadiocarbonDate, int]], accessed: str) -> di
     keys = sorted(counts, key=lambda key: (key[2], key[0], key[1]))
     return {
         "schemaVersion": 1,
+        "sources": ["p3k14c", "intcal20", "shcal20"],
         "accessed": accessed,
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "CC0 1.0 (p3k14c); CC BY 4.0 (IntCal20, SHCal20)",
+        "changes": "Calibrated here with IntCal20 or SHCal20; counted by 1° cell and 250 years",
         "cellDegrees": CELL,
         "stepYears": STEP,
         "reachBP": REACH_BP,

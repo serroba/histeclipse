@@ -57,8 +57,15 @@ def test_writes_a_file_per_age_and_an_index(tmp_path: Path) -> None:
     index = json.loads((tmp_path / "index.json").read_text())  # pyright: ignore[reportAny]
     assert index == {
         "schemaVersion": 1,
+        "sources": ["cao2024"],
         "credit": CREDIT,
         "source": "https://doi.org/10.5281/zenodo.13628813",
+        "licence": "CC BY 4.0",
+        "accessed": "2026-11-23",
+        "changes": (
+            "Plate boundaries resolved with pyGPlates, in the model's paleomagnetic frame; "
+            "the day given as accessed is the day this file was last written"
+        ),
         "stepMa": 5,
         "oldestMa": 5,
     }

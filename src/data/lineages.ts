@@ -14,6 +14,7 @@ import * as v from 'valibot';
 
 import { elementAt, valueAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 export const LINEAGE_GROUPS = ['trilobites', 'ammonoids', 'dinosaurs', 'mammals'] as const;
 export type LineageGroup = (typeof LINEAGE_GROUPS)[number];
@@ -24,6 +25,7 @@ const Age = v.pipe(v.number(), v.minValue(0), v.maxValue(4600));
 const LineagesSchema = v.pipe(
   v.strictObject({
     schemaVersion: v.literal(2),
+    ...HEADER_ADDED,
     credit: v.pipe(v.string(), v.minLength(1)),
     source: v.pipe(v.string(), v.url()),
     accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),

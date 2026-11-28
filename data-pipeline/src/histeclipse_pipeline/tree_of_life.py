@@ -387,12 +387,15 @@ def tree_file(  # noqa: PLR0913
     rank_index = {rank: i for i, rank in enumerate(ranks)}
     return {
         "schemaVersion": 1,
+        "sources": ["openTree"],
         "accessed": accessed,
         "credit": (
             f"Open Tree of Life, synthetic tree {SYNTHESIS} and taxonomy {TAXONOMY} "
             "(CC0), trimmed for this site"
         ),
         "source": "https://tree.opentreeoflife.org",
+        "licence": "CC0 1.0",
+        "changes": "Trimmed for this site",
         "synthesis": SYNTHESIS,
         "taxonomy": TAXONOMY,
         "flags": {"extinct": EXTINCT, "phylogeny": PHYLOGENY, "taxonomyOnly": TAXONOMY_ONLY},

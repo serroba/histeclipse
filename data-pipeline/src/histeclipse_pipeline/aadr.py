@@ -162,8 +162,15 @@ def genomes_file(genomes: list[Genome]) -> dict[str, Json]:
     ordered = in_order(genomes)
     return {
         "schemaVersion": 1,
+        "sources": ["aadr"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "CC0 1.0",
+        "accessed": "2026-11-21",
+        "changes": (
+            "Ancient individuals that pass its assessment, counted by 2° cell; the day given "
+            "as accessed is the day this file was last written"
+        ),
         "version": VERSION,
         "cellDegrees": CELL,
         # Row n's person is in people/{n // peopleChunk}.json.
@@ -196,8 +203,15 @@ def ice_age_file(genomes: list[Genome], credit: str, source: str) -> dict[str, J
     )
     return {
         "schemaVersion": 1,
+        "sources": ["aadr"],
         "credit": credit,
         "source": source,
+        "licence": "CC0 1.0",
+        "accessed": "2026-11-21",
+        "changes": (
+            "The ice-age people not already on the Humans layer's list, oldest first; the day "
+            "given as accessed is the day this file was last written"
+        ),
         "people": [
             {
                 "bp": genome.bp,

@@ -144,9 +144,17 @@ def volcanoes_file(
     evidence = sorted({eruption.evidence for eruption in eruptions if eruption.evidence})
     return {
         "schemaVersion": 1,
+        "sources": ["gvp"],
         "credit": CREDIT,
         "source": SOURCE,
         "accessed": accessed,
+        "licence": "Non-commercial use with credit",
+        "changes": (
+            "Kept per volcano: number, name, type, country, place, elevation and last known "
+            "eruption; per eruption: start year, month and day where known, VEI, whether "
+            "confirmed and how dated; years before the common era turned into astronomical "
+            "years"
+        ),
         "evidence": list[Json](evidence),
         "volcanoes": [
             {
@@ -179,11 +187,18 @@ def volcanoes_file(
     }
 
 
-def details_file(volcanoes: list[Volcano]) -> dict[str, Json]:
+def details_file(volcanoes: list[Volcano], accessed: str) -> dict[str, Json]:
     """Build the second file, for the cards: each volcano's summary and photo, by its number."""
     return {
         "schemaVersion": 1,
+        "sources": ["gvp"],
         "credit": CREDIT,
+        "licence": "Non-commercial use with credit",
+        "accessed": accessed,
+        "changes": (
+            "Each volcano's geological summary and its primary photo's address, caption and "
+            "credit; the photo itself is not copied"
+        ),
         "volcanoes": {
             str(volcano.number): {
                 "summary": volcano.summary,
@@ -229,6 +244,7 @@ def fetch_volcanoes(path: Path) -> int:  # pragma: no cover - needs network acce
     )
     details = path.with_name("volcano-details.json")
     _ = details.write_text(
-        json.dumps(details_file(volcanoes), separators=(",", ":"), ensure_ascii=False) + "\n"
+        json.dumps(details_file(volcanoes, accessed), separators=(",", ":"), ensure_ascii=False)
+        + "\n"
     )
     return len(eruptions)

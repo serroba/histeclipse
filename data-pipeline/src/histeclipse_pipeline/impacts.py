@@ -189,9 +189,14 @@ def impacts_file(
     """Build the site's file: each impact, with its places then as [lat, lon] x 100."""
     return {
         "schemaVersion": 1,
+        "sources": ["impactEarth", "gplates", "paleodem"],
         "credit": CREDIT,
         "source": SOURCE,
         "accessed": accessed,
+        "licence": "none stated",
+        "changes": (
+            "Places when they struck worked out from the PALEOMAP model by the GPlates Web Service"
+        ),
         "stepMa": STEP_MA,
         "scale": 100,
         "impacts": [
