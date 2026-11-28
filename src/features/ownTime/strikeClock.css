@@ -119,6 +119,18 @@
   }
 }
 
+/* A short screen, as the first iPhone SE's (#1301): folded, the globe's key waits behind More and
+   the record's plot is lower, so the moment, its losses, the record and the slider fit unscrolled. */
+@media (max-height: 600px) {
+  .strike-clock[data-folded] .strike-clock-legend {
+    display: none;
+  }
+
+  .strike-clock[data-folded] .proxy-plot {
+    height: 40px;
+  }
+}
+
 .strike-clock-phase {
   margin: 4px 0 0;
   font-size: 14px;
@@ -177,6 +189,34 @@
 
 .strike-clock-marks li:last-child {
   transform: translateX(-100%);
+}
+
+/* A narrow screen, as the first iPhone SE's (#1301): the marks, too close for one line each, break
+   onto two, the track making room for them. */
+@media (max-width: 360px) {
+  .strike-clock-track {
+    padding-bottom: 28px;
+  }
+
+  .strike-clock-marks {
+    height: 26px;
+    line-height: 1.2;
+  }
+
+  .strike-clock-marks li {
+    width: max-content;
+    max-width: 9.5ch;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .strike-clock-marks li:first-child {
+    text-align: left;
+  }
+
+  .strike-clock-marks li:last-child {
+    text-align: right;
+  }
 }
 
 .strike-clock-hint,
