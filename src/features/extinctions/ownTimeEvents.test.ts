@@ -28,6 +28,10 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
 
   it('carry what each took, for the gauge on its clock (#1223)', () => {
     expect(ownTimeOf(DATA, 'k-pg-extinction', 66)?.loss?.lost).toEqual([0.38, 0.4]);
+    // With the temperature after it, measured (#1229).
+    expect(ownTimeOf(DATA, 'k-pg-extinction', 66)?.proxies?.map((each) => each.name)).toEqual([
+      'Temperature',
+    ]);
     expect(ownTimeOf(DATA, 'end-triassic-extinction', 201.5)?.loss?.lost).toEqual([0.33, 0.73]);
   });
 

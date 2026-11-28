@@ -30,6 +30,7 @@ import { factsAt, KEY_FACTS, type KeyFact } from './keyFacts';
 import { ANOXIC_EXTENTS } from './anoxicExtent';
 import { PROVINCE_LEGEND } from './legends';
 import { LOSSES } from './losses';
+import { KPG_TEMPERATURES } from './kpgTemperatures';
 import { MEISHAN_TEMPERATURES } from './meishanTemperatures';
 import { EXTENTS } from './provinceExtents';
 import { PERMIAN_CARBON_DIOXIDE } from './permianCarbonDioxide';
@@ -293,7 +294,9 @@ function drawnOf(data: ExtinctionSites, id: string, ma: number): OwnTimeEvent | 
   if (place === null) return null;
   const strike = strikeEvent(impactPlay('Chicxulub', place, CHICXULUB_KM), phases);
   const deccan = placeOf(data, 'deccan-traps', ma);
-  return facing(deccan === null ? strike : withDeccan(strike, deccan), place, STRIKE_DISTANCE);
+  // The temperature after the impact, measured (#1229).
+  const charted = { ...strike, proxies: [KPG_TEMPERATURES] };
+  return facing(deccan === null ? charted : withDeccan(charted, deccan), place, STRIKE_DISTANCE);
 }
 
 /**
