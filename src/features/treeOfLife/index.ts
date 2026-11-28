@@ -1,7 +1,7 @@
 /**
  * The tree of life (#300) and life through time (#358), as a part of the page (#443): their two
- * sheets, each loaded the first time it is asked for, and the ways other parts open them at a
- * taxon or at a genus.
+ * sheets, each loaded the first time it is asked for, data and code alike (#220), and the ways
+ * other parts open them at a taxon or at a genus.
  */
 
 import {
@@ -12,10 +12,9 @@ import {
   type Place,
 } from '../../data/lineages';
 import { oldestFinds } from '../../data/fossilFinds';
-import type { FossilFinds } from '../../state/viewState';
+import type { FossilFinds, LineagesView, TreeView } from '../../state/viewState';
 import { loadTreeOfLife, type TreeOfLife } from '../../data/treeOfLife';
-import { createLineagesSheet } from './lineagesSheet';
-import { createTreeSheet } from './treeSheet';
+import { lazySheet, type LazySheet } from './lazySheet';
 import { errorMessage } from '../../util/errors';
 import type { MountedPart, PartContext } from '../part';
 
@@ -80,6 +79,34 @@ function genusWays(
   return { goToFinds, openFindsAt, openLineagesAt };
 }
 
+/** Life through time's sheet, its code loaded the first time it shows (#220). */
+function lazyLineagesSheet(
+  context: PartContext,
+  loadGroupLineages: (group: LineageGroup) => Promise<Lineages>,
+  goToFinds: (ma: number, where: Place, finds: FossilFinds) => void,
+  failed: (error: unknown) => void,
+): LazySheet<LineagesView> {
+  const { base, store } = context;
+  return lazySheet<LineagesView>(
+    () =>
+      import('./lineagesSheet').then(({ createLineagesSheet }) =>
+        createLineagesSheet(
+          (lineages) => {
+            store.set((state) => ({ ...state, lineages }));
+          },
+          loadGroupLineages,
+          (ma) => `${base}data/paleodem/${String(ma)}.png`,
+          (ma, where, finds) => {
+            store.set((state) => ({ ...state, lineages: null }));
+            goToFinds(ma, where, finds);
+          },
+          context.why('lineages', 'Life through time'),
+        ),
+      ),
+    failed,
+  );
+}
+
 export function mountTreeOfLife(context: PartContext): TreeOfLifePart {
   const { base, fetchJson, store } = context;
   let treeOfLife: Promise<TreeOfLife> | null = null;
@@ -102,16 +129,25 @@ export function mountTreeOfLife(context: PartContext): TreeOfLifePart {
     return loading;
   };
   const { goToFinds, openFindsAt, openLineagesAt } = genusWays(context, loadGroupLineages);
-  const treeSheet = createTreeSheet(
-    (tree) => {
-      store.set((state) => ({ ...state, tree }));
-    },
-    loadTree,
-    context.why('tree', 'Tree of life'),
-    (to, group, genus) => {
-      if (to === 'time') openLineagesAt(group, genus);
-      else openFindsAt(group, genus);
-    },
+  const failed = (error: unknown): void => {
+    context.notify(`Could not load the sheet: ${errorMessage(error)}`);
+  };
+  const treeSheet = lazySheet<TreeView>(
+    () =>
+      import('./treeSheet').then(({ createTreeSheet }) =>
+        createTreeSheet(
+          (tree) => {
+            store.set((state) => ({ ...state, tree }));
+          },
+          loadTree,
+          context.why('tree', 'Tree of life'),
+          (to, group, genus) => {
+            if (to === 'time') openLineagesAt(group, genus);
+            else openFindsAt(group, genus);
+          },
+        ),
+      ),
+    failed,
   );
   function openTreeAt(pick: TreePick): void {
     loadTree().then(
@@ -126,22 +162,11 @@ export function mountTreeOfLife(context: PartContext): TreeOfLifePart {
     );
   }
 
-  const lineagesSheet = createLineagesSheet(
-    (lineages) => {
-      store.set((state) => ({ ...state, lineages }));
-    },
-    loadGroupLineages,
-    (ma) => `${base}data/paleodem/${String(ma)}.png`,
-    (ma, where, finds) => {
-      store.set((state) => ({ ...state, lineages: null }));
-      goToFinds(ma, where, finds);
-    },
-    context.why('lineages', 'Life through time'),
-  );
+  const lineagesSheet = lazyLineagesSheet(context, loadGroupLineages, goToFinds, failed);
 
   return {
     watches: (state) => [state.tree, state.lineages],
-    elements: [treeSheet.dialog, lineagesSheet.dialog],
+    elements: [treeSheet.element, lineagesSheet.element],
     render(state) {
       treeSheet.show(state.tree);
       lineagesSheet.show(state.lineages);
