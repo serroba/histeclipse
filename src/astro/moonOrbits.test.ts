@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import data from '../../public/data/moon-orbits.json';
 import reference from '../../test-vectors/moons.json';
-import { loadMoonOrbits, moonPosition, MOONS, type MoonName } from './moonOrbits';
+import { eccentricAnomaly, loadMoonOrbits, moonPosition, MOONS, type MoonName } from './moonOrbits';
 
 const file = JSON.stringify(data);
 const serve = (body: string) => () => Promise.resolve(new Response(body));
@@ -59,5 +59,26 @@ describe('the moons going round their planets, against JPL Horizons', () => {
     await expect(loadMoonOrbits('moon-orbits.json', serve(JSON.stringify(bad)))).rejects.toThrow(
       'every moon',
     );
+  });
+});
+
+describe('Kepler’s equation', () => {
+  for (const e of [0, 0.2, 0.5, 0.85, 0.95]) {
+    it(`Given an eccentricity of ${String(e)}, Then it is solved all the way round, and turns beyond`, () => {
+      for (let degrees = -720; degrees <= 720; degrees += 7) {
+        const mean = (degrees * Math.PI) / 180;
+        const anomaly = eccentricAnomaly(mean, e);
+        const left = anomaly - e * Math.sin(anomaly) - mean;
+        const turns = left / (2 * Math.PI);
+        expect(Math.abs(turns - Math.round(turns))).toBeLessThan(1e-11);
+      }
+    });
+  }
+
+  it('Given a stretched orbit a hair past its pericentre, where a start from M overshoots, Then it settles', () => {
+    const anomaly = eccentricAnomaly(0.001, 0.95);
+    expect(anomaly - 0.95 * Math.sin(anomaly)).toBeCloseTo(0.001, 12);
+    expect(anomaly).toBeGreaterThan(0);
+    expect(anomaly).toBeLessThan(0.05);
   });
 });

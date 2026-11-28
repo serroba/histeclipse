@@ -1,7 +1,7 @@
 /**
- * The asteroid belt in the space view (#372): each asteroid a dot where it is, the larger ones
- * larger, all one dusty grey, the largest named, a tap on a name picked as `asteroid:<number>`.
- * A layer on the globe's host (#379): `globe.addLayer(asteroidBelt)`.
+ * The asteroids and dwarf planets in the space view (#372, #1329): each a dot where it is, the
+ * larger ones larger, all one dusty grey, those its feature names named, a tap on a name picked
+ * as `asteroid:<number>`. A layer on the globe's host (#379): `globe.addLayer(asteroidBelt)`.
  */
 
 import {
@@ -15,15 +15,14 @@ import {
 } from 'three';
 import { createNameLabels, type LayerFactory, type Triple } from '../../globe/layerHost';
 
-/** The asteroids named, those at least this wide, km: 27 of them, Ceres to Fortuna. */
-const NAMED_FROM_KM = 200;
-
 /** An asteroid of the belt as the globe is given it: where it is from Earth, J2000 km. */
 export interface SceneAsteroid {
   readonly number: string;
   readonly name: string;
   readonly km: Triple;
   readonly diameterKm: number;
+  /** Whether its name is written beside its dot. */
+  readonly named: boolean;
 }
 
 /** Dot sizes, pixels, for asteroids at least as wide as each diameter (km): Ceres the largest. */
@@ -115,7 +114,7 @@ export const asteroidBelt: LayerFactory<readonly SceneAsteroid[] | null> = (host
       // Two hundred names would crowd the belt; the dots are there for the rest.
       names.show(
         placed
-          .filter(({ diameterKm }) => diameterKm >= NAMED_FROM_KM)
+          .filter(({ named }) => named)
           .map(({ number, name, at }) => ({
             key: number,
             name,

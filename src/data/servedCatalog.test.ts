@@ -20,6 +20,7 @@ describe('reuseOf', () => {
     ['CC0 1.0', 'open'],
     ['ODbL 1.0', 'open'],
     ['Open Government Licence v3.0', 'open'],
+    ['BSD-3-Clause', 'open'],
     ['none stated (US Government work)', 'open'],
     ['Public domain (a work of the US Government)', 'open'],
     ['CC BY-NC 4.0', 'source'],

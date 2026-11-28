@@ -13,8 +13,12 @@ import { describe, expect, it } from 'vitest';
 
 import { servedCatalogue } from '../../vite.catalog';
 import { HeaderSchema } from '../data/header';
+import { reuseOf, type Reuse } from '../data/servedCatalog';
 import headerless from './headerless.json' with { type: 'json' };
 import { SOURCES } from './registry';
+
+/** From the terms that let a reader do least to those that let them do most. */
+const OPENNESS: readonly Reuse[] = ['source', 'unstated', 'open'];
 
 const data = join(process.cwd(), 'public', 'data');
 
@@ -46,11 +50,18 @@ describe('the headers of the served data', () => {
     expect(withHeader.length).toBeGreaterThan(0);
   });
 
-  it.each(withHeader)('%s names sources the registry has, under their licences', (_, header) => {
-    for (const id of header.sources) {
-      expect(Object.keys(SOURCES)).toContain(id);
+  it.each(withHeader)('%s names sources the registry has', (_, header) => {
+    for (const id of header.sources) expect(Object.keys(SOURCES)).toContain(id);
+  });
+
+  // The registry is the record of each source's terms (#389). A file may word its licence its
+  // own way, but never offer more than its sources do.
+  it.each(withHeader)('%s offers no more than its sources allow', (_, header) => {
+    const allowed = header.sources.map((id) => {
       const licence = (SOURCES as Readonly<Record<string, { licence?: string }>>)[id]?.licence;
-      if (licence !== undefined) expect(header.licence).toContain(licence);
-    }
+      return licence === undefined ? 'unstated' : reuseOf(licence);
+    });
+    const strictest = Math.min(...allowed.map((reuse) => OPENNESS.indexOf(reuse)));
+    expect(OPENNESS.indexOf(reuseOf(header.licence))).toBeLessThanOrEqual(strictest);
   });
 });

@@ -223,11 +223,16 @@ def index_file(layers: list[Json]) -> dict[str, Json]:
     """Build the manifest the web app reads: credit, units, encoding and the maps."""
     return {
         "schemaVersion": 1,
+        "sources": ["iap2024"],
         "credit": CREDIT,
         "source": SOURCE,
         "paper": "https://doi.org/10.5194/essd-16-3517-2024",
         "licence": LICENCE,
         "accessed": ACCESSED,
+        "changes": (
+            "Yearly means, trends in W/m² and their significance computed for this site, "
+            "averaged onto a 1° grid and packed into 8-bit images"
+        ),
         "units": "W/m²",
         "unitsNote": (
             "heat gained by the water column under each square metre of sea surface, per "
