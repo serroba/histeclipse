@@ -14,7 +14,7 @@ import {
 import { oldestFinds } from '../../data/fossilFinds';
 import type { FossilFinds, LineagesView, TreeView } from '../../state/viewState';
 import { loadTreeOfLife, type TreeOfLife } from '../../data/treeOfLife';
-import { lazySheet, type LazySheet } from './lazySheet';
+import { lazySheet, type LazySheet } from '../../ui/lazySheet';
 import { errorMessage } from '../../util/errors';
 import type { MountedPart, PartContext } from '../part';
 

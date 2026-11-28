@@ -42,7 +42,7 @@ import { createMarkerCard } from './ui/markerCard';
 import { createViewSwitch } from './ui/viewSwitch';
 import { countryRings, loadNamedPeriods } from './data/namedPeriods';
 import { createWhySheet } from './ui/whySheet';
-import { createImpactPathsSheet } from './ui/impactPathsSheet';
+import { lazyImpactPaths } from './ui/impactPathsLazy';
 import { lateDeltaT, lateEphemerides, lateTimeline, type PartContext } from './features/part';
 import { mountBoundaries } from './features/boundaries';
 import { mountTreeOfLife } from './features/treeOfLife';
@@ -153,9 +153,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     togglePanels: panels.toggle,
     marks: (state) => records.marks(state),
   });
-  // The impacts' paths through time (#304): the craters and today's coasts, loaded when opened,
-  // from what the layers already loaded where they have.
-  const impactPathsSheet = createImpactPathsSheet(
+  // The impacts' paths (#304): the craters and today's coasts, loaded when opened, code too (#220).
+  const impactPathsSheet = lazyImpactPaths(
     (craters) => {
       store.set((state) => ({ ...state, craters }));
     },
@@ -174,6 +173,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       partContext.goToDeepTime(ma, 'impacts', where);
     },
     whySheet.mark('impacts', 'Impact craters'),
+    notify,
   );
   // The Sources list: the whys of what is on screen now.
   const sources = createSourcesList(whySheet);
@@ -419,7 +419,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       sky.container,
       zoomRail.root,
       ...treeOfLife.elements,
-      impactPathsSheet.dialog,
+      impactPathsSheet.element,
       ...boundaries.elements,
       whySheet.dialog,
     ],
