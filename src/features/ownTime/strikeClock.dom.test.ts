@@ -322,8 +322,19 @@ describe('the strike clock’s panel (#1173)', () => {
     expect(frames).toHaveLength(0);
     vi.advanceTimersByTime(1);
     expect(frames).toHaveLength(1);
+    // The frame after the wait is quick again: the wait is not counted as its own time, so the
+    // next is asked for at once, not held back by the one hitch for good (#1309).
+    frames.shift()?.(632);
+    expect(frames).toHaveLength(1);
+    // Another slow one waits again.
+    frames.shift()?.(1032);
+    expect(frames).toHaveLength(0);
+    vi.advanceTimersByTime(400);
+    expect(frames).toHaveLength(1);
+    frames.shift()?.(1448);
+    expect(frames).toHaveLength(1);
     // Paused while it waits: nothing more is asked for.
-    frames.shift()?.(2316);
+    frames.shift()?.(3448);
     made.root.querySelector<HTMLButtonElement>('.strike-clock-play')?.click();
     vi.advanceTimersByTime(500);
     expect(frames).toHaveLength(0);
