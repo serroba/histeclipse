@@ -191,6 +191,8 @@ export const SURFACE_PRIORITY = {
   impacts: 40,
   extinctions: 45,
   // One genus's sites before the counts, so the counts give way to what was asked for (#309).
+  // An animal's story: its lineage's sites before any counts.
+  life: 47,
   fossilFinds: 48,
   fossils: 50,
   minorStates: 60,

@@ -45,7 +45,7 @@ export function contentSecurityPolicy(html: string): string {
     // through the style object, which a policy does not govern).
     'style-src': ["'self'", ...PHORIA_STYLES],
     // Maps and textures are the site's own; pictures are Wikimedia Commons thumbnails, and the
-    // Smithsonian's photographs of volcanoes.
+    // Smithsonian's photographs of volcanoes; the animals' silhouettes are PhyloPic's.
     'img-src': [
       "'self'",
       'data:',
@@ -53,6 +53,7 @@ export function contentSecurityPolicy(html: string): string {
       'https://upload.wikimedia.org',
       'https://thumb.wikimedia.org',
       'https://volcano.si.edu',
+      'https://images.phylopic.org',
     ],
     // Telemetry to Honeycomb, and the beacon's reports to Cloudflare.
     'connect-src': ["'self'", 'https://api.honeycomb.io', 'https://cloudflareinsights.com'],

@@ -46,6 +46,7 @@ import { lazyImpactPaths } from './ui/impactPathsLazy';
 import { lateDeltaT, lateEphemerides, lateTimeline, type PartContext } from './features/part';
 import { mountBoundaries } from './features/boundaries';
 import { mountTreeOfLife } from './features/treeOfLife';
+import { mountLife } from './features/life';
 import { mountSky } from './features/sky';
 import { mountBodies } from './features/bodies';
 import { mountRecords } from './features/records';
@@ -278,6 +279,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
       co2Archive.load();
     },
   });
+  // An animal's story (a prototype): found by name, told on the globe through deep time.
+  const life = mountLife({
+    ...partContext,
+    globe,
+    deepTime: {
+      enter: (ma) => {
+        deepTime.enterDeepTime(ma, 'all');
+      },
+      play: (ma, maPerSecond) => {
+        deepTime.playFrom(ma, 'all', maPerSecond);
+      },
+      playing: () => deepTime.playing(),
+    },
+  });
   // A passage's or a destination's view laid over the reader's, as a step back can undo.
   const opener = viewOpener({ store, deepTime, sync: () => sync, globe });
   const openAnchor = opener.anchor;
@@ -412,13 +427,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
   eclipses.timeline.append(days.root);
 
   // The page's frame (#442): each part's elements, where they go.
-  const headerTools = [boundaries.button, texts.search.button, panels.fullView];
+  const headerTools = [life.button, boundaries.button, texts.search.button, panels.fullView];
   const { hud, hudActions, bottom } = layOutPage(root, {
     under: [
       globeContainer,
       sky.container,
       zoomRail.root,
       ...treeOfLife.elements,
+      ...life.elements,
       impactPathsSheet.element,
       ...boundaries.elements,
       whySheet.dialog,
@@ -460,6 +476,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     over: [
       famous.dialog,
       texts.search.dialog,
+      life.dialog,
       records.dialog,
       layersPanel.dialog,
       ...explore.dialogs,
@@ -655,6 +672,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { name: 'wave', when: on(wave.watches), draw: wave.render },
     { name: 'telescopes', when: on(telescopeList.watches), draw: telescopeList.render },
     { name: 'tree', when: on(treeOfLife.watches), draw: treeOfLife.render },
+    { name: 'life', when: on(life.watches), draw: life.render },
     { name: 'sheets', draw: showSheets },
     // The time changed elsewhere (the year typed, the slider) ends the cycle's play.
     { name: 'cycle', draw: cycle.render },

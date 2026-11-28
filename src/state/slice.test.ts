@@ -89,12 +89,13 @@ describe("deep time's slice", () => {
     snowball: DEEP_DEFAULTS.snowball,
     water: 'inherited',
     finds: { group: 'dinosaurs', pbdb: 38613 },
+    life: { group: 'mammals', pbdb: 41045, focus: 41066 },
   };
 
   it('reads back what it writes', () => {
     const query = written(DEEP_PARAMS, away);
     expect(query).toBe(
-      'ma=66.04&scale=eons&dw=124%2C76&dispersal=b&species=neanderthal&story=humans&growth=fast&theia=immediate&finds=dinosaurs%3A38613&water=inherited',
+      'ma=66.04&scale=eons&dw=124%2C76&dispersal=b&species=neanderthal&story=humans&growth=fast&theia=immediate&finds=dinosaurs%3A38613&life=mammals%3A41045%3A41066&water=inherited',
     );
     expect(readSlice(DEEP_PARAMS, DEEP_DEFAULTS, readerOf(query))).toEqual(away);
   });
