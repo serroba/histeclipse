@@ -4,11 +4,13 @@
  * rests on, and how this site used them. The "Why this?" marks and the Sources panel read these.
  *
  * The data is in sources.json and, a why a file, in `whys/` (#906); the checks that every layer has its why, and that
- * every entry has the right shape, are in registry.test.ts.
+ * every entry has the right shape, are in registry.test.ts. Only each source's name, kind, link
+ * and licence are here, for what the features link to; the full references (citations.json) and
+ * the whys load with the panel that reads them (`content.ts`, #220).
  */
 
 import sourcesJson from './sources.json' with { type: 'json' };
-import { WHYS_CONTENT } from './whys';
+import type { WHYS_CONTENT } from './whys';
 
 /** What kind of thing a source is, each shown with its own icon. */
 export type SourceKind = 'paper' | 'dataset' | 'model' | 'imagery' | 'catalogue' | 'reference';
@@ -17,8 +19,6 @@ export interface Source {
   /** The name a link reads as. */
   readonly name: string;
   readonly kind: SourceKind;
-  /** The full reference: authors, year, venue, version. */
-  readonly cite: string;
   readonly url: string;
   /** As its maker states it; omitted when none is stated. */
   readonly licence?: string;
@@ -53,18 +53,69 @@ export interface Why {
   readonly reading?: readonly SourceId[];
 }
 
-// The whys are content, a file each in whys/ (#906); registry.test.ts checks each one's shape and
-// that every source it names exists.
-export const WHYS = WHYS_CONTENT as Readonly<Record<keyof typeof WHYS_CONTENT, Why>>;
+export type WhyId = keyof typeof WHYS_CONTENT;
 
-export type WhyId = keyof typeof WHYS;
+/**
+ * Every why by name, in the order of `whys.ts`, without their text: what a link's `why=` may
+ * name. registry.test.ts checks the two lists agree.
+ */
+export const WHY_IDS = [
+  'earth',
+  'moons',
+  'bodies',
+  'eclipses',
+  'sun',
+  'radiocarbon',
+  'dates',
+  'carbonMade',
+  'close-up',
+  'sky',
+  'empires-cliopatria',
+  'empires-ohm',
+  'delta-t',
+  'earth-facts',
+  'ways',
+  'periods',
+  'genomes',
+  'rocks',
+  'impacts',
+  'volcanoes',
+  'spacecraft',
+  'asteroids',
+  'orbits',
+  'deep-surface',
+  'deep-evidence',
+  'formation',
+  'ice-surface',
+  'temperature',
+  'sealevel',
+  'plates',
+  'humans',
+  'air',
+  'tree',
+  'fossils',
+  'lineages',
+  'search',
+  'boundaries',
+  'ozone',
+  'warming',
+  'oceanHeat',
+  'oceanTemp',
+  'enso',
+  'amoc',
+  'oceanCurrents',
+  'gravitationalWaves',
+  'telescopes',
+  'neutronStarMerger',
+  'extinctions',
+] as const satisfies readonly WhyId[];
 
 /**
  * What the why panel can show: one thing's why, every source ('all'), or what each layer has
  * at the place picked ('here').
  */
 export type WhyView = WhyId | 'all' | 'here';
-export const WHY_VIEWS: readonly WhyView[] = [...(Object.keys(WHYS) as WhyId[]), 'all', 'here'];
+export const WHY_VIEWS: readonly WhyView[] = [...WHY_IDS, 'all', 'here'];
 
 /** What one layer has at the place picked, for "Why here?", and the why of its source. */
 export interface HereFact {
@@ -80,12 +131,6 @@ export interface HereFact {
 export function doiOf(source: Source): string | null {
   const match = /^https:\/\/doi\.org\/(.+)$/.exec(source.url);
   return match?.[1] ?? null;
-}
-
-/** The reference to copy: the full citation, where to find it, and its licence. */
-export function citation(source: Source): string {
-  const licence = source.licence === undefined ? '' : ` Licence: ${source.licence}.`;
-  return `${source.cite}. ${source.url}${licence}`;
 }
 
 /** Where to get a source's BibTeX, from Crossref, when it has a DOI. */

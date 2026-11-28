@@ -63,7 +63,6 @@ export const LINE_LIMITS = {
   'globe/showerAnimation.ts': 618,
   'features/shower/leafScene.ts': 520,
   'time/calendars.ts': 481,
-  'ui/whySheet.ts': 435,
 };
 
 /**

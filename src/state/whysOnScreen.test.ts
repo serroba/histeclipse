@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { WHYS } from '../sources/registry';
+import { WHYS } from '../sources/content';
 import { LAYERS, type Layer, type Span } from './viewState';
 import { layerWhy, onScreen, type Scene } from './whysOnScreen';
 

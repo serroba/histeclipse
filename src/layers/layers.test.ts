@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { WHYS } from '../sources/registry';
+import { WHYS } from '../sources/content';
 import { LAYER_GROUPS, layerEntry, LAYERS } from './layers';
 
 describe('the layers', () => {
