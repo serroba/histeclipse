@@ -280,10 +280,17 @@ def index_file(curves: Iterable[Curve], maps: list[tuple[Map, float]]) -> dict[s
     """Build the manifest the web app reads: credit, baseline, curves, and the maps' encoding."""
     return {
         "schemaVersion": 1,
+        "sources": ["garner2021"],
         "credit": CREDIT,
         "source": SOURCE,
         "record": RECORD,
         "licence": LICENCE,
+        "accessed": "2026-11-12",
+        "changes": (
+            "Quantiles of the total sea-level change against 1995-2014 kept; the regional "
+            "maps packed into 8-bit images for this site; the day given as accessed is the "
+            "day this file was last written"
+        ),
         "units": "m",
         "baseline": BASELINE,
         "quantiles": list[Json](QUANTILES),

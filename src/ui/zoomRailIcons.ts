@@ -98,8 +98,8 @@ export function railIcons(handlers: {
     ),
     asteroids: iconButton(
       'asteroids',
-      'Asteroid belt',
-      'The asteroid belt: its asteroids 100 km across or more',
+      'Asteroids and dwarf planets',
+      'The largest asteroids and the dwarf planets, around the Sun',
       layerIcon('asteroids', 18),
       () => {
         handlers.onAsteroids();

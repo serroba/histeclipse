@@ -126,9 +126,16 @@ def index_file(maps: list[Json], curves: list[Json]) -> dict[str, Json]:
     """Build the manifest the web app reads: credit, scale, encoding, the map and the curves."""
     return {
         "schemaVersion": 1,
+        "sources": ["speibase"],
         "credit": CREDIT,
         "source": SOURCE,
         "licence": LICENCE,
+        "accessed": "2026-11-12",
+        "changes": (
+            "December values kept as yearly; trends, their significance and land means "
+            "computed for this site; maps packed into 8-bit images; the day given as accessed "
+            "is the day this file was last written"
+        ),
         "index": "SPEI, 12 months to December (standardised: 0 normal, -1 one deviation drier)",
         "dry": DRY,
         "coverage": "land",

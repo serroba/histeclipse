@@ -296,6 +296,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1007/s004100050465"
   },
+  "bragaRibas2013": {
+    "name": "Braga-Ribas et al. 2013",
+    "kind": "paper",
+    "url": "https://doi.org/10.1088/0004-637X/773/1/26"
+  },
   "brayard2009": {
     "name": "Brayard et al. 2009",
     "kind": "paper",
@@ -305,6 +310,11 @@
     "name": "Brehm et al. 2022",
     "kind": "paper",
     "url": "https://doi.org/10.1038/s41467-022-28804-9"
+  },
+  "brown2018": {
+    "name": "Brown & Butler 2018",
+    "kind": "paper",
+    "url": "https://doi.org/10.3847/1538-3881/aad9f2"
   },
   "brugger2017": {
     "name": "Brugger, Feulner & Petri 2017",
@@ -586,6 +596,11 @@
     "name": "de Winter et al. 2020",
     "kind": "paper",
     "url": "https://doi.org/10.1029/2019PA003723"
+  },
+  "deenen2010": {
+    "name": "Deenen et al. 2010",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.epsl.2010.01.003"
   },
   "deltaTLongTerm": {
     "name": "Stephenson et al. 2016",
@@ -981,6 +996,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1130/0091-7613(2002)030<0251:TAMEAT>2.0.CO;2"
   },
+  "hesselbo2004": {
+    "name": "Hesselbo et al. 2004",
+    "kind": "paper",
+    "url": "https://doi.org/10.1144/0016-764903-033"
+  },
   "hipparcos": {
     "name": "Hipparcos",
     "kind": "catalogue",
@@ -1000,6 +1020,12 @@
     "name": "HolVol",
     "kind": "dataset",
     "url": "https://doi.org/10.5194/essd-14-3167-2022",
+    "licence": "CC BY 4.0"
+  },
+  "hounslowAndrews2024": {
+    "name": "Hounslow & Andrews 2024",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.palaeo.2024.112579",
     "licence": "CC BY 4.0"
   },
   "hu2016": {
@@ -1070,6 +1096,11 @@
     "kind": "dataset",
     "url": "https://doi.org/10.1175/JCLI-D-15-0730.1",
     "licence": "None stated; freely available from the IAP, credited"
+  },
+  "iauDwarfPlanets": {
+    "name": "IAU: the five dwarf planets (2008)",
+    "kind": "reference",
+    "url": "https://www.iau.org/Iau/News/PR2008/iau-names-fifth-dwarf-planet-haumea.aspx"
   },
   "iauGazetteer": {
     "name": "Gazetteer of Planetary Nomenclature",
@@ -1184,7 +1215,7 @@
     "licence": "CC BY 3.0"
   },
   "jplHorizonsAsteroids": {
-    "name": "JPL Horizons: asteroids",
+    "name": "JPL Horizons: asteroids and dwarf planets",
     "kind": "dataset",
     "url": "https://ssd.jpl.nasa.gov/horizons/",
     "licence": "NASA/JPL, public domain"
@@ -1250,6 +1281,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1002/2015GC005734"
   },
+  "kent2017": {
+    "name": "Kent et al. 2017",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.earscirev.2016.12.014"
+  },
   "keplerPressKit": {
     "name": "NASA/JPL: Kepler launch press kit",
     "kind": "reference",
@@ -1264,6 +1300,11 @@
     "name": "Kirschvink et al. 1997",
     "kind": "paper",
     "url": "https://doi.org/10.1126/science.277.5325.541"
+  },
+  "kiss2019": {
+    "name": "Kiss et al. 2019",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.icarus.2019.03.013"
   },
   "kivelson2000": {
     "name": "Kivelson et al. 2000",
@@ -1380,6 +1421,11 @@
     "url": "https://doi.org/10.1017/9781009157896.006",
     "licence": "© IPCC (the report; its figures’ data are CC BY 4.0)"
   },
+  "lellouch2013": {
+    "name": "Lellouch et al. 2013",
+    "kind": "paper",
+    "url": "https://doi.org/10.1051/0004-6361/201322047"
+  },
   "lemen2012": {
     "name": "Lemen et al. 2012",
     "kind": "paper",
@@ -1395,6 +1441,11 @@
     "name": "Li et al. 2008",
     "kind": "paper",
     "url": "https://doi.org/10.1016/j.precamres.2007.04.021"
+  },
+  "lindstrom2017": {
+    "name": "Lindström et al. 2017",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.palaeo.2016.12.025"
   },
   "lindstrom2021": {
     "name": "Lindström et al. 2021",
@@ -1760,6 +1811,11 @@
     "url": "https://doi.org/10.7289/V53F4MVP",
     "licence": "Public domain (US government work)"
   },
+  "nimmo2017": {
+    "name": "Nimmo et al. 2017",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.icarus.2016.06.027"
+  },
   "noaaGlobalTemp": {
     "name": "NOAAGlobalTemp v6.1",
     "kind": "dataset",
@@ -1851,6 +1907,16 @@
     "url": "https://doi.org/10.1016/j.quascirev.2016.12.024",
     "licence": "CC BY 4.0"
   },
+  "ortiz2012": {
+    "name": "Ortiz et al. 2012",
+    "kind": "paper",
+    "url": "https://doi.org/10.1038/nature11597"
+  },
+  "ortiz2017": {
+    "name": "Ortiz et al. 2017",
+    "kind": "paper",
+    "url": "https://doi.org/10.1038/nature24051"
+  },
   "osmSlough": {
     "name": "OpenStreetMap: Herschel Street, Slough",
     "kind": "catalogue",
@@ -1880,6 +1946,11 @@
     "kind": "dataset",
     "url": "https://doi.org/10.1038/s41561-019-0400-0",
     "licence": "None stated; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
+  },
+  "pal2012": {
+    "name": "Pál et al. 2012",
+    "kind": "paper",
+    "url": "https://doi.org/10.1051/0004-6361/201218874"
   },
   "paleBlueDot": {
     "name": "Voyager 1: Pale Blue Dot",
@@ -2091,6 +2162,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1038/ngeo2866"
   },
+  "ruhl2010": {
+    "name": "Ruhl et al. 2010",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.epsl.2010.04.008"
+  },
   "ruhl2011": {
     "name": "Ruhl et al. 2011",
     "kind": "paper",
@@ -2211,6 +2287,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.12789/geocanj.2014.41.060"
   },
+  "sicardy2011": {
+    "name": "Sicardy et al. 2011",
+    "kind": "paper",
+    "url": "https://doi.org/10.1038/nature10550"
+  },
   "siegel2019": {
     "name": "Siegel et al. 2019, collapsars as a source of r-process elements",
     "kind": "paper",
@@ -2265,6 +2346,11 @@
     "kind": "dataset",
     "url": "https://doi.org/10.20350/digitalCSIC/16497",
     "licence": "ODbL 1.0"
+  },
+  "spencer2020": {
+    "name": "Spencer et al. 2020",
+    "kind": "paper",
+    "url": "https://doi.org/10.1126/science.aay3999"
   },
   "sprain2019": {
     "name": "Sprain et al. 2019",
@@ -2444,6 +2530,12 @@
     "url": "https://doi.org/10.1038/s41586-019-1676-3",
     "licence": "Springer Nature (all rights reserved); facts quoted"
   },
+  "weedon2018": {
+    "name": "Weedon et al. 2018",
+    "kind": "paper",
+    "url": "https://doi.org/10.1017/S0016756818000808",
+    "licence": "CC BY 4.0"
+  },
   "wells1963": {
     "name": "Wells 1963",
     "kind": "paper",
@@ -2525,6 +2617,12 @@
     "name": "Zhao et al. 2002",
     "kind": "paper",
     "url": "https://doi.org/10.1016/S0012-8252(02)00073-9"
+  },
+  "zhao2026": {
+    "name": "Zhao et al. 2026",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.gloplacha.2026.105690",
+    "licence": "CC BY 4.0"
   },
   "zi2010": {
     "name": "Zi et al. 2010",

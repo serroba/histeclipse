@@ -132,9 +132,15 @@ def periods_file(
     citations, periods = periods_of(dump, index)
     return {
         "schemaVersion": 1,
+        "sources": ["periodo", "naturalEarth"],
         "credit": CREDIT,
         "source": SOURCE,
         "accessed": accessed,
+        "licence": "CC0 (PeriodO); public domain (Natural Earth)",
+        "changes": (
+            "Periods matched to countries by their Wikidata identifiers; country outlines "
+            "from Natural Earth 1:110m"
+        ),
         "countries": [
             {
                 "name": name,

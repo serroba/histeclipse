@@ -292,8 +292,16 @@ def index_file(frames: list[tuple[int, float]], coldest: float, warmest: float) 
     """Build the manifest the web app reads: credit, encoding, grid shape and time steps."""
     return {
         "schemaVersion": 1,
+        "sources": ["krapp2021"],
         "credit": CREDIT,
         "source": ZENODO_RECORD,
+        "licence": "CC BY 4.0",
+        "accessed": "2026-11-11",
+        "changes": (
+            "Land only, ice sheets left out; averaged onto a 1° grid and packed into 8-bit "
+            "images for this site; the day given as accessed is the day this file was last "
+            "written"
+        ),
         "coverage": "land",
         "columns": COLUMNS,
         "rows": ROWS,

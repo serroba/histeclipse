@@ -22,11 +22,14 @@ export const HEADER = {
 } as const;
 
 /**
- * What the header adds to a file that already stated its credit, for its schema to allow. The
- * served files are held to them by `sources/dataHeaders.test.ts`; the site reads neither.
+ * What the header adds to a file that already stated its credit, for its schema to allow, spread
+ * before the schema's own fields so that one it declares itself stands. The served files are
+ * held to them by `sources/dataHeaders.test.ts`; the site reads none of them.
  */
 export const HEADER_ADDED = {
   sources: v.optional(HEADER.sources),
+  licence: v.optional(HEADER.licence),
+  accessed: v.optional(HEADER.accessed),
   changes: v.optional(HEADER.changes),
 } as const;
 
@@ -34,5 +37,4 @@ export const HEADER_ADDED = {
 export const HeaderSchema = v.looseObject({
   schemaVersion: v.pipe(v.number(), v.integer(), v.minValue(1)),
   ...HEADER,
-  units: v.optional(UNITS),
 });

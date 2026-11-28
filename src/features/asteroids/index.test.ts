@@ -38,7 +38,7 @@ function fakeContext(planetsLoaded: boolean) {
   return { context, drawn, cards, rail, refresh, notify, loadPlanets };
 }
 
-describe('the asteroid belt as a feature', () => {
+describe('the asteroids and dwarf planets as a feature', () => {
   it('is shown again when the layers change, and not for other changes', () => {
     expect(asteroidsFeature.watches(on)).toEqual([on.layers]);
     expect(asteroidsFeature.watches({ ...on, mode: 'sky' })).toEqual([on.layers]);
@@ -69,9 +69,18 @@ describe('the asteroid belt as a feature', () => {
     expect(drawn).toEqual([]);
 
     belt.show?.(on, J2000);
-    const shown = drawn[0] as readonly { number: string; km: readonly number[] }[];
+    const shown = drawn[0] as readonly {
+      number: string;
+      name: string;
+      km: readonly number[];
+      named: boolean;
+    }[];
     expect(shown).toHaveLength(Object.keys(data.asteroids).length);
     expect(shown.every(({ km }) => km.every(Number.isFinite))).toBe(true);
+    // The largest of the crowded belt and the chosen few are named; the rest are dots.
+    const names = shown.filter((each) => each.named).map((each) => each.name);
+    expect(names).toEqual(expect.arrayContaining(['Ceres', 'Vesta', 'Pluto', 'Sedna', 'Eros']));
+    expect(names).not.toContain('Gudrun');
 
     belt.pick?.('1');
     expect(cards).toHaveLength(1);

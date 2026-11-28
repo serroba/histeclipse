@@ -112,10 +112,16 @@ def cmip6_file(years: list[int], tsi: list[float], accessed: str) -> dict[str, J
     means = annual_means(years, tsi, first, last)
     return {
         "schemaVersion": 1,
+        "sources": ["matthes2017"],
         "credit": CMIP6_CREDIT,
         "source": CMIP6_SOURCE,
         "page": CMIP6_PAGE,
         "accessed": accessed,
+        "licence": "CC BY-SA 4.0",
+        "changes": (
+            "The historical part, 1850-2014, of the monthly reference scenario; each year the "
+            "plain mean of its twelve months, shared under the same licence"
+        ),
         "unit": "W/m²",
         "what": "total solar irradiance at 1 AU, annual mean of the monthly reconstruction",
         "firstYear": first,
@@ -165,10 +171,20 @@ def steinhilber_file(rows: list[SolarRow], accessed: str) -> dict[str, Json]:
     """Build the site's file: the 22-year means as columns, oldest first."""
     return {
         "schemaVersion": 1,
+        "sources": ["steinhilber2012"],
         "credit": STEINHILBER_CREDIT,
         "source": STEINHILBER_SOURCE,
         "paper": "https://doi.org/10.1073/pnas.1118965109",
         "accessed": accessed,
+        "licence": (
+            "None stated; NOAA NCEI asks users to cite the publication, the online resource "
+            "and the date accessed"
+        ),
+        "changes": (
+            "The 22-year means as given, each with its 1-sigma and the solar modulation "
+            "potential, with the reference they differ from beside them; years turned from "
+            "cal yr BP to astronomical CE"
+        ),
         "unit": "W/m²",
         "what": (
             "total solar irradiance as the difference from the PMOD composite at the 1986 "
@@ -234,10 +250,16 @@ def evolv2k_file(events: list[Injection], accessed: str) -> dict[str, Json]:
     """Build the site's file: the events as columns, oldest first."""
     return {
         "schemaVersion": 1,
+        "sources": ["evolv2k"],
         "credit": EVOLV2K_CREDIT,
         "source": EVOLV2K_SOURCE,
         "paper": "https://doi.org/10.5194/essd-9-809-2017",
         "accessed": accessed,
+        "licence": "CC BY 4.0",
+        "changes": (
+            "Each sulfur injection with its 1-sigma, date, latitude and, where the authors "
+            "give it, the volcano; where the file's two year columns disagree, both kept"
+        ),
         "unit": "Tg S",
         "what": "volcanic stratospheric sulfur injection per eruption, with its 1-sigma",
         "year": [event.year for event in events],

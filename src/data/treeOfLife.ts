@@ -12,6 +12,7 @@ import * as v from 'valibot';
 import { valueAt } from '../util/arrays';
 import { LINEAGE_GROUPS, type LineageGroup } from './lineages';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 const Index = v.pipe(v.number(), v.integer(), v.minValue(0));
 const IndexMap = v.record(v.string(), Index);
@@ -19,6 +20,7 @@ const IndexMap = v.record(v.string(), Index);
 const TreeOfLifeSchema = v.pipe(
   v.strictObject({
     schemaVersion: v.literal(1),
+    ...HEADER_ADDED,
     accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
     credit: v.pipe(v.string(), v.minLength(1)),
     source: v.pipe(v.string(), v.url()),

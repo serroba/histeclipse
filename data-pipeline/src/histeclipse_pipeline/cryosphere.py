@@ -174,9 +174,17 @@ def imbie_index(regions: Sequence[dict[str, Json]]) -> dict[str, Json]:
     """Build the IMBIE manifest: credit, units and every region's series."""
     return {
         "schemaVersion": SCHEMA_VERSION,
+        "sources": ["imbie"],
         "credit": IMBIE_CREDIT,
         "source": IMBIE_SOURCE,
         "licence": IMBIE_LICENCE,
+        "accessed": "2026-11-12",
+        "changes": (
+            "Written once a year from the monthly series: the year's mean rate and the "
+            "cumulative change at its last month, from zero at the start of each record; "
+            "one-sigma uncertainties kept; the day given as accessed is the day this file was "
+            "last written"
+        ),
         "units": {"rate": "Gt/yr", "mass": "Gt"},
         "gtPerMm": GT_PER_MM,
         "baseline": "cumulative change from zero at the first month of each record",
@@ -202,7 +210,7 @@ GLAMBIE = Download(
     "f2e615a2598229396ab7e262b3a5d66c1b7acce999c93d3c5d3a884418546265",
 )
 GLAMBIE_SOURCE = "https://doi.org/10.5904/wgms-glambie-2024-07"
-GLAMBIE_LICENCE = "Open access, on condition of correct citation (WGMS)"
+GLAMBIE_LICENCE = "None stated; open access on condition of correct citation (WGMS)"
 GLAMBIE_CREDIT = (
     "GlaMBIE (The GlaMBIE Team 2025, Community estimate of global glacier mass changes from "
     "2000 to 2023, Nature 639, 382; dataset 1.0.0, WGMS, doi:10.5904/wgms-glambie-2024-07), open "
@@ -323,9 +331,17 @@ def glaciers_index(world: dict[str, Json], regions: list[Json]) -> dict[str, Jso
     """Build the glaciers manifest: credit, units, the world's total and each region's series."""
     return {
         "schemaVersion": SCHEMA_VERSION,
+        "sources": ["glambie", "hugonnet2021"],
         "credit": GLAMBIE_CREDIT,
         "source": GLAMBIE_SOURCE,
         "licence": GLAMBIE_LICENCE,
+        "accessed": "2026-11-12",
+        "changes": (
+            "Each region's yearly mass change, combined and by kind of observation, and the "
+            "world's total, as curves; Hugonnet et al.'s five-year elevation changes by "
+            "region kept beside them; the day given as accessed is the day this file was last "
+            "written"
+        ),
         "units": {
             "gt": "Gt per year (negative: loss)",
             "mwe": "m water equivalent per year",
@@ -442,9 +458,15 @@ def seaice_index(series: Sequence[dict[str, Json]]) -> dict[str, Json]:
     """Build the sea-ice trend manifest: credit, units and each month's series."""
     return {
         "schemaVersion": SCHEMA_VERSION,
+        "sources": ["nsidcSeaIce"],
         "credit": SEAICE_CREDIT,
         "source": SEAICE_SOURCE,
         "licence": SEAICE_LICENCE,
+        "accessed": "2026-11-12",
+        "changes": (
+            "The monthly mean extent and area of each pole's months of most and least ice, as "
+            "yearly curves; the day given as accessed is the day this file was last written"
+        ),
         "units": {"extent": "million km²", "area": "million km²"},
         "note": (
             "Monthly means, not the single day of most or least ice. Extent counts every "
@@ -502,9 +524,15 @@ def snow_cover(text: str) -> dict[str, Json]:
     ]
     return {
         "schemaVersion": SCHEMA_VERSION,
+        "sources": ["rutgersSnow"],
         "credit": SNOW_CREDIT,
         "source": SNOW_SOURCE,
         "licence": SNOW_LICENCE,
+        "accessed": "2026-11-12",
+        "changes": (
+            "The monthly table as a row of twelve months for each year; months missing in the "
+            "source are null; the day given as accessed is the day this file was last written"
+        ),
         "units": {"extent": "million km²"},
         "coverage": "Northern Hemisphere land, Greenland included",
         "note": (
