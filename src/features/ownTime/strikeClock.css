@@ -321,6 +321,44 @@
   line-height: 1.35;
 }
 
+/* The extinction against every stage's losses (#1269): bars as wide as each stage, as tall as
+   its share lost, the extinction's own marked. */
+.loss-history {
+  margin: 2px 0 0;
+}
+
+.loss-history-title {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.loss-history-plot {
+  position: relative;
+  height: 36px;
+  margin-top: 2px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.2);
+}
+
+.loss-history-bar {
+  position: absolute;
+  bottom: 0;
+  background: rgb(255 255 255 / 0.22);
+}
+
+.loss-history-marked {
+  z-index: 1;
+  /* A crisis stage can be a few pixels of half a billion years: kept wide enough to see. */
+  min-width: 4px;
+  background: rgb(240 110 90);
+}
+
+.loss-history-ends {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-muted);
+  font-size: 10px;
+}
+
 /* A measured record above the slider (#1229): inset as the slider's marks are, so each reading
    sits over its moment and the thumb is its cursor. */
 .proxy-chart {

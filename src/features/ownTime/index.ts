@@ -52,6 +52,7 @@ interface OwnTimePlay {
 export { phase, phaseAt, type EventPhase } from './phases';
 export type { DatedWindow } from './strikeClock';
 export type { LossGauge } from './lossGauge';
+export type { LossHistory } from './lossHistory';
 export { createGuide, IDLE_MS, type Guide, type GuideView } from './guide';
 export type { LegendItem } from './legend';
 export type { ProxyChart, ProxyReading } from './proxyChart';

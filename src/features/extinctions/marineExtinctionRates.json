@@ -1,0 +1,855 @@
+{
+  "credit": "The Paleobiology Database (paleobiodb.org): marine animal occurrences identified to genus, counted by stage for this site; extinction by three-timer (Alroy 2008) and gap-filler (Alroy 2014) rates",
+  "source": "https://paleobiodb.org",
+  "licence": "CC0, as the PBDB data service states it",
+  "accessed": "2026-11-28",
+  "occurrences": 847720,
+  "stages": [
+    {
+      "stage": "Fortunian",
+      "base": 538.8,
+      "top": 529.0,
+      "genera": 48,
+      "lastFound": 0.271,
+      "threeTimer": null,
+      "gapFiller": null
+    },
+    {
+      "stage": "Stage 2",
+      "base": 529.0,
+      "top": 521.0,
+      "genera": 230,
+      "lastFound": 0.457,
+      "threeTimer": 0.282,
+      "gapFiller": 0.457
+    },
+    {
+      "stage": "Stage 3",
+      "base": 521.0,
+      "top": 514.5,
+      "genera": 757,
+      "lastFound": 0.814,
+      "threeTimer": 0.625,
+      "gapFiller": 0.686
+    },
+    {
+      "stage": "Stage 4",
+      "base": 514.5,
+      "top": 506.5,
+      "genera": 335,
+      "lastFound": 0.678,
+      "threeTimer": 0.754,
+      "gapFiller": 0.686
+    },
+    {
+      "stage": "Wuliuan",
+      "base": 506.5,
+      "top": 504.5,
+      "genera": 283,
+      "lastFound": 0.65,
+      "threeTimer": 0.652,
+      "gapFiller": 0.514
+    },
+    {
+      "stage": "Drumian",
+      "base": 504.5,
+      "top": 500.5,
+      "genera": 204,
+      "lastFound": 0.441,
+      "threeTimer": 0.13,
+      "gapFiller": 0.18
+    },
+    {
+      "stage": "Guzhangian",
+      "base": 500.5,
+      "top": 497.0,
+      "genera": 358,
+      "lastFound": 0.712,
+      "threeTimer": 0.865,
+      "gapFiller": 0.883
+    },
+    {
+      "stage": "Paibian",
+      "base": 497.0,
+      "top": 494.2,
+      "genera": 193,
+      "lastFound": 0.425,
+      "threeTimer": 0.655,
+      "gapFiller": 0.347
+    },
+    {
+      "stage": "Jiangshanian",
+      "base": 494.2,
+      "top": 491.0,
+      "genera": 200,
+      "lastFound": 0.3,
+      "threeTimer": 0.084,
+      "gapFiller": 0.02
+    },
+    {
+      "stage": "Stage 10",
+      "base": 491.0,
+      "top": 486.85,
+      "genera": 404,
+      "lastFound": 0.458,
+      "threeTimer": 0.268,
+      "gapFiller": 0.345
+    },
+    {
+      "stage": "Tremadocian",
+      "base": 486.85,
+      "top": 477.1,
+      "genera": 858,
+      "lastFound": 0.526,
+      "threeTimer": 0.678,
+      "gapFiller": 0.73
+    },
+    {
+      "stage": "Floian",
+      "base": 477.1,
+      "top": 471.3,
+      "genera": 731,
+      "lastFound": 0.328,
+      "threeTimer": 0.621,
+      "gapFiller": 0.116
+    },
+    {
+      "stage": "Dapingian",
+      "base": 471.3,
+      "top": 469.4,
+      "genera": 649,
+      "lastFound": 0.149,
+      "threeTimer": 0.0,
+      "gapFiller": 0.072
+    },
+    {
+      "stage": "Darriwilian",
+      "base": 469.4,
+      "top": 458.2,
+      "genera": 1464,
+      "lastFound": 0.431,
+      "threeTimer": 0.386,
+      "gapFiller": 0.441
+    },
+    {
+      "stage": "Sandbian",
+      "base": 458.2,
+      "top": 452.8,
+      "genera": 1366,
+      "lastFound": 0.238,
+      "threeTimer": 0.034,
+      "gapFiller": 0.199
+    },
+    {
+      "stage": "Katian",
+      "base": 452.8,
+      "top": 445.2,
+      "genera": 1842,
+      "lastFound": 0.55,
+      "threeTimer": 0.551,
+      "gapFiller": 0.609
+    },
+    {
+      "stage": "Hirnantian",
+      "base": 445.2,
+      "top": 443.1,
+      "genera": 943,
+      "lastFound": 0.275,
+      "threeTimer": 0.595,
+      "gapFiller": 0.43
+    },
+    {
+      "stage": "Rhuddanian",
+      "base": 443.1,
+      "top": 440.5,
+      "genera": 817,
+      "lastFound": 0.108,
+      "threeTimer": 0.14,
+      "gapFiller": 0.014
+    },
+    {
+      "stage": "Aeronian",
+      "base": 440.5,
+      "top": 438.6,
+      "genera": 932,
+      "lastFound": 0.134,
+      "threeTimer": 0.0,
+      "gapFiller": 0.1
+    },
+    {
+      "stage": "Telychian",
+      "base": 438.6,
+      "top": 432.9,
+      "genera": 1173,
+      "lastFound": 0.298,
+      "threeTimer": 0.26,
+      "gapFiller": 0.323
+    },
+    {
+      "stage": "Sheinwoodian",
+      "base": 432.9,
+      "top": 430.6,
+      "genera": 1032,
+      "lastFound": 0.157,
+      "threeTimer": 0.21,
+      "gapFiller": 0.158
+    },
+    {
+      "stage": "Homerian",
+      "base": 430.6,
+      "top": 426.7,
+      "genera": 1032,
+      "lastFound": 0.17,
+      "threeTimer": 0.196,
+      "gapFiller": 0.172
+    },
+    {
+      "stage": "Gorstian",
+      "base": 426.7,
+      "top": 425.0,
+      "genera": 979,
+      "lastFound": 0.129,
+      "threeTimer": 0.013,
+      "gapFiller": 0.062
+    },
+    {
+      "stage": "Ludfordian",
+      "base": 425.0,
+      "top": 422.7,
+      "genera": 987,
+      "lastFound": 0.239,
+      "threeTimer": 0.311,
+      "gapFiller": 0.289
+    },
+    {
+      "stage": "Lochkovian",
+      "base": 419.62,
+      "top": 413.02,
+      "genera": 1412,
+      "lastFound": 0.316,
+      "threeTimer": 0.157,
+      "gapFiller": 0.136
+    },
+    {
+      "stage": "Pragian",
+      "base": 413.02,
+      "top": 410.62,
+      "genera": 1440,
+      "lastFound": 0.248,
+      "threeTimer": 0.112,
+      "gapFiller": 0.184
+    },
+    {
+      "stage": "Emsian",
+      "base": 410.62,
+      "top": 393.47,
+      "genera": 1898,
+      "lastFound": 0.402,
+      "threeTimer": 0.253,
+      "gapFiller": 0.25
+    },
+    {
+      "stage": "Eifelian",
+      "base": 393.47,
+      "top": 387.95,
+      "genera": 1517,
+      "lastFound": 0.277,
+      "threeTimer": 0.175,
+      "gapFiller": 0.26
+    },
+    {
+      "stage": "Givetian",
+      "base": 387.95,
+      "top": 382.31,
+      "genera": 1679,
+      "lastFound": 0.473,
+      "threeTimer": 0.423,
+      "gapFiller": 0.474
+    },
+    {
+      "stage": "Frasnian",
+      "base": 382.31,
+      "top": 372.15,
+      "genera": 1270,
+      "lastFound": 0.424,
+      "threeTimer": 0.404,
+      "gapFiller": 0.357
+    },
+    {
+      "stage": "Famennian",
+      "base": 372.15,
+      "top": 358.86,
+      "genera": 1216,
+      "lastFound": 0.461,
+      "threeTimer": 0.524,
+      "gapFiller": 0.49
+    },
+    {
+      "stage": "Tournaisian",
+      "base": 358.86,
+      "top": 346.7,
+      "genera": 1145,
+      "lastFound": 0.305,
+      "threeTimer": 0.173,
+      "gapFiller": 0.269
+    },
+    {
+      "stage": "Visean",
+      "base": 346.7,
+      "top": 330.3,
+      "genera": 1404,
+      "lastFound": 0.361,
+      "threeTimer": 0.493,
+      "gapFiller": 0.496
+    },
+    {
+      "stage": "Serpukhovian",
+      "base": 330.3,
+      "top": 323.4,
+      "genera": 1116,
+      "lastFound": 0.254,
+      "threeTimer": 0.364,
+      "gapFiller": 0.258
+    },
+    {
+      "stage": "Bashkirian",
+      "base": 323.4,
+      "top": 315.2,
+      "genera": 1154,
+      "lastFound": 0.207,
+      "threeTimer": 0.213,
+      "gapFiller": 0.164
+    },
+    {
+      "stage": "Moscovian",
+      "base": 315.2,
+      "top": 307.0,
+      "genera": 1319,
+      "lastFound": 0.265,
+      "threeTimer": 0.268,
+      "gapFiller": 0.157
+    },
+    {
+      "stage": "Kasimovian",
+      "base": 307.0,
+      "top": 303.7,
+      "genera": 1122,
+      "lastFound": 0.112,
+      "threeTimer": 0.1,
+      "gapFiller": 0.069
+    },
+    {
+      "stage": "Gzhelian",
+      "base": 303.7,
+      "top": 298.9,
+      "genera": 1162,
+      "lastFound": 0.121,
+      "threeTimer": 0.161,
+      "gapFiller": 0.21
+    },
+    {
+      "stage": "Asselian",
+      "base": 298.9,
+      "top": 293.52,
+      "genera": 1251,
+      "lastFound": 0.082,
+      "threeTimer": 0.05,
+      "gapFiller": 0.095
+    },
+    {
+      "stage": "Sakmarian",
+      "base": 293.52,
+      "top": 290.1,
+      "genera": 1384,
+      "lastFound": 0.086,
+      "threeTimer": 0.004,
+      "gapFiller": 0.009
+    },
+    {
+      "stage": "Artinskian",
+      "base": 290.1,
+      "top": 283.3,
+      "genera": 1614,
+      "lastFound": 0.165,
+      "threeTimer": 0.008,
+      "gapFiller": 0.116
+    },
+    {
+      "stage": "Kungurian",
+      "base": 283.3,
+      "top": 274.4,
+      "genera": 1907,
+      "lastFound": 0.252,
+      "threeTimer": 0.138,
+      "gapFiller": 0.196
+    },
+    {
+      "stage": "Roadian",
+      "base": 274.4,
+      "top": 266.9,
+      "genera": 1765,
+      "lastFound": 0.241,
+      "threeTimer": 0.163,
+      "gapFiller": 0.212
+    },
+    {
+      "stage": "Wordian",
+      "base": 266.9,
+      "top": 264.28,
+      "genera": 1618,
+      "lastFound": 0.204,
+      "threeTimer": 0.11,
+      "gapFiller": 0.055
+    },
+    {
+      "stage": "Capitanian",
+      "base": 264.28,
+      "top": 259.857,
+      "genera": 1438,
+      "lastFound": 0.243,
+      "threeTimer": 0.175,
+      "gapFiller": 0.238
+    },
+    {
+      "stage": "Wuchiapingian",
+      "base": 259.857,
+      "top": 254.14,
+      "genera": 1364,
+      "lastFound": 0.331,
+      "threeTimer": 0.001,
+      "gapFiller": 0.212
+    },
+    {
+      "stage": "Changhsingian",
+      "base": 254.14,
+      "top": 251.902,
+      "genera": 1125,
+      "lastFound": 0.584,
+      "threeTimer": 0.788,
+      "gapFiller": 0.762
+    },
+    {
+      "stage": "Induan",
+      "base": 251.902,
+      "top": 250.8,
+      "genera": 651,
+      "lastFound": 0.21,
+      "threeTimer": 0.355,
+      "gapFiller": 0.217
+    },
+    {
+      "stage": "Olenekian",
+      "base": 250.8,
+      "top": 247.0,
+      "genera": 941,
+      "lastFound": 0.411,
+      "threeTimer": 0.297,
+      "gapFiller": 0.33
+    },
+    {
+      "stage": "Anisian",
+      "base": 247.0,
+      "top": 241.464,
+      "genera": 1308,
+      "lastFound": 0.371,
+      "threeTimer": 0.154,
+      "gapFiller": 0.21
+    },
+    {
+      "stage": "Ladinian",
+      "base": 241.464,
+      "top": 237.0,
+      "genera": 1175,
+      "lastFound": 0.259,
+      "threeTimer": 0.143,
+      "gapFiller": 0.214
+    },
+    {
+      "stage": "Carnian",
+      "base": 237.0,
+      "top": 227.3,
+      "genera": 1410,
+      "lastFound": 0.361,
+      "threeTimer": 0.27,
+      "gapFiller": 0.348
+    },
+    {
+      "stage": "Norian",
+      "base": 227.3,
+      "top": 205.7,
+      "genera": 1361,
+      "lastFound": 0.407,
+      "threeTimer": 0.297,
+      "gapFiller": 0.369
+    },
+    {
+      "stage": "Rhaetian",
+      "base": 205.7,
+      "top": 201.4,
+      "genera": 993,
+      "lastFound": 0.342,
+      "threeTimer": 0.638,
+      "gapFiller": 0.585
+    },
+    {
+      "stage": "Hettangian",
+      "base": 201.4,
+      "top": 199.5,
+      "genera": 903,
+      "lastFound": 0.155,
+      "threeTimer": 0.057,
+      "gapFiller": 0.015
+    },
+    {
+      "stage": "Sinemurian",
+      "base": 199.5,
+      "top": 192.9,
+      "genera": 1037,
+      "lastFound": 0.18,
+      "threeTimer": 0.053,
+      "gapFiller": 0.098
+    },
+    {
+      "stage": "Pliensbachian",
+      "base": 192.9,
+      "top": 184.2,
+      "genera": 1144,
+      "lastFound": 0.24,
+      "threeTimer": 0.152,
+      "gapFiller": 0.276
+    },
+    {
+      "stage": "Toarcian",
+      "base": 184.2,
+      "top": 174.7,
+      "genera": 1452,
+      "lastFound": 0.399,
+      "threeTimer": 0.405,
+      "gapFiller": 0.315
+    },
+    {
+      "stage": "Aalenian",
+      "base": 174.7,
+      "top": 170.9,
+      "genera": 1004,
+      "lastFound": 0.096,
+      "threeTimer": 0.168,
+      "gapFiller": 0.064
+    },
+    {
+      "stage": "Bajocian",
+      "base": 170.9,
+      "top": 168.2,
+      "genera": 1237,
+      "lastFound": 0.176,
+      "threeTimer": 0.128,
+      "gapFiller": 0.209
+    },
+    {
+      "stage": "Bathonian",
+      "base": 168.2,
+      "top": 165.3,
+      "genera": 1393,
+      "lastFound": 0.166,
+      "threeTimer": 0.024,
+      "gapFiller": 0.08
+    },
+    {
+      "stage": "Callovian",
+      "base": 165.3,
+      "top": 161.5,
+      "genera": 1524,
+      "lastFound": 0.216,
+      "threeTimer": 0.141,
+      "gapFiller": 0.199
+    },
+    {
+      "stage": "Oxfordian",
+      "base": 161.5,
+      "top": 154.8,
+      "genera": 1531,
+      "lastFound": 0.175,
+      "threeTimer": 0.133,
+      "gapFiller": 0.213
+    },
+    {
+      "stage": "Kimmeridgian",
+      "base": 154.8,
+      "top": 149.2,
+      "genera": 1643,
+      "lastFound": 0.219,
+      "threeTimer": 0.124,
+      "gapFiller": 0.262
+    },
+    {
+      "stage": "Tithonian",
+      "base": 149.2,
+      "top": 143.1,
+      "genera": 1744,
+      "lastFound": 0.319,
+      "threeTimer": 0.601,
+      "gapFiller": 0.431
+    },
+    {
+      "stage": "Berriasian",
+      "base": 143.1,
+      "top": 137.05,
+      "genera": 1518,
+      "lastFound": 0.215,
+      "threeTimer": 0.351,
+      "gapFiller": 0.203
+    },
+    {
+      "stage": "Valanginian",
+      "base": 137.05,
+      "top": 132.6,
+      "genera": 1430,
+      "lastFound": 0.148,
+      "threeTimer": 0.265,
+      "gapFiller": 0.196
+    },
+    {
+      "stage": "Hauterivian",
+      "base": 132.6,
+      "top": 125.77,
+      "genera": 1441,
+      "lastFound": 0.144,
+      "threeTimer": 0.351,
+      "gapFiller": -0.006
+    },
+    {
+      "stage": "Barremian",
+      "base": 125.77,
+      "top": 121.4,
+      "genera": 1508,
+      "lastFound": 0.149,
+      "threeTimer": 0.049,
+      "gapFiller": 0.087
+    },
+    {
+      "stage": "Aptian",
+      "base": 121.4,
+      "top": 113.2,
+      "genera": 1825,
+      "lastFound": 0.209,
+      "threeTimer": 0.119,
+      "gapFiller": 0.199
+    },
+    {
+      "stage": "Albian",
+      "base": 113.2,
+      "top": 100.5,
+      "genera": 2171,
+      "lastFound": 0.273,
+      "threeTimer": 0.188,
+      "gapFiller": 0.257
+    },
+    {
+      "stage": "Cenomanian",
+      "base": 100.5,
+      "top": 93.9,
+      "genera": 2332,
+      "lastFound": 0.312,
+      "threeTimer": 0.343,
+      "gapFiller": 0.398
+    },
+    {
+      "stage": "Turonian",
+      "base": 93.9,
+      "top": 89.8,
+      "genera": 2060,
+      "lastFound": 0.197,
+      "threeTimer": 0.46,
+      "gapFiller": 0.232
+    },
+    {
+      "stage": "Coniacian",
+      "base": 89.8,
+      "top": 85.7,
+      "genera": 1769,
+      "lastFound": 0.053,
+      "threeTimer": 0.149,
+      "gapFiller": -0.235
+    },
+    {
+      "stage": "Santonian",
+      "base": 85.7,
+      "top": 83.6,
+      "genera": 1935,
+      "lastFound": 0.101,
+      "threeTimer": 0.0,
+      "gapFiller": 0.058
+    },
+    {
+      "stage": "Campanian",
+      "base": 83.6,
+      "top": 72.2,
+      "genera": 2433,
+      "lastFound": 0.275,
+      "threeTimer": 0.12,
+      "gapFiller": 0.246
+    },
+    {
+      "stage": "Maastrichtian",
+      "base": 72.2,
+      "top": 66.0,
+      "genera": 2389,
+      "lastFound": 0.416,
+      "threeTimer": 0.51,
+      "gapFiller": 0.566
+    },
+    {
+      "stage": "Danian",
+      "base": 66.0,
+      "top": 61.66,
+      "genera": 1955,
+      "lastFound": 0.152,
+      "threeTimer": 0.548,
+      "gapFiller": 0.351
+    },
+    {
+      "stage": "Selandian",
+      "base": 61.66,
+      "top": 59.24,
+      "genera": 1826,
+      "lastFound": 0.056,
+      "threeTimer": 0.104,
+      "gapFiller": -0.145
+    },
+    {
+      "stage": "Thanetian",
+      "base": 59.24,
+      "top": 56.0,
+      "genera": 1938,
+      "lastFound": 0.072,
+      "threeTimer": 0.0,
+      "gapFiller": 0.041
+    },
+    {
+      "stage": "Ypresian",
+      "base": 56.0,
+      "top": 48.07,
+      "genera": 3109,
+      "lastFound": 0.284,
+      "threeTimer": 0.0,
+      "gapFiller": 0.08
+    },
+    {
+      "stage": "Lutetian",
+      "base": 48.07,
+      "top": 41.03,
+      "genera": 2935,
+      "lastFound": 0.153,
+      "threeTimer": 0.075,
+      "gapFiller": 0.041
+    },
+    {
+      "stage": "Bartonian",
+      "base": 41.03,
+      "top": 37.71,
+      "genera": 2965,
+      "lastFound": 0.156,
+      "threeTimer": 0.1,
+      "gapFiller": 0.153
+    },
+    {
+      "stage": "Priabonian",
+      "base": 37.71,
+      "top": 33.9,
+      "genera": 3342,
+      "lastFound": 0.292,
+      "threeTimer": 0.273,
+      "gapFiller": 0.259
+    },
+    {
+      "stage": "Rupelian",
+      "base": 33.9,
+      "top": 27.3,
+      "genera": 2896,
+      "lastFound": 0.156,
+      "threeTimer": 0.173,
+      "gapFiller": 0.205
+    },
+    {
+      "stage": "Chattian",
+      "base": 27.3,
+      "top": 23.04,
+      "genera": 2916,
+      "lastFound": 0.162,
+      "threeTimer": 0.491,
+      "gapFiller": 0.137
+    },
+    {
+      "stage": "Aquitanian",
+      "base": 23.04,
+      "top": 20.45,
+      "genera": 2664,
+      "lastFound": 0.06,
+      "threeTimer": 0.0,
+      "gapFiller": -0.035
+    },
+    {
+      "stage": "Burdigalian",
+      "base": 20.45,
+      "top": 15.98,
+      "genera": 3079,
+      "lastFound": 0.146,
+      "threeTimer": 0.174,
+      "gapFiller": 0.169
+    },
+    {
+      "stage": "Langhian",
+      "base": 15.98,
+      "top": 13.82,
+      "genera": 2904,
+      "lastFound": 0.111,
+      "threeTimer": 0.134,
+      "gapFiller": -0.032
+    },
+    {
+      "stage": "Serravallian",
+      "base": 13.82,
+      "top": 11.63,
+      "genera": 3004,
+      "lastFound": 0.165,
+      "threeTimer": 0.058,
+      "gapFiller": 0.086
+    },
+    {
+      "stage": "Tortonian",
+      "base": 11.63,
+      "top": 7.246,
+      "genera": 2948,
+      "lastFound": 0.193,
+      "threeTimer": 0.228,
+      "gapFiller": 0.043
+    },
+    {
+      "stage": "Messinian",
+      "base": 7.246,
+      "top": 5.333,
+      "genera": 2680,
+      "lastFound": 0.171,
+      "threeTimer": 0.0,
+      "gapFiller": -0.037
+    },
+    {
+      "stage": "Zanclean",
+      "base": 5.333,
+      "top": 3.6,
+      "genera": 2627,
+      "lastFound": 0.301,
+      "threeTimer": null,
+      "gapFiller": null
+    },
+    {
+      "stage": "Piacenzian",
+      "base": 3.6,
+      "top": 2.58,
+      "genera": 2225,
+      "lastFound": 1.0,
+      "threeTimer": null,
+      "gapFiller": null
+    }
+  ]
+}

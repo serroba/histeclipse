@@ -14,6 +14,7 @@ import {
   LIVE_GPU,
   pickSpan,
   test,
+  watchLoads,
 } from './support';
 
 // Commit SHA the deployment is expected to serve. Empty or unset skips the release check.
@@ -24,13 +25,14 @@ const SHARED_LINK = '?t=-620-04-22T07:20&loc=32.5422,44.4209&cam=30,40,3&sel=lun
 
 test('loads the globe without errors or failed requests @acceptance', LIVE, async ({ page }) => {
   const problems = collectProblems(page);
+  const loads = watchLoads(page);
   const response = await page.goto('./');
 
   expect(response?.status()).toBe(200);
   await expect(page).toHaveTitle('histeclipse');
   await expect(page.getByRole('heading', { level: 1, name: 'histeclipse' })).toBeVisible();
   await globeRendered(page);
-  await page.waitForLoadState('networkidle');
+  await loads.settled();
   expect(problems).toEqual([]);
 });
 
