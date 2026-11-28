@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 
 import { UNTESTED } from './coverage.untested.js';
+import { catalogue } from './vite.catalog.ts';
 import { sitePolicy } from './vite.csp.ts';
 import { models } from './vite.models.ts';
 
@@ -9,7 +10,7 @@ export default defineConfig({
   // a path, as it once did at serroba.github.io/histeclipse/: every page is index.html at the
   // site's root, so './' always resolves to the right place.
   base: './',
-  plugins: [models()],
+  plugins: [models(), catalogue()],
   // The production preview, which the end-to-end suite tests, runs under the site's policy (#240).
   preview: { headers: { 'Content-Security-Policy': sitePolicy() } },
   build: {
