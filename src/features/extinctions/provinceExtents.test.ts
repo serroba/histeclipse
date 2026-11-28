@@ -42,6 +42,7 @@ describe('the volcanic provinces drawn at their estimated extents (#1230)', () =
     expect(drawnArea(EXTENTS.siberian.spread) / EXTENTS.siberian.area).toBeCloseTo(1, 1);
     expect(drawnArea(EXTENTS.camp.spread) / EXTENTS.camp.area).toBeCloseTo(1, 1);
     expect(drawnArea(EXTENTS.emeishan.spread) / EXTENTS.emeishan.area).toBeCloseTo(1, 1);
+    expect(drawnArea(EXTENTS.viluy.spread) / EXTENTS.viluy.area).toBeCloseTo(1, 1);
     // All flowed: the Deccan Traps are held half so, as whether most came first is argued.
     expect(drawnArea(EXTENTS.deccan.spread) / EXTENTS.deccan.area).toBeCloseTo(1, 1);
   });
