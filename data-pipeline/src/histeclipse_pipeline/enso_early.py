@@ -226,6 +226,7 @@ def early_file(indices: list[Json], accessed: str) -> dict[str, Json]:
     """Build the manifest of the early indices, laid out as ``enso/index.json`` is."""
     return {
         "schemaVersion": 1,
+        "sources": ["huang2025ersst6", "rayner2003hadisst", "cpcRoni"],
         "credit": (
             "Computed for this site by NOAA CPC's RONI method from NOAA ERSST v6 (Huang et al. "
             "2025; NOAA PSL) and the Met Office Hadley Centre's HadISST 1.1 (Rayner et al. "
@@ -234,6 +235,10 @@ def early_file(indices: list[Json], accessed: str) -> dict[str, Json]:
         "source": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/",
         "licence": "ERSST: none stated (US Government work); HadISST: Open Government Licence v3",
         "accessed": accessed,
+        "changes": (
+            "The index computed for this site by NOAA CPC's RONI method from each analysis; "
+            "seasons placed at their middle month"
+        ),
         "units": "°C",
         "placed": "each three-month season at its middle month",
         "threshold": 0.5,
@@ -287,6 +292,7 @@ def sea_maps(record: Record, folder: Path, accessed: str) -> int:
         written.append((year, month))
     index: dict[str, Json] = {
         "schemaVersion": 1,
+        "sources": ["huang2025ersst6"],
         "credit": (
             "NOAA ERSST v6 (Huang et al. 2025), from NOAA PSL; anomalies computed for this site"
         ),
@@ -294,6 +300,9 @@ def sea_maps(record: Record, folder: Path, accessed: str) -> int:
         "paper": "https://doi.org/10.1175/JCLI-D-23-0707.1",
         "licence": "none stated (US Government work); acknowledged as NOAA PSL asks",
         "accessed": accessed,
+        "changes": (
+            "Anomalies against the baseline computed for this site and packed into 8-bit images"
+        ),
         "units": "°C",
         "baseline": f"{BASE[0]}\N{EN DASH}{BASE[1]}, each calendar month against its own mean",
         "bound": BOUND,

@@ -170,10 +170,17 @@ def curve_json(series: Curve) -> dict[str, Json]:
     """Give the curve as the web app reads it, with its 1-sigma range."""
     return {
         "schemaVersion": 1,
+        "sources": ["kopp2016"],
         "credit": CREDIT,
         "source": SOURCE,
         "url": REPOSITORY,
         "licence": LICENCE,
+        "accessed": "2026-11-12",
+        "changes": (
+            "The curve read from Data/GLMW-1ts.mat of the authors' SESL code: year, global "
+            "sea level and its 1-sigma range; the day given as accessed is the day this file "
+            "was last written"
+        ),
         "model": "ML2,1 (GLMW-1ts in the authors' code)",
         "units": "mm",
         "baseline": "the model's own zero (about 0 mm at 2000 CE)",

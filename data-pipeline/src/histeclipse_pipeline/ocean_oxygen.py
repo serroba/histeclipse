@@ -276,11 +276,13 @@ def index_file(summary: Summary, maps: list[Json], accessed: str) -> dict[str, J
     slope, significant = _trend(summary.years, means)
     return {
         "schemaVersion": 1,
+        "sources": ["gobaiO2"],
         "credit": CREDIT,
         "source": SOURCE,
         "licence": LICENCE,
         "version": VERSION,
         "accessed": accessed,
+        "changes": ("Inventories, trends and the trend map computed for this site"),
         "units": {
             "inventory": "Pmol",
             "concentration": "µmol/kg",

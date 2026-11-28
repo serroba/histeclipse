@@ -296,10 +296,16 @@ def index_file(variables: dict[str, Json]) -> dict[str, Json]:
     """Build the manifest the web app reads: credit, baseline, encoding, grid, maps, timing."""
     return {
         "schemaVersion": 1,
+        "sources": ["ar6Ch4Data", "lee2021"],
         "credit": CREDIT,
         "source": SOURCE,
         "data": [BASE_URL.format(figure=variable.figure) for variable in VARIABLES],
         "licence": LICENCE,
+        "accessed": "2026-11-19",
+        "changes": (
+            "Averaged onto a 1° grid and packed into 8-bit images for this site; the day "
+            "given as accessed is the day this file was last written"
+        ),
         "baseline": BASELINE,
         "statistic": "CMIP6 multi-model mean over the 20 years each model is at the level",
         "coverage": "global",

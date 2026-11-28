@@ -10,6 +10,7 @@ import * as v from 'valibot';
 
 import { getJson, type Fetch } from '../util/fetchJson';
 import { latestFor } from './ensoSst';
+import { HEADER_ADDED } from './header';
 
 const text = v.pipe(v.string(), v.minLength(1));
 const month = v.pipe(v.string(), v.regex(/^\d{4}-(0[1-9]|1[0-2])$/u));
@@ -24,6 +25,7 @@ const DepthSchema = v.strictObject({
 
 const OceanTemperatureSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   credit: text,
   source: v.pipe(v.string(), v.url()),
   paper: v.pipe(v.string(), v.url()),
@@ -54,6 +56,7 @@ const calendarYear = v.pipe(v.number(), v.integer());
 
 const OceanDeepSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   credit: text,
   source: v.pipe(v.string(), v.url()),
   paper: v.pipe(v.string(), v.url()),

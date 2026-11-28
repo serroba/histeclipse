@@ -158,6 +158,9 @@ test('GW170817 opens as two neutron stars, its own story, card and scale, with n
 test('stepping the years bar to 2015 shows GW150914, and its chip opens the wave (#837) @mobile', async ({
   page,
 }) => {
+  // The wave's part now loads when first named (#1327), then its 3D view: on CI's software
+  // WebGL the test ran past the 30 s budget, up from 16–18 s (#1333).
+  test.slow();
   const problems = collectProblems(page);
   const days = page.getByRole('list', { name: 'Events this year' });
   const chip = days.getByRole('button', { name: /GW150914: first gravitational wave/ });

@@ -8,12 +8,14 @@
 import * as v from 'valibot';
 
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 const celsius = v.pipe(v.number(), v.minValue(-100), v.maxValue(100));
 
 const IndexSchema = v.pipe(
   v.strictObject({
     schemaVersion: v.literal(1),
+    ...HEADER_ADDED,
     credit: v.pipe(v.string(), v.minLength(1)),
     source: v.pipe(v.string(), v.url()),
     /** What the maps cover: the whole globe (the default), or ice-free land only. */

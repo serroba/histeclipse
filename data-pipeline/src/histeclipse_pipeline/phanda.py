@@ -83,8 +83,16 @@ def phanda_file(stages: list[Stage]) -> dict[str, Json]:
     """Build the site's file: credit, units, and one row per stage."""
     return {
         "schemaVersion": 1,
+        "sources": ["judd2024"],
         "credit": CREDIT,
         "source": SOURCE,
+        "licence": "none stated",
+        "accessed": "2026-11-12",
+        "changes": (
+            "Every stage kept, with its ages and the percentiles of global mean surface "
+            "temperature; the CO2 columns left out; the day given as accessed is the day this "
+            "file was last written"
+        ),
         "repository": REPOSITORY,
         "age": "Ma (millions of years before present); stage ages as the source gives them",
         "units": {"gmst": "°C"},

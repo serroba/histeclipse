@@ -203,9 +203,17 @@ def budget_file(budget: Budget) -> dict[str, Json]:
     rows: list[Json] = [list(row) for row in budget.rows]
     return {
         "schemaVersion": 1,
+        "sources": ["globalCarbonBudget2026"],
         "credit": BUDGET_CREDIT,
         "source": BUDGET_SOURCE,
         "licence": LICENCE,
+        "accessed": "2026-11-12",
+        "changes": (
+            "The Historical Budget sheet's yearly rows as columns, with the 1-sigma "
+            "uncertainties the Global Carbon Budget sheet's notes give; values rounded to "
+            "four significant figures; the day given as accessed is the day this file was "
+            "last written"
+        ),
         "unit": "GtC/yr",
         "co2PerC": CO2_PER_C,
         "columns": list(BUDGET_COLUMNS),
@@ -284,9 +292,16 @@ def places_file(
         sections[section_of(code)][code] = {"name": place.name, "values": rows}
     return {
         "schemaVersion": 1,
+        "sources": ["jones2023"],
         "credit": NATIONAL_CREDIT,
         "source": NATIONAL_SOURCE,
         "licence": LICENCE,
+        "accessed": "2026-11-12",
+        "changes": (
+            "Each country's yearly series keyed by its ISO 3166-1 alpha-3 code, the file's "
+            "other codes and groupings kept apart; values rounded to four significant "
+            "figures; the day given as accessed is the day this file was last written"
+        ),
         **header,
         "first": years.start,
         **sections,

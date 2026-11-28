@@ -87,6 +87,7 @@
     .strike-clock-drawn,
     .loss-gauge-says,
     .loss-groups,
+    .loss-recoveries,
     .proxy-says
   ) {
   display: none;
@@ -437,6 +438,28 @@
 
 .loss-group-last .loss-group-bar {
   background: rgb(240 110 90);
+}
+
+/* How long life took to come back (#1269): a study a row, quickest first. */
+.loss-recoveries {
+  margin: 4px 0 0;
+}
+
+.loss-recovery-list {
+  display: grid;
+  gap: 2px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+}
+
+.loss-recovery-took {
+  font-variant-numeric: tabular-nums;
+}
+
+.loss-recovery-whose {
+  color: var(--ink-muted);
 }
 
 /* A measured record above the slider (#1229): inset as the slider's marks are, so each reading

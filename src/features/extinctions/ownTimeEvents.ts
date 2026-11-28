@@ -32,12 +32,13 @@ import { PROVINCE_LEGEND } from './legends';
 import { LOSSES } from './losses';
 import { KPG_TEMPERATURES } from './kpgTemperatures';
 import { MEISHAN_TEMPERATURES } from './meishanTemperatures';
+import { withViluy } from './viluyLava';
 import { EXTENTS } from './provinceExtents';
 import { PERMIAN_CARBON_DIOXIDE } from './permianCarbonDioxide';
 import { PERMIAN_CARBON_ISOTOPES } from './permianCarbonIsotopes';
 import { END_PERMIAN } from './permianPhases';
 import { seasLayer } from './seasLayer';
-import { COLD, coldEvent, seasAt } from './seasEvents';
+import { COLD, coldEvent, seasAt, type ColdCrisis } from './seasEvents';
 import { END_TRIASSIC } from './triassicPhases';
 
 /** The key to a province's oxygen-poor seas, where it draws them. */
@@ -259,15 +260,35 @@ export function ownTimeOf(data: ExtinctionSites, id: string, ma: number): OwnTim
   return event === null || loss === undefined ? event : { ...event, loss };
 }
 
+/** A crisis of the seas' own time at `ma`: its ice, its anoxia, and the Late Devonian's lava. */
+function coldOf(data: ExtinctionSites, cold: ColdCrisis, ma: number): OwnTimeEvent | null {
+  const anoxia = placeOf(data, cold.anoxia, ma);
+  if (anoxia === null) return null;
+  const ice = cold.ice === null ? null : placeOf(data, cold.ice, ma);
+  const event = coldEvent(cold, ice, anoxia);
+  // The Late Devonian's possible cause, its lava drawn beside its seas (#1230).
+  const viluy = cold.key === 'late-devonian-extinction' ? placeOf(data, 'viluy-traps', ma) : null;
+  if (viluy === null) return facing(event, ice ?? anoxia, COLD_DISTANCE);
+  // Over the traps first, then the sea where the extinction is dated, then both (#1266).
+  const both = {
+    latitude: (viluy.latitude + anoxia.latitude) / 2,
+    longitude: (viluy.longitude + anoxia.longitude) / 2,
+  };
+  return guided(withViluy(event, viluy), [
+    {
+      from: -Infinity,
+      place: { latitude: viluy.latitude - 4, longitude: viluy.longitude },
+      distance: PROVINCE_DISTANCE,
+    },
+    { from: 0, place: anoxia, distance: COLD_DISTANCE },
+    { from: 700 * KYR, place: both, distance: WORLD_DISTANCE },
+  ]);
+}
+
 /** The extinction `id`'s own time at `ma`, as it is drawn, if it has one. */
 function drawnOf(data: ExtinctionSites, id: string, ma: number): OwnTimeEvent | null {
   const cold = COLD.find((each) => each.key === id);
-  if (cold !== undefined) {
-    const anoxia = placeOf(data, cold.anoxia, ma);
-    if (anoxia === null) return null;
-    const ice = cold.ice === null ? null : placeOf(data, cold.ice, ma);
-    return facing(coldEvent(cold, ice, anoxia), ice ?? anoxia, COLD_DISTANCE);
-  }
+  if (cold !== undefined) return coldOf(data, cold, ma);
   const province = PROVINCES.find((each) => each.key === id);
   if (province !== undefined) {
     const places = province.sites.flatMap((site) => placeOf(data, site, ma) ?? []);
@@ -308,7 +329,7 @@ function withDeccan(strike: OwnTimeEvent, deccan: GeoPoint): OwnTimeEvent {
   return {
     ...strike,
     rank: 1,
-    drawn: `The Deccan Traps’ smoke and lava are drawn to illustrate, not measured, and held steady through the million years: whether most erupted before or after the impact is argued. ${EXTENTS.deccan.says}`,
+    drawn: `The Deccan Traps’ smoke and lava are drawn to illustrate, not measured, and held steady through the million years: whether most erupted before or after the impact is argued. ${EXTENTS.deccan.says} No oxygen-poor seas are drawn: no study gives the K-Pg a share of the seafloor without oxygen, as uranium isotopes give the other four; the low-oxygen water found was local, and the deep sea’s bottom-dwelling foraminifera came through the impact without an extinction (Alegret et al. 2021).`,
     play(tools) {
       const struck = strike.play(tools);
       const fumes = tools.layer(fumesLayer);

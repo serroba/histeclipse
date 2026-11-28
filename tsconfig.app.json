@@ -3,7 +3,9 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    // vite.catalog.ts, which a test here reads the served data through, names its import in full.
+    "allowImportingTsExtensions": true
   },
   "include": ["src"]
 }

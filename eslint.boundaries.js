@@ -109,7 +109,7 @@ export const FUNCTION_LIMITS = {
   'features/records/index.ts': 1,
   'features/records/tabletPanel.ts': 1,
   'features/shower/airShower.ts': 3,
-  'features/shower/index.ts': 2,
+  'features/shower/body.ts': 2,
   'features/shower/leafScene.ts': 2,
   'features/shower/showerStage.ts': 1,
   'features/shower/sunCore.ts': 1,
