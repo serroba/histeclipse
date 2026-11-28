@@ -10,7 +10,7 @@
  * no DOI found). The ages are Wu et al.'s: each section matched to Meishan's isotope shift,
  * dated by its ash beds (Burgess et al. 2014).
  *
- * Meishan, where the clock's zero is set, is drawn as its own series; the other nine as one.
+ * Meishan, where the clock's zero is set, is drawn as its own series, over the other nine as one.
  *
  * Pure.
  */
@@ -37,12 +37,15 @@ export const PERMIAN_CARBON_ISOTOPES: ProxyChart = {
   low: -5,
   high: 5,
   series: ['Meishan, China', 'Nine other Tethys sections'],
-  readings: PERMIAN_SECTIONS.flatMap(({ section, points }) =>
-    points.map(([ma = ZERO, value = 0]) => ({
-      seconds: (ZERO - ma) * 1000 * KYR,
-      value,
-      series: section === 'Meishan' ? 0 : 1,
-    })),
-  ),
+  // Meishan last, so its dots are drawn over the other sections'.
+  readings: [...PERMIAN_SECTIONS]
+    .sort((one, other) => Number(one.section === 'Meishan') - Number(other.section === 'Meishan'))
+    .flatMap(({ section, points }) =>
+      points.map(([ma = ZERO, value = 0]) => ({
+        seconds: (ZERO - ma) * 1000 * KYR,
+        value,
+        series: section === 'Meishan' ? 0 : 1,
+      })),
+    ),
   says: 'The share of heavy carbon in the sea’s limestone, measured at ten sections around the Tethys Ocean: at Meishan it falls from about +3‰ to below −1‰, at its lowest −4‰, over the 30,000 years to the extinction’s start. Light carbon flooded the sea and air: mostly volcanic gas, as Cui et al. (2021) work it out, or with carbon from organic rock and coal the Siberian Traps heated, as Wu et al. (2021) argue. Compiled with ages by Wu et al. (2021) and published by Cui et al. (2021); each section by its own authors (Burgess et al. 2014; Algeo et al. 2007; Song et al. 2012; Schobben et al. 2014, 2017; Korte et al. 2010; Clarkson et al. 2013; Ji et al. 2018). Each section is dated by matching its shift to Meishan’s, whose ash beds are dated.',
 };

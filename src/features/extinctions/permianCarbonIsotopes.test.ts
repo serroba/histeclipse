@@ -13,6 +13,10 @@ describe('the sea’s carbon isotopes through the end-Permian extinction (#1229)
     expect(meishan).toHaveLength(199);
   });
 
+  it('draws Meishan last, over the other sections', () => {
+    expect(readings.slice(-199).every((each) => each.series === 0)).toBe(true);
+  });
+
   it('falls at Meishan from about +3‰ to its lowest, −3.96‰, at the extinction’s start', () => {
     const before = meishan.filter((each) => each.seconds < -25 * KYR && each.seconds > -60 * KYR);
     const lowest = meishan.reduce((low, each) => (each.value < low.value ? each : low));
