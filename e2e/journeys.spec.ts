@@ -1041,6 +1041,14 @@ test('with the asteroids and dwarf planets on, the large ones go round the Sun, 
     await expect(card).toContainText('of JPL’s place along its orbit');
     await expect(card).toContainText('Main-belt asteroid, between Mars and Jupiter');
   });
+  await test.step('When they go out to the Kuiper belt, Then Pluto and its neighbours are in view, named', async () => {
+    // By its link: 160 AU above the Sun, where the view stopped at 12.8 before (#1329).
+    await page.goto('./?t=2025-01-10T12:00&cam=66.5607,-90,34340&focus=sun&layers=asteroids');
+    await expect(names.getByRole('button', { name: 'Pluto', exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(names.getByRole('button', { name: 'Makemake', exact: true })).toBeVisible();
+  });
   expect(problems).toEqual([]);
 });
 

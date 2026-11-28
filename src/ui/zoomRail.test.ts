@@ -41,10 +41,10 @@ describe('the zoom rail', () => {
   });
 
   it('reaches as far round each body as the camera does, in that body’s radii', () => {
-    // The scene caps the camera at 300,000 Earth radii, whatever the body.
+    // The scene caps the camera at 10 million Earth radii, whatever the body.
     const sun = rail('sun');
     expect(sun.far * sun.radiusKm).toBeCloseTo(earth.far * earth.radiusKm, -3);
-    // A body smaller than Earth reaches 300,000 of its own radii.
+    // A body smaller than Earth reaches 10 million of its own radii.
     expect(rail('moon').far).toBe(CAMERA_DISTANCE_RANGE.max);
   });
 
@@ -66,10 +66,12 @@ describe('the zoom rail', () => {
 
   it('gives each body the stops within reach, its own first', () => {
     const labels = (body: Body): string[] => stopsFor(rail(body)).map((stop) => stop.label);
-    expect(labels('earth')).toEqual(['Earth', 'Moon', 'Planets', 'Saturn']);
-    expect(labels('sun')).toEqual(['Sun', 'Planets', 'Saturn']);
-    expect(labels('moon')).toEqual(['Moon', 'With Earth', 'Planets']);
-    expect(labels('mars')).toEqual(['Mars', 'Planets']);
+    const far = ['Planets', 'Saturn', 'Kuiper belt'];
+    expect(labels('earth')).toEqual(['Earth', 'Moon', ...far]);
+    expect(labels('sun')).toEqual(['Sun', ...far]);
+    // The Moon's rail reaches 10 million of its own radii: 116 AU, short of the Kuiper belt's stop.
+    expect(labels('moon')).toEqual(['Moon', 'With Earth', 'Planets', 'Saturn']);
+    expect(labels('mars')).toEqual(['Mars', ...far]);
     for (const body of ['earth', 'sun', 'moon', 'jupiter'] as const) {
       const distances = stopsFor(rail(body)).map((stop) => stop.distance);
       expect([...distances].sort((a, b) => a - b)).toEqual(distances);
@@ -81,6 +83,9 @@ describe('the zoom rail', () => {
     expect(distanceText(150, earth)).toBe('960,000 km from Earth');
     expect(distanceText(60_000, earth)).toBe('2.6 AU from Earth');
     expect(distanceText(300_000, earth)).toBe('13 AU from Earth');
+    // The Kuiper belt's stop, and the farthest the camera goes.
+    expect(distanceText(3_750_000, earth)).toBe('160 AU from Earth');
+    expect(distanceText(10_000_000, earth)).toBe('426 AU from Earth');
     expect(distanceText(3, rail('sun'))).toBe('2,100,000 km from the Sun');
     expect(distanceText(3, rail('mars'))).toBe('10,000 km from Mars');
   });

@@ -63,12 +63,19 @@ export interface ZoomStop {
 }
 
 /**
- * Earth and the Moon's orbit together; the inner planets round the Sun; out to Saturn: round
- * numbers of Earth radii (as Earth's own rail has them), in kilometres for any body's.
+ * Earth and the Moon's orbit together; the inner planets round the Sun; out to Saturn, and to
+ * Neptune and the Kuiper belt: round numbers of Earth radii (as Earth's own rail has them), in kilometres for any body's.
  */
 const MOON_ORBIT_KM = 150 * EARTH_RADIUS_KM;
 const PLANETS_KM = 60_000 * EARTH_RADIUS_KM;
 const SATURN_KM = 300_000 * EARTH_RADIUS_KM;
+/**
+ * Far enough that the Kuiper belt out to 50 AU from the Sun, and Neptune's orbit within it, fit
+ * the height of the view: 3.2 times as far as they are wide, at the camera's 35°. One stop for
+ * both: a stop for Neptune too would sit a label's height from this one, and on a phone's short
+ * rail crowd the others off their places.
+ */
+const KUIPER_BELT_KM = 3_750_000 * EARTH_RADIUS_KM;
 
 /** The stops for a rail, nearest first, each within the camera's reach. */
 export function stopsFor(scale: RailScale): ZoomStop[] {
@@ -87,6 +94,11 @@ export function stopsFor(scale: RailScale): ZoomStop[] {
       title: 'The inner planets, around the Sun',
     },
     { distance: radii(SATURN_KM), label: 'Saturn', title: 'Out to Saturn' },
+    {
+      distance: radii(KUIPER_BELT_KM),
+      label: 'Kuiper belt',
+      title: 'Out to Neptune and the Kuiper belt',
+    },
   ];
   // Within reach (a hair over, for rounding), and not crowding the body's own stop.
   return all.filter(

@@ -120,12 +120,14 @@ export interface ViewState extends DisplayState, HistoryState, DeepState, Sheets
   readonly look: SkyLook;
 }
 
-// In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
-// so Saturn (up to ~11 AU away) fits in view; the scene caps other bodies at the same reach.
+// In the focused body's radii. For Earth, 10 million radii is some 426 times the Sun's distance
+// (23,455 Earth radii): from there the whole heliosphere fits in view, out to the heliopause some
+// 120 AU from the Sun (#1329); the scene caps other bodies at the same reach. It was 300,000,
+// which framed no more than Saturn's orbit. The scene's camera sees four times as far (`scene.ts`).
 // The nearest is Earth's, about 50 km up, where its tiles show the ground at 1.85 km a pixel
 // (#568); the other bodies, and Earth on graphics without its tiles, stop at `nearestDistance`.
 // A link names any distance in the range; the scene then holds it to what the device allows.
-export const CAMERA_DISTANCE_RANGE = { min: 1.008, max: 300_000 } as const;
+export const CAMERA_DISTANCE_RANGE = { min: 1.008, max: 10_000_000 } as const;
 
 /**
  * The nearest the camera comes to `body`, in its radii: Earth's tiles let it come closest where

@@ -291,7 +291,8 @@ test('on a short phone the zoom rail’s stops keep their names apart (#980) @mo
   await page.goto('./?t=2026-11-20T09:43Z');
   await globeRendered(page);
   const stops = page.locator('.zoom-stop');
-  await expect(stops).toHaveCount(4);
+  // Earth, Moon, Planets, Saturn, and the Kuiper belt (#1329).
+  await expect(stops).toHaveCount(5);
   const boxes = await stops.evaluateAll((all) =>
     all.map((each) => {
       const box = each.getBoundingClientRect();

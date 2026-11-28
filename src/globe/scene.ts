@@ -74,7 +74,7 @@ export function createGlobe(
   const stage = new Stage(container, {
     renderer,
     // With a logarithmic depth buffer one camera spans metres above the ground to past the Sun.
-    camera: new PerspectiveCamera(35, 1, 1e-4, 1e6),
+    camera: new PerspectiveCamera(35, 1, 1e-4, 4e7),
     styleSize: false,
   });
   const { scene, camera } = stage;
