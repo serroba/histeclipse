@@ -486,6 +486,11 @@
     "url": "https://doi.org/10.3847/1538-4357/aaad67",
     "licence": "AAS/IOP (all rights reserved); facts quoted"
   },
+  "courtillot2010": {
+    "name": "Courtillot et al. 2010",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.epsl.2010.09.045"
+  },
   "cowan2021": {
     "name": "Cowan et al. 2021, the rapid neutron-capture process",
     "kind": "paper",

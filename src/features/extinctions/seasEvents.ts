@@ -34,6 +34,9 @@ export interface ColdCrisis {
   seas(seconds: number): Seas;
 }
 
+/** An own-time event whose words on what is drawn, and whose key, are always there. */
+export type DrawnEvent = OwnTimeEvent & Required<Pick<OwnTimeEvent, 'drawn' | 'legend'>>;
+
 /** The crises of the seas, by the extinction each is watched for (#1202). */
 export const COLD: readonly ColdCrisis[] = [
   {
@@ -77,11 +80,7 @@ export function seasAt(
 }
 
 /** A crisis of the seas on the long crisis clock: its ice at `ice`, its anoxia round `anoxia`. */
-export function coldEvent(
-  crisis: ColdCrisis,
-  ice: GeoPoint | null,
-  anoxia: GeoPoint,
-): OwnTimeEvent {
+export function coldEvent(crisis: ColdCrisis, ice: GeoPoint | null, anoxia: GeoPoint): DrawnEvent {
   const extent = ANOXIC_EXTENTS[crisis.key];
   return {
     key: crisis.key,

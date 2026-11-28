@@ -39,4 +39,9 @@ export const EXTENTS = {
     area: 1.5e6,
     says: 'Its lava, all flowed, would be drawn over some 1.5 million km², half of it here: its first extent is estimated at 1 to 2.6 million, estimates called highly speculative; some 500,000 km² remain today (as Verma & Khosla 2019 review). The shape is drawn, not mapped.',
   },
+  viluy: {
+    spread: 3.8,
+    area: 1e6,
+    says: 'Its lava is drawn over some 1 million km², the “more than 1 million” Kravchinsky (2012) lists for its area; the Viluy rift is some 800 km long and 450 km wide (Kiselev et al. 2006, as Kravchinsky gives it), and much of the province is eroded or lies under the Siberian Traps (Courtillot et al. 2010). The shape is drawn, not mapped.',
+  },
 } as const satisfies Readonly<Record<string, Extent>>;
