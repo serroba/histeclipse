@@ -139,6 +139,29 @@ describe('the sea temperature maps behind El Niño', () => {
     });
   });
 
+  it('Given the month shown loads, Then the feature is asked to show again, and showing it again repaints nothing (#1293)', async () => {
+    const { sea, painted, refresh } = setUp();
+    sea.show(true, month(1997, 12));
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledOnce();
+    });
+    sea.show(true, month(1997, 12));
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(2);
+    });
+    expect(painted).toEqual(['/data/enso-sst/1997-12.png']);
+    // What a refresh does: the same month shown again, painted once all the same.
+    sea.show(true, month(1997, 12));
+    expect(painted).toEqual(['/data/enso-sst/1997-12.png']);
+    // Months fetched ahead ask for nothing: they are not shown.
+    await Promise.resolve();
+    expect(refresh).toHaveBeenCalledTimes(2);
+    // Off and on again, it is painted again.
+    sea.show(false, month(1997, 12));
+    sea.show(true, month(1997, 12));
+    expect(painted).toEqual(['/data/enso-sst/1997-12.png', null, '/data/enso-sst/1997-12.png']);
+  });
+
   it('Given more months than it keeps, Then the oldest is loaded again', async () => {
     const { sea, painted, refresh } = setUp();
     sea.show(true, month(2000, 1));
