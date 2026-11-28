@@ -1010,7 +1010,7 @@ test('with Spacecraft on, the craft beyond Earth orbit fly where they were, each
   expect(problems).toEqual([]);
 });
 
-test('with the asteroid belt on, its large asteroids go round between Mars and Jupiter, each with its card', async ({
+test('with the asteroids and dwarf planets on, the large ones go round the Sun, each with its card', async ({
   page,
 }) => {
   // A data file and a planet theory: slow on a phone drawn in software.
@@ -1022,14 +1022,14 @@ test('with the asteroid belt on, its large asteroids go round between Mars and J
     await page.goto('./?t=2025-01-10T12:00&cam=0,80,2400&focus=sun');
     await expect(globe).toHaveAttribute('data-focus', 'sun', { timeout: 30_000 });
   });
-  await test.step('When they turn the asteroid belt on', async () => {
-    await page.getByRole('button', { name: 'Asteroid belt', exact: true }).click();
+  await test.step('When they turn the asteroids and dwarf planets on', async () => {
+    await page.getByRole('button', { name: 'Asteroids and dwarf planets', exact: true }).click();
   });
-  await test.step('Then some two hundred asteroids are drawn, the largest named', async () => {
+  await test.step('Then some two hundred and forty bodies are drawn, the largest named', async () => {
     await expect(page).toHaveURL(/layers=[a-z,]*asteroids/);
     await expect
       .poll(async () => Number(await globe.getAttribute('data-asteroids')), { timeout: 30_000 })
-      .toBeGreaterThan(200);
+      .toBeGreaterThan(240);
     await expect(names.getByRole('button', { name: 'Vesta', exact: true })).toBeVisible();
     // Only the largest: Gudrun, some 146 km across, has a dot but no name.
     await expect(names.getByRole('button', { name: 'Gudrun', exact: true })).toHaveCount(0);
@@ -1039,6 +1039,7 @@ test('with the asteroid belt on, its large asteroids go round between Mars and J
     const card = page.getByRole('dialog');
     await expect(card).toContainText('523 km');
     await expect(card).toContainText('of JPL’s place along its orbit');
+    await expect(card).toContainText('Main-belt asteroid, between Mars and Jupiter');
   });
   expect(problems).toEqual([]);
 });

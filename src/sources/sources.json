@@ -281,10 +281,20 @@
     "kind": "paper",
     "url": "https://doi.org/10.1007/s004100050465"
   },
+  "bragaRibas2013": {
+    "name": "Braga-Ribas et al. 2013",
+    "kind": "paper",
+    "url": "https://doi.org/10.1088/0004-637X/773/1/26"
+  },
   "brehm2022": {
     "name": "Brehm et al. 2022",
     "kind": "paper",
     "url": "https://doi.org/10.1038/s41467-022-28804-9"
+  },
+  "brown2018": {
+    "name": "Brown & Butler 2018",
+    "kind": "paper",
+    "url": "https://doi.org/10.3847/1538-3881/aad9f2"
   },
   "brugger2017": {
     "name": "Brugger, Feulner & Petri 2017",
@@ -1036,6 +1046,11 @@
     "url": "https://doi.org/10.1175/JCLI-D-15-0730.1",
     "licence": "None stated; freely available from the IAP, credited"
   },
+  "iauDwarfPlanets": {
+    "name": "IAU: the five dwarf planets (2008)",
+    "kind": "reference",
+    "url": "https://www.iau.org/Iau/News/PR2008/iau-names-fifth-dwarf-planet-haumea.aspx"
+  },
   "iauGazetteer": {
     "name": "Gazetteer of Planetary Nomenclature",
     "kind": "dataset",
@@ -1149,7 +1164,7 @@
     "licence": "CC BY 3.0"
   },
   "jplHorizonsAsteroids": {
-    "name": "JPL Horizons: asteroids",
+    "name": "JPL Horizons: asteroids and dwarf planets",
     "kind": "dataset",
     "url": "https://ssd.jpl.nasa.gov/horizons/",
     "licence": "NASA/JPL, public domain"
@@ -1229,6 +1244,11 @@
     "name": "Kirschvink et al. 1997",
     "kind": "paper",
     "url": "https://doi.org/10.1126/science.277.5325.541"
+  },
+  "kiss2019": {
+    "name": "Kiss et al. 2019",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.icarus.2019.03.013"
   },
   "kivelson2000": {
     "name": "Kivelson et al. 2000",
@@ -1334,6 +1354,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.1017/9781009157896.006",
     "licence": "© IPCC (the report; its figures’ data are CC BY 4.0)"
+  },
+  "lellouch2013": {
+    "name": "Lellouch et al. 2013",
+    "kind": "paper",
+    "url": "https://doi.org/10.1051/0004-6361/201322047"
   },
   "lemen2012": {
     "name": "Lemen et al. 2012",
@@ -1715,6 +1740,11 @@
     "url": "https://doi.org/10.7289/V53F4MVP",
     "licence": "Public domain (US government work)"
   },
+  "nimmo2017": {
+    "name": "Nimmo et al. 2017",
+    "kind": "paper",
+    "url": "https://doi.org/10.1016/j.icarus.2016.06.027"
+  },
   "noaaGlobalTemp": {
     "name": "NOAAGlobalTemp v6.1",
     "kind": "dataset",
@@ -1806,6 +1836,16 @@
     "url": "https://doi.org/10.1016/j.quascirev.2016.12.024",
     "licence": "CC BY 4.0"
   },
+  "ortiz2012": {
+    "name": "Ortiz et al. 2012",
+    "kind": "paper",
+    "url": "https://doi.org/10.1038/nature11597"
+  },
+  "ortiz2017": {
+    "name": "Ortiz et al. 2017",
+    "kind": "paper",
+    "url": "https://doi.org/10.1038/nature24051"
+  },
   "osmSlough": {
     "name": "OpenStreetMap: Herschel Street, Slough",
     "kind": "catalogue",
@@ -1835,6 +1875,11 @@
     "kind": "dataset",
     "url": "https://doi.org/10.1038/s41561-019-0400-0",
     "licence": "None stated; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
+  },
+  "pal2012": {
+    "name": "Pál et al. 2012",
+    "kind": "paper",
+    "url": "https://doi.org/10.1051/0004-6361/201218874"
   },
   "paleBlueDot": {
     "name": "Voyager 1: Pale Blue Dot",
@@ -2150,6 +2195,11 @@
     "kind": "paper",
     "url": "https://doi.org/10.12789/geocanj.2014.41.060"
   },
+  "sicardy2011": {
+    "name": "Sicardy et al. 2011",
+    "kind": "paper",
+    "url": "https://doi.org/10.1038/nature10550"
+  },
   "siegel2019": {
     "name": "Siegel et al. 2019, collapsars as a source of r-process elements",
     "kind": "paper",
@@ -2193,6 +2243,11 @@
     "kind": "dataset",
     "url": "https://doi.org/10.20350/digitalCSIC/16497",
     "licence": "ODbL 1.0"
+  },
+  "spencer2020": {
+    "name": "Spencer et al. 2020",
+    "kind": "paper",
+    "url": "https://doi.org/10.1126/science.aay3999"
   },
   "sprain2019": {
     "name": "Sprain et al. 2019",

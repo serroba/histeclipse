@@ -15,6 +15,7 @@ from histeclipse_pipeline.moon_orbits import (
     Orbit,
     State,
     angle_off,
+    eccentric_anomaly,
     fit_orbit,
     fit_polynomial,
     laplace_frame,
@@ -183,3 +184,13 @@ def test_a_swing_in_what_the_steady_motion_leaves_is_found() -> None:
 
 def test_a_steady_motion_has_no_swing() -> None:
     assert swings([0.0, 100.0, 200.0, 300.0], [0.0, 0.0, 0.0, 0.0]) == []
+
+
+@pytest.mark.parametrize("e", [0.0, 0.2, 0.5, 0.85, 0.95])
+def test_kepler_s_equation_is_solved_all_the_way_round_even_a_stretched_orbit(e: float) -> None:
+    for step in range(-720, 721, 7):
+        mean = math.radians(step)
+        anomaly = eccentric_anomaly(mean, e)
+        assert math.remainder(anomaly - e * math.sin(anomaly) - mean, 2 * math.pi) == (
+            pytest.approx(0, abs=1e-11)
+        )
