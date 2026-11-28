@@ -13,6 +13,7 @@
 import * as v from 'valibot';
 
 import { getJson, type Fetch } from '../util/fetchJson';
+import { HEADER_ADDED } from './header';
 
 const Point = v.tuple([v.number(), v.number(), v.nullable(v.number()), v.nullable(v.number())]);
 
@@ -32,6 +33,7 @@ const SeriesSchema = v.strictObject({
 
 const TemperatureSchema = v.strictObject({
   schemaVersion: v.literal(1),
+  ...HEADER_ADDED,
   baseline: v.string(),
   series: v.array(SeriesSchema),
 });

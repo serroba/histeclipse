@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING
 
 from openpyxl import load_workbook
 
+from histeclipse_pipeline.header import header
 from histeclipse_pipeline.sky import Json, verified
 
 if TYPE_CHECKING:
@@ -58,6 +59,9 @@ SPRATT = Source(
 )
 
 #: van der Meer et al.'s table: age in Ma, and the tectono-glacio-eustatic curve's columns.
+#: The day the site's file was last written; set it when the sources are fetched again.
+ACCESSED = "2026-11-01"
+
 _VDM_AGE = 0
 _VDM_LEVEL, _VDM_LOW, _VDM_HIGH = 34, 35, 36
 _VDM_FIRST_ROW = 5
@@ -199,7 +203,29 @@ def write_sealevel(series: list[Series], folder: Path) -> int:
     """Write every series to ``index.json``; return how many points they hold."""
     folder.mkdir(parents=True, exist_ok=True)
     body = json.dumps(
-        {"schemaVersion": 1, "series": [series_json(each) for each in series]},
+        {
+            **header(
+                version=1,
+                sources=["vanDerMeer", "miller", "bintanja", "spratt"],
+                credit=(
+                    "van der Meer et al. 2022; Miller et al. 2020; Bintanja & van de Wal 2008; "
+                    "Spratt & Lisiecki 2016; each series carries its own source and licence"
+                ),
+                licence=(
+                    "CC BY 4.0 (van der Meer et al. 2022); CC BY 4.0 (Miller et al. 2020); "
+                    "none stated, NOAA asks that the publication be cited (Bintanja & van de Wal "
+                    "2008); none stated, NOAA asks that the publication be cited (Spratt & "
+                    "Lisiecki 2016)"
+                ),
+                accessed=ACCESSED,
+                changes=(
+                    "Each series in metres above or below today's sea level by age; Bintanja & "
+                    "van de Wal's thinned from 100-year to 1,000-year steps and its sign turned; "
+                    "the day given as accessed is the day this file was last written"
+                ),
+            ),
+            "series": [series_json(each) for each in series],
+        },
         separators=(",", ":"),
     )
     _ = (folder / "index.json").write_text(body + "\n")

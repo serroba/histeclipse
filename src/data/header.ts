@@ -28,6 +28,7 @@ export const HEADER = {
  */
 export const HEADER_ADDED = {
   sources: v.optional(HEADER.sources),
+  credit: v.optional(HEADER.credit),
   licence: v.optional(HEADER.licence),
   accessed: v.optional(HEADER.accessed),
   changes: v.optional(HEADER.changes),

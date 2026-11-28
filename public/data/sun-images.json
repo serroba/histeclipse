@@ -1,6 +1,13 @@
 {
   "schemaVersion": 3,
+  "sources": [
+    "sdo",
+    "helioviewer"
+  ],
   "credit": "NASA/SDO and the AIA and HMI science teams, via Helioviewer",
+  "licence": "NASA, public domain (SDO); none stated (Helioviewer, which serves the images)",
+  "accessed": "2026-11-07",
+  "changes": "For each channel, four frames a quarter of a solar rotation apart stitched into one map of the whole surface; the newest frame kept as well; the day given as accessed is the day this file was last written",
   "diskRadius": 0.4,
   "layers": [
     {

@@ -283,7 +283,11 @@ class Manifest(TypedDict):
     """``sun-images.json``: what the maps and frames are and where they came from."""
 
     schemaVersion: int
+    sources: list[str]
     credit: str
+    licence: str
+    accessed: str
+    changes: str
     diskRadius: float
     layers: list[LayerEntry]
 
@@ -295,7 +299,15 @@ def manifest(observed: dict[str, list[str]]) -> Manifest:
     """Describe every layer in ``LAYERS``, given when its frames were taken, oldest first."""
     return {
         "schemaVersion": 3,
+        "sources": ["sdo", "helioviewer"],
         "credit": CREDIT,
+        "licence": "NASA, public domain (SDO); none stated (Helioviewer, which serves the images)",
+        "accessed": "2026-11-07",
+        "changes": (
+            "For each channel, four frames a quarter of a solar rotation apart stitched into "
+            "one map of the whole surface; the newest frame kept as well; the day given as "
+            "accessed is the day this file was last written"
+        ),
         "diskRadius": DISK_RADIUS,
         "layers": [
             {

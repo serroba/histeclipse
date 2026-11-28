@@ -324,6 +324,21 @@ def write_holocene_temperature(series: list[Series], path: Path) -> int:
     body = json.dumps(
         {
             "schemaVersion": 1,
+            "sources": ["jouzel2007", "osman2021", "pages2k2019", "hadcrut5"],
+            "credit": (
+                "Jouzel et al. 2007 (EPICA Dome C); Osman et al. 2021 (Last Glacial Maximum "
+                "Reanalysis); PAGES 2k Consortium 2019; Morice et al. 2021 (HadCRUT5); each "
+                "series carries its own credit"
+            ),
+            "licence": (
+                "CC BY 3.0 (EPICA Dome C); none stated (Osman et al. 2021); none stated "
+                "(PAGES 2k Consortium 2019); Open Government Licence v3 (HadCRUT5)"
+            ),
+            "accessed": ACCESSED,
+            "changes": (
+                "Each series as points of year, median, low and high, oldest first, in °C "
+                "rounded to 0.01; years turned to astronomical CE"
+            ),
             "baseline": "1850\u20131900",
             "series": [series_json(each) for each in series],
         },

@@ -78,7 +78,23 @@ def atmosphere_file(co2: list[Point], ch4: list[Point]) -> dict[str, Json]:
     """Build the site's file: each gas with its unit, sources and points (ka, value, 1 sigma)."""
     return {
         "schemaVersion": 1,
+        "sources": ["bereiter", "loulergue"],
+        "credit": (
+            "CO2: Bereiter et al. 2015, the Antarctic composite, with EPICA Dome C (Lüthi et "
+            "al. 2008); CH4: Loulergue et al. 2008, EPICA Dome C; both from NOAA's World Data "
+            "Center for Paleoclimatology"
+        ),
         "source": SOURCE,
+        "licence": (
+            "none stated; NOAA's World Data Center for Paleoclimatology asks that the "
+            "publications be cited"
+        ),
+        "accessed": "2026-11-03",
+        "changes": (
+            "Gas ages kept as years before 1950, each point with its 1 sigma; the "
+            "pre-industrial levels beside them are IPCC AR6 WGI's; the day given as accessed "
+            "is the day this file was last written"
+        ),
         "gases": [
             {
                 "id": "co2",
