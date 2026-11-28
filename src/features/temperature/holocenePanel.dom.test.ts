@@ -44,7 +44,7 @@ const { temperatureFeature } = await import('.');
 const data = {} as HoloceneTemperature;
 
 describe('temperature over 800,000 years beside the globe (#434)', () => {
-  it('Given a view, Then the chart held at its year, its echoes not taken for the reader’s moves', () => {
+  it('Given a view, Then the chart held at its year, its echoes not taken for the reader’s moves', async () => {
     charts.made.length = 0;
     const container = document.createElement('div');
     const moveTo = vi.fn();
@@ -53,6 +53,10 @@ describe('temperature over 800,000 years beside the globe (#434)', () => {
     expect(root?.hidden).toBe(true);
     panel.update({ data, year: -19_050 });
     expect(root?.hidden).toBe(false);
+    // The chart's code comes when first shown (#220), then holds the year asked for.
+    await vi.waitFor(() => {
+      expect(charts.made[0]?.held).toEqual([-19_050]);
+    });
     panel.update({ data, year: -9_050 });
     expect(charts.made).toHaveLength(1);
     expect(charts.made[0]?.held).toEqual([-19_050, -9_050]);
@@ -66,11 +70,26 @@ describe('temperature over 800,000 years beside the globe (#434)', () => {
     expect(charts.made[0]?.disposed).toBe(true);
   });
 
-  it('Given play reached today, Then the chart draws on from there to its latest year (#1276)', () => {
+  it('Given a view moved on before the chart loads, Then it starts at the last one asked (#220)', async () => {
+    charts.made.length = 0;
+    const container = document.createElement('div');
+    const panel = holocenePanel(vi.fn())({ container } as unknown as LayerHost);
+    panel.update({ data, year: -19_050 });
+    panel.update({ data, year: -9_050 });
+    await vi.waitFor(() => {
+      expect(charts.made).toHaveLength(1);
+    });
+    expect(charts.made[0]?.held).toEqual([-9_050]);
+  });
+
+  it('Given play reached today, Then the chart draws on from there to its latest year (#1276)', async () => {
     charts.made.length = 0;
     const container = document.createElement('div');
     const panel = holocenePanel(vi.fn())({ container } as unknown as LayerHost);
     panel.update({ data, year: 1890 });
+    await vi.waitFor(() => {
+      expect(charts.made).toHaveLength(1);
+    });
     panel.update({ data, year: 1950, drawOn: true });
     expect(charts.made[0]?.held).toEqual([1890, 1950]);
     expect(charts.made[0]?.playing).toEqual([true]);
@@ -107,7 +126,9 @@ describe('temperature over 800,000 years beside the globe (#434)', () => {
       expect(refresh).toHaveBeenCalled();
     });
     shown.show?.(ice, 0);
-    expect(charts.made[0]?.held).toEqual([-19_050]);
+    await vi.waitFor(() => {
+      expect(charts.made[0]?.held).toEqual([-19_050]);
+    });
     expect(change).not.toHaveBeenCalled();
     charts.made[0]?.onYear(-120_050);
     const update = change.mock.calls[0]?.[0] as (state: ViewState) => ViewState;
