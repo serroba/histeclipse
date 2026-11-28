@@ -19,6 +19,7 @@ import { awayFromSun } from './craftAttitude';
 import type { SceneCraft } from './craftLayer';
 import { sceneModelOf, type SceneModel } from './craftModels';
 import { releaseModel } from '../../models/releaseModel';
+import { seesModel } from './views';
 
 /** The craft the camera is on, as the spacecraft feature has it at the moment shown. */
 export interface FocusedCraft {
@@ -42,11 +43,6 @@ export function focusedCraft(
 
 /** Within this of the craft the camera is on (km), other craft are not drawn. */
 const CROWDING_KM = 10_000;
-/**
- * Nearer than this, in the craft's radii, its model is a few pixels across or more (some 4 at
- * 300 radii, with the view's 40°), and it is drawn as its model alone.
- */
-const SEEN_AS_MODEL = 300;
 
 /**
  * Whether `craft` is not drawn as a point beside the one the camera is on, with the camera
@@ -55,10 +51,6 @@ const SEEN_AS_MODEL = 300;
  * halo orbits, hundreds of thousands of km across, are not drawn). Further out, its point marks
  * it again, and the others are there.
  */
-/** Whether the camera is on a craft close enough to see its model, in its radii `distance`. */
-export function seesModel(craft: string | null, distance: number): boolean {
-  return craft !== null && distance < SEEN_AS_MODEL;
-}
 
 export function hiddenBy(
   focused: FocusedCraft | null,
