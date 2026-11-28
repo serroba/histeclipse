@@ -26,10 +26,16 @@ export type Reuse = 'open' | 'source' | 'unstated';
 interface CataloguePart {
   readonly file: string;
   readonly schemaVersion?: number;
+  /** Ids in the site's registry of sources, where the file has its header (#1318). */
+  readonly sources?: readonly string[];
   readonly credit?: string;
   readonly source?: string;
   readonly licence?: string;
-  readonly units?: string;
+  readonly accessed?: string;
+  /** What this site did to the source's data. */
+  readonly changes?: string;
+  /** One text, or one for each column. */
+  readonly units?: string | Readonly<Record<string, string>>;
   /** How its other files are named, where it says (`YYYY-MM.png`). */
   readonly files?: string;
   readonly reuse: Reuse;
@@ -119,21 +125,44 @@ function text(json: Readonly<Record<string, unknown>>, key: string): string | un
   return typeof value === 'string' ? value : undefined;
 }
 
+function texts(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const found = value.filter((item: unknown) => typeof item === 'string');
+  return found.length === 0 ? undefined : found;
+}
+
+function unitsOf(top: Readonly<Record<string, unknown>>): CataloguePart['units'] {
+  const units = top['units'];
+  if (isRecord(units)) {
+    const named = Object.entries(units).filter(
+      (pair): pair is [string, string] => typeof pair[1] === 'string',
+    );
+    if (named.length > 0) return Object.fromEntries(named);
+  }
+  return text(top, 'units') ?? text(top, 'unit');
+}
+
 function partOf(file: string, json: unknown): CataloguePart {
   const top = isRecord(json) ? json : {};
   const version = top['schemaVersion'];
   const credit = joined(stated(json, ['credit']));
   const licence = joined(stated(json, ['licence', 'license']));
   const source = text(top, 'source');
-  const units = text(top, 'units') ?? text(top, 'unit');
+  const units = unitsOf(top);
+  const sources = texts(top['sources']);
+  const accessed = text(top, 'accessed');
+  const changes = text(top, 'changes');
   const files = text(top, 'files');
   const terms = licence ?? credit;
   return {
     file,
     ...(typeof version === 'number' ? { schemaVersion: version } : {}),
+    ...(sources === undefined ? {} : { sources }),
     ...(credit === undefined ? {} : { credit }),
     ...(source === undefined ? {} : { source }),
     ...(licence === undefined ? {} : { licence }),
+    ...(accessed === undefined ? {} : { accessed }),
+    ...(changes === undefined ? {} : { changes }),
     ...(units === undefined ? {} : { units }),
     ...(files === undefined ? {} : { files }),
     reuse: terms === undefined ? 'unstated' : reuseOf(terms),
