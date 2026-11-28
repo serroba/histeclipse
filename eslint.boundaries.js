@@ -98,7 +98,7 @@ export const FUNCTION_LIMITS = {
   'features/deepTime/index.ts': 3,
   'features/eclipses/index.ts': 1,
   'features/eclipses/seen.ts': 1,
-  'features/empires/index.ts': 1,
+  'features/empires/body.ts': 1,
   'features/famous/famousPanel.ts': 1,
   'features/fossils/index.ts': 1,
   'features/humans/index.ts': 1,
