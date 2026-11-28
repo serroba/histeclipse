@@ -77,7 +77,7 @@ const RESTRICTED = /non-?commercial|\bBY-NC\b|all rights reserved/i;
 const NONE_STATED = /none stated|no licence stated/i;
 const PUBLIC = /US Government|public domain/i;
 const OPEN =
-  /\bCC0\b|\bCC BY(?:-SA)?\b(?!-)|\bODbL\b|Open Government Licence|\bGPL\b|\bMIT\b|free and open|open access|no restrictions/i;
+  /\bCC0\b|\bCC BY(?:-SA)?\b(?!-)|\bODbL\b|Open Government Licence|\bGPL\b|\bMIT\b|\bBSD\b|free and open|open access|no restrictions/i;
 
 /** What a licence, in its maker's words, lets a reader do with the copy served here. */
 export function reuseOf(licence: string): Reuse {

@@ -21,6 +21,15 @@ export const HEADER = {
   changes: text,
 } as const;
 
+/**
+ * What the header adds to a file that already stated its credit, for its schema to allow. The
+ * served files are held to them by `sources/dataHeaders.test.ts`; the site reads neither.
+ */
+export const HEADER_ADDED = {
+  sources: v.optional(HEADER.sources),
+  changes: v.optional(HEADER.changes),
+} as const;
+
 /** The header alone, whatever else a file holds: what every served file is checked against. */
 export const HeaderSchema = v.looseObject({
   schemaVersion: v.pipe(v.number(), v.integer(), v.minValue(1)),

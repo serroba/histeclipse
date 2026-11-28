@@ -167,11 +167,16 @@ def index_file(accessed: str) -> dict[str, Json]:
     """Build the manifest the web app reads."""
     return {
         "schemaVersion": 1,
+        "sources": ["iapCurrents"],
         "credit": CREDIT,
         "source": SOURCE,
         "paper": "https://doi.org/10.1175/JCLI-D-15-0730.1",
         "licence": LICENCE,
         "accessed": accessed,
+        "changes": (
+            "Two depths kept, left out near the equator, averaged onto a 1° grid and packed "
+            "into 8-bit images"
+        ),
         "units": "m/s",
         "encoding": "R eastward, G northward, each from -bound to +bound; B 128; A current",
         "files": "<depth>/YYYY-MM.png",
