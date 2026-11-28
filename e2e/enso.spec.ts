@@ -54,6 +54,11 @@ test('why here: in the equatorial Pacific, the sea that month and what El Niño 
   const problems = collectProblems(page);
   const here = page.getByRole('dialog', { name: /^Here: / });
   await test.step('Given a link to the equatorial Pacific in December 1997, with El Niño and La Niña on', async () => {
+    // The month's map comes last, as on the live site: "Here" is said again when it does (#1293).
+    await page.route('**/data/enso-sst/1997-12.png', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await route.continue();
+    });
     await page.goto('./?t=1997-12-15T12:00Z&loc=0,-120&layers=enso&cam=0,-120,3&why=here');
     await globeRendered(page);
   });
